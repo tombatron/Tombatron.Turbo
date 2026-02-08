@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="samples/Tombatron.Turbo.Sample/Tombatron.Turbo.Sample.csproj" />
+  <Project Path="src/Tombatron.Turbo.Analyzers/Tombatron.Turbo.Analyzers.csproj" />
+  <Project Path="src/Tombatron.Turbo.SourceGenerator/Tombatron.Turbo.SourceGenerator.csproj" />
+  <Project Path="src/Tombatron.Turbo/Tombatron.Turbo.csproj" />
+  <Project Path="tests/Tombatron.Turbo.Tests/Tombatron.Turbo.Tests.csproj" />
+</Solution>
