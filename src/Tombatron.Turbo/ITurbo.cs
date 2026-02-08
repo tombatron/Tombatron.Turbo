@@ -36,13 +36,13 @@ public interface ITurbo
     /// <exception cref="ArgumentNullException">Thrown when streamNames or build is null.</exception>
     /// <example>
     /// <code>
-    /// await turbo.StreamMany(new[] { "user:alice", "user:bob" }, builder =>
+    /// await turbo.Stream(new[] { "user:alice", "user:bob" }, builder =>
     /// {
     ///     builder.Append("notifications", "&lt;div&gt;New message!&lt;/div&gt;");
     /// });
     /// </code>
     /// </example>
-    Task StreamMany(IEnumerable<string> streamNames, Action<ITurboStreamBuilder> build);
+    Task Stream(IEnumerable<string> streamNames, Action<ITurboStreamBuilder> build);
 
     /// <summary>
     /// Broadcasts Turbo Stream updates to all connected clients regardless of their subscriptions.

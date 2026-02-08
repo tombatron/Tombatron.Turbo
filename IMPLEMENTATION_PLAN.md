@@ -456,7 +456,7 @@ samples/Tombatron.Turbo.Sample/
   - [ ] `src/Tombatron.Turbo/Streams/TurboService.cs`
   - [ ] Inject `IHubContext<TurboHub>`
   - [ ] `Stream(string streamName, Action<ITurboStreamBuilder> build)`
-  - [ ] `StreamMany(IEnumerable<string> streamNames, Action<ITurboStreamBuilder> build)`
+  - [ ] `Stream (overload)(IEnumerable<string> streamNames, Action<ITurboStreamBuilder> build)`
   - [ ] `Broadcast(Action<ITurboStreamBuilder> build)`
   - [ ] Validate inputs
 - [ ] Implement ITurboStreamBuilder:
@@ -494,8 +494,8 @@ samples/Tombatron.Turbo.Sample/
   - [ ] `tests/Tombatron.Turbo.Tests/Streams/TurboServiceTests.cs`
     - [ ] Test Stream() with valid stream name
     - [ ] Test Stream() with invalid stream name
-    - [ ] Test StreamMany() with multiple streams
-    - [ ] Test StreamMany() with empty list
+    - [ ] Test Stream (overload)() with multiple streams
+    - [ ] Test Stream (overload)() with empty list
     - [ ] Test Broadcast()
     - [ ] Test null builder (should throw)
   - [ ] `tests/Tombatron.Turbo.Tests/Streams/TurboHubTests.cs`
@@ -525,7 +525,7 @@ samples/Tombatron.Turbo.Sample/
 - ✅ Subscribe adds connection to group
 - ✅ Authorization checks work
 - ✅ ITurbo.Stream() broadcasts to group
-- ✅ ITurbo.StreamMany() broadcasts to multiple groups
+- ✅ ITurbo.Stream (overload)() broadcasts to multiple groups
 - ✅ ITurbo.Broadcast() sends to all clients
 - ✅ Stream builder generates valid Turbo Stream HTML
 - ✅ HTML generation functions are pure
