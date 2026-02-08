@@ -790,12 +790,20 @@ samples/
 **Status:** 🔴 Not Started
 
 ### Objectives
+- Source generator sub-template routing optimization (deferred from Milestone 4)
 - Performance optimization
 - Comprehensive testing
 - Security review
 - Error handling improvements
 
 ### Tasks
+- [ ] Source generator sub-template routing optimization:
+  - [ ] Wire up generated TurboFrameMetadata to middleware
+  - [ ] Fix AdditionalFiles registration for .cshtml files
+  - [ ] Generate actual sub-template Razor files (not just metadata)
+  - [ ] Implement view location expander for sub-templates
+  - [ ] Test automatic sub-template routing end-to-end
+  - [ ] Benchmark sub-template vs full-page response performance
 - [ ] Performance optimization:
   - [ ] `tests/Tombatron.Turbo.Benchmarks/` - BenchmarkDotNet project
   - [ ] Benchmark frame routing performance
