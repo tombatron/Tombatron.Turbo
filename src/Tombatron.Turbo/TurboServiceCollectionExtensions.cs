@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -63,6 +64,9 @@ public static class TurboServiceCollectionExtensions
 
         services.AddSingleton(options);
         services.AddSignalR();
+
+        // Register IHttpContextAccessor for tag helpers
+        services.AddHttpContextAccessor();
 
         // Register the result filter for automatic sub-template routing
         services.Configure<MvcOptions>(mvcOptions =>

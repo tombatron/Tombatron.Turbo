@@ -4,7 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Tombatron.Turbo Sample</title>
+    <!-- Hotwire Turbo.js for frames and navigation -->
     <script type="module" src="https://unpkg.com/@@hotwired/turbo@8.0.4/dist/turbo.es2017-esm.js"></script>
+    <!-- SignalR client for Turbo Streams -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -62,12 +65,43 @@
         .btn-danger:hover {
             background: #990000;
         }
+        .connection-status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+        .connection-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .connection-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .connection-status.connecting {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .stream-notification {
+            padding: 10px;
+            margin: 5px 0;
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            border-radius: 4px;
+            animation: fadeIn 0.3s ease-in;
+        }
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
     <nav>
         <a href="/">Home</a>
         <a href="/Cart">Cart</a>
+        <a href="/Streams">Streams Demo</a>
+        <span id="connection-status" class="connection-status disconnected">Disconnected</span>
     </nav>
 
     <main>
@@ -75,5 +109,300 @@
     </main>
 
     @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Turbo Stream SignalR Custom Element (inline for demo) -->
+    <script>
+    (function() {
+        // Singleton connection manager
+        const connectionManager = {
+            connection: null,
+            streamRefs: new Map(),
+            subscribedStreams: new Set(),
+            hubUrl: null,
+            isConnected: false,
+            isConnecting: false,
+            connectionCallbacks: [],
+
+            async getConnection(hubUrl) {
+                if (this.connection && this.hubUrl !== hubUrl) {
+                    await this.closeConnection();
+                }
+
+                if (this.connection && this.isConnected) {
+                    return this.connection;
+                }
+
+                if (this.isConnecting) {
+                    return new Promise((resolve) => {
+                        this.connectionCallbacks.push(() => resolve(this.connection));
+                    });
+                }
+
+                this.isConnecting = true;
+                this.hubUrl = hubUrl;
+
+                this.connection = new signalR.HubConnectionBuilder()
+                    .withUrl(hubUrl)
+                    .withAutomaticReconnect()
+                    .configureLogging(signalR.LogLevel.Warning)
+                    .build();
+
+                this.connection.on('TurboStream', (html) => {
+                    this.handleTurboStream(html);
+                });
+
+                this.connection.onreconnecting(() => {
+                    this.isConnected = false;
+                    this.updateStatusIndicator('connecting');
+                });
+
+                this.connection.onreconnected(async () => {
+                    this.isConnected = true;
+                    this.updateStatusIndicator('connected');
+                    await this.resubscribeAll();
+                });
+
+                this.connection.onclose(() => {
+                    this.isConnected = false;
+                    this.subscribedStreams.clear();
+                    this.updateStatusIndicator('disconnected');
+                });
+
+                try {
+                    await this.connection.start();
+                    this.isConnected = true;
+                    this.isConnecting = false;
+                    this.updateStatusIndicator('connected');
+
+                    this.connectionCallbacks.forEach((cb) => cb());
+                    this.connectionCallbacks = [];
+
+                    return this.connection;
+                } catch (error) {
+                    this.isConnecting = false;
+                    this.updateStatusIndicator('disconnected');
+                    throw error;
+                }
+            },
+
+            async closeConnection() {
+                if (this.connection) {
+                    await this.connection.stop();
+                    this.connection = null;
+                    this.hubUrl = null;
+                    this.isConnected = false;
+                    this.subscribedStreams.clear();
+                }
+            },
+
+            async subscribe(streamName, hubUrl) {
+                if (!streamName || typeof streamName !== 'string') {
+                    throw new Error('Stream name is required');
+                }
+
+                const trimmedName = streamName.trim();
+                if (trimmedName.length === 0) {
+                    throw new Error('Stream name cannot be empty');
+                }
+
+                const currentCount = this.streamRefs.get(trimmedName) || 0;
+                this.streamRefs.set(trimmedName, currentCount + 1);
+
+                if (currentCount === 0) {
+                    try {
+                        const connection = await this.getConnection(hubUrl);
+                        const success = await connection.invoke('Subscribe', trimmedName);
+
+                        if (success) {
+                            this.subscribedStreams.add(trimmedName);
+                            return true;
+                        } else {
+                            this.streamRefs.set(trimmedName, currentCount);
+                            return false;
+                        }
+                    } catch (error) {
+                        this.streamRefs.set(trimmedName, currentCount);
+                        throw error;
+                    }
+                }
+
+                return true;
+            },
+
+            async unsubscribe(streamName) {
+                if (!streamName) return;
+
+                const trimmedName = streamName.trim();
+                const currentCount = this.streamRefs.get(trimmedName) || 0;
+
+                if (currentCount <= 0) return;
+
+                const newCount = currentCount - 1;
+
+                if (newCount === 0) {
+                    this.streamRefs.delete(trimmedName);
+                    this.subscribedStreams.delete(trimmedName);
+
+                    if (this.connection && this.isConnected) {
+                        try {
+                            await this.connection.invoke('Unsubscribe', trimmedName);
+                        } catch (error) {
+                            console.warn('Error unsubscribing:', error);
+                        }
+                    }
+                } else {
+                    this.streamRefs.set(trimmedName, newCount);
+                }
+            },
+
+            async resubscribeAll() {
+                if (!this.connection || !this.isConnected) return;
+
+                for (const streamName of this.streamRefs.keys()) {
+                    try {
+                        const success = await this.connection.invoke('Subscribe', streamName);
+                        if (success) {
+                            this.subscribedStreams.add(streamName);
+                        }
+                    } catch (error) {
+                        console.warn('Error resubscribing to:', streamName, error);
+                    }
+                }
+            },
+
+            handleTurboStream(html) {
+                if (!html) return;
+
+                if (window.Turbo && typeof window.Turbo.renderStreamMessage === 'function') {
+                    window.Turbo.renderStreamMessage(html);
+                } else {
+                    this.manualRenderStream(html);
+                }
+            },
+
+            manualRenderStream(html) {
+                const template = document.createElement('template');
+                template.innerHTML = html;
+
+                const streams = template.content.querySelectorAll('turbo-stream');
+
+                for (const stream of streams) {
+                    const action = stream.getAttribute('action');
+                    const target = stream.getAttribute('target');
+                    const templateContent = stream.querySelector('template');
+
+                    if (!target) continue;
+
+                    const targetElement = document.getElementById(target);
+                    if (!targetElement && action !== 'remove') continue;
+
+                    const content = templateContent ? templateContent.content.cloneNode(true) : null;
+
+                    switch (action) {
+                        case 'append':
+                            if (content) targetElement.appendChild(content);
+                            break;
+                        case 'prepend':
+                            if (content) targetElement.prepend(content);
+                            break;
+                        case 'replace':
+                            if (content && targetElement.parentNode) {
+                                targetElement.parentNode.replaceChild(content, targetElement);
+                            }
+                            break;
+                        case 'update':
+                            if (targetElement) {
+                                targetElement.innerHTML = '';
+                                if (content) targetElement.appendChild(content);
+                            }
+                            break;
+                        case 'remove':
+                            if (targetElement) targetElement.remove();
+                            break;
+                        case 'before':
+                            if (content && targetElement.parentNode) {
+                                targetElement.parentNode.insertBefore(content, targetElement);
+                            }
+                            break;
+                        case 'after':
+                            if (content && targetElement.parentNode) {
+                                targetElement.parentNode.insertBefore(content, targetElement.nextSibling);
+                            }
+                            break;
+                    }
+                }
+            },
+
+            updateStatusIndicator(status) {
+                const indicator = document.getElementById('connection-status');
+                if (indicator) {
+                    indicator.className = 'connection-status ' + status;
+                    indicator.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                }
+            }
+        };
+
+        // Custom element
+        class TurboStreamSourceSignalR extends HTMLElement {
+            static get observedAttributes() {
+                return ['stream', 'hub-url'];
+            }
+
+            constructor() {
+                super();
+                this._streamName = null;
+                this._hubUrl = null;
+                this._subscribed = false;
+            }
+
+            async connectedCallback() {
+                this._streamName = this.getAttribute('stream');
+                this._hubUrl = this.getAttribute('hub-url') || '/turbo-hub';
+
+                if (this._streamName) {
+                    await this._subscribe();
+                }
+            }
+
+            async disconnectedCallback() {
+                if (this._subscribed && this._streamName) {
+                    await connectionManager.unsubscribe(this._streamName);
+                    this._subscribed = false;
+                }
+            }
+
+            async attributeChangedCallback(name, oldValue, newValue) {
+                if (oldValue === newValue) return;
+
+                if (name === 'stream') {
+                    if (this._subscribed && this._streamName) {
+                        await connectionManager.unsubscribe(this._streamName);
+                        this._subscribed = false;
+                    }
+
+                    this._streamName = newValue;
+                    if (this._streamName && this.isConnected) {
+                        await this._subscribe();
+                    }
+                } else if (name === 'hub-url') {
+                    this._hubUrl = newValue || '/turbo-hub';
+                }
+            }
+
+            async _subscribe() {
+                if (!this._streamName) return;
+
+                try {
+                    const success = await connectionManager.subscribe(this._streamName, this._hubUrl);
+                    this._subscribed = success;
+                } catch (error) {
+                    console.error('Error subscribing to stream:', error);
+                }
+            }
+        }
+
+        customElements.define('turbo-stream-source-signalr', TurboStreamSourceSignalR);
+    })();
+    </script>
 </body>
 </html>

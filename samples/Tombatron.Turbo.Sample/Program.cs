@@ -9,6 +9,15 @@ builder.Services.AddTurbo(options =>
     options.UseSignedStreamNames = false;
 });
 
+// Add session support for the counter demo
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
@@ -24,11 +33,17 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Use session
+app.UseSession();
+
 // Use Turbo middleware
 app.UseTurbo();
 
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+// Map the Turbo SignalR hub for streaming
+app.MapTurboHub();
 
 app.Run();
