@@ -9,103 +9,398 @@
     <!-- SignalR client for Turbo Streams -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <style>
+        :root {
+            --bg-primary: #f9f7f3;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0ede6;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --text-muted: #999999;
+            --accent: #d97706;
+            --accent-hover: #b45309;
+            --accent-light: #fef3c7;
+            --border: #e5e2db;
+            --shadow: rgba(0, 0, 0, 0.06);
+            --success: #059669;
+            --success-bg: #ecfdf5;
+            --danger: #dc2626;
+            --danger-bg: #fef2f2;
+            --warning-bg: #fffbeb;
+            --info-bg: #f0f9ff;
+            --info-border: #0ea5e9;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
             line-height: 1.6;
+            min-height: 100vh;
         }
-        nav {
-            margin-bottom: 20px;
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 4px;
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
         }
-        nav a {
-            margin-right: 15px;
+
+        /* Header & Navigation */
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-primary);
             text-decoration: none;
-            color: #0066cc;
         }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        nav a {
+            padding: 8px 16px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+        }
+
         nav a:hover {
-            text-decoration: underline;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
         }
+
+        .connection-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+        }
+
+        .connection-status.connected {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .connection-status.disconnected {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .connection-status.connecting {
+            background: var(--warning-bg);
+            color: var(--accent);
+        }
+
+        /* Main Content */
+        main {
+            padding: 40px 0 60px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 0 0 8px;
+            color: var(--text-primary);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 32px 0 12px;
+            color: var(--text-primary);
+        }
+
+        h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 24px 0 8px;
+            color: var(--text-secondary);
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin: 0 0 16px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 16px 0;
+            box-shadow: 0 1px 3px var(--shadow), 0 1px 2px var(--shadow);
+        }
+
+        /* Turbo Frames */
         turbo-frame {
             display: block;
-            border: 1px dashed #ccc;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 4px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 12px 0;
+            transition: all 0.2s ease;
         }
+
         turbo-frame[busy] {
             opacity: 0.6;
+            pointer-events: none;
         }
+
+        /* Cart Items */
         .cart-item {
-            padding: 10px;
-            background: #f9f9f9;
-            margin: 5px 0;
-            border-radius: 4px;
+            background: var(--bg-tertiary);
+            padding: 16px 20px;
+            margin: 8px 0;
+            border-radius: 10px;
         }
+
+        .cart-item strong {
+            color: var(--text-primary);
+        }
+
+        /* Buttons */
         .btn {
-            display: inline-block;
-            padding: 8px 16px;
-            background: #0066cc;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            background: var(--accent);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
             cursor: pointer;
             text-decoration: none;
+            transition: all 0.15s ease;
+            gap: 8px;
         }
+
         .btn:hover {
-            background: #0052a3;
+            background: var(--accent-hover);
+            transform: translateY(-1px);
         }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
         .btn-danger {
-            background: #cc0000;
+            background: var(--danger);
         }
+
         .btn-danger:hover {
-            background: #990000;
+            background: #b91c1c;
         }
-        .connection-status {
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.8em;
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
         }
-        .connection-status.connected {
-            background: #d4edda;
-            color: #155724;
+
+        /* Forms */
+        input[type="text"],
+        input[type="number"] {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
-        .connection-status.disconnected {
-            background: #f8d7da;
-            color: #721c24;
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
         }
-        .connection-status.connecting {
-            background: #fff3cd;
-            color: #856404;
+
+        input::placeholder {
+            color: var(--text-muted);
         }
+
+        /* Stream Notifications */
         .stream-notification {
-            padding: 10px;
-            margin: 5px 0;
-            background: #e7f3ff;
-            border-left: 4px solid #0066cc;
-            border-radius: 4px;
-            animation: fadeIn 0.3s ease-in;
+            padding: 14px 18px;
+            margin: 8px 0;
+            background: var(--info-bg);
+            border-left: 3px solid var(--info-border);
+            border-radius: 0 8px 8px 0;
+            animation: slideIn 0.3s ease;
         }
-        @@keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .stream-notification strong {
+            color: var(--text-primary);
+        }
+
+        @@keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Info Box */
+        .info-box {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 24px 0;
+        }
+
+        .info-box h3 {
+            margin-top: 0;
+        }
+
+        .info-box ul {
+            margin: 0;
+            padding-left: 20px;
+            color: var(--text-secondary);
+        }
+
+        .info-box li {
+            margin: 8px 0;
+        }
+
+        .info-box code {
+            background: var(--bg-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: var(--accent);
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 24px 0;
+        }
+
+        @@media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Notification List */
+        .notification-list {
+            min-height: 120px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .notification-list:empty::before {
+            content: 'Notifications will appear here...';
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+
+        /* Counter Display */
+        .counter-display {
+            font-size: 3rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-align: center;
+            padding: 24px;
+            background: var(--accent-light);
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        /* Form Row */
+        .form-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin: 12px 0;
+        }
+
+        /* Footer Link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 32px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
         }
     </style>
 </head>
 <body>
-    <nav>
-        <a href="/">Home</a>
-        <a href="/Cart">Cart</a>
-        <a href="/Streams">Streams Demo</a>
-        <span id="connection-status" class="connection-status disconnected">Disconnected</span>
-    </nav>
+    <header>
+        <div class="container">
+            <a href="/" class="logo">Tombatron.<span>Turbo</span></a>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/Cart">Cart</a>
+                <a href="/Streams">Streams</a>
+                <span id="connection-status" class="connection-status disconnected">Offline</span>
+            </nav>
+        </div>
+    </header>
 
     <main>
-        @RenderBody()
+        <div class="container">
+            @RenderBody()
+        </div>
     </main>
 
     @await RenderSectionAsync("Scripts", required: false)
@@ -337,7 +632,12 @@
                 const indicator = document.getElementById('connection-status');
                 if (indicator) {
                     indicator.className = 'connection-status ' + status;
-                    indicator.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                    const labels = {
+                        connected: 'Live',
+                        disconnected: 'Offline',
+                        connecting: 'Connecting...'
+                    };
+                    indicator.textContent = labels[status] || status;
                 }
             }
         };

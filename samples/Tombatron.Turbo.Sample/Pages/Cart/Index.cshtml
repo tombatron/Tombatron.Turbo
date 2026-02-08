@@ -5,43 +5,64 @@
 }
 
 <h1>Shopping Cart</h1>
-
 <p>This page demonstrates both static and dynamic turbo-frames.</p>
 
-<h2>Cart Summary (Static Frame)</h2>
-<turbo-frame id="cart-summary">
-    <div class="cart-item">
-        <strong>Cart Total:</strong> @Model.CartTotal.ToString("C")
-        <br />
-        <small>@Model.ItemCount items in cart</small>
+<div class="grid">
+    <div>
+        <h2>Cart Items</h2>
+        <p>Each item is a separate turbo-frame with a dynamic ID using the <code>item_</code> prefix:</p>
+
+        @foreach (var item in Model.Items)
+        {
+            <turbo-frame id="item_@item.Id" asp-frame-prefix="item_">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>@item.Name</strong>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px;">
+                            @item.Price.ToString("C") &times; @item.Quantity = <strong>@((item.Price * item.Quantity).ToString("C"))</strong>
+                        </div>
+                    </div>
+                    <form method="post" asp-page-handler="RemoveItem" asp-route-itemId="@item.Id" data-turbo-frame="item_@item.Id">
+                        <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                    </form>
+                </div>
+            </turbo-frame>
+        }
+
+        @if (!Model.Items.Any())
+        {
+            <div class="cart-item" style="text-align: center; color: var(--text-muted);">
+                Your cart is empty
+            </div>
+        }
     </div>
-</turbo-frame>
 
-<h2>Cart Items (Dynamic Frames with Prefix)</h2>
-<p>Each item below is a separate turbo-frame with a dynamic ID using the <code>item_</code> prefix:</p>
+    <div>
+        <h2>Cart Summary</h2>
+        <turbo-frame id="cart-summary">
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 600; color: var(--accent);">
+                    @Model.CartTotal.ToString("C")
+                </div>
+                <div style="color: var(--text-secondary); margin-top: 4px;">
+                    @Model.ItemCount item@(Model.ItemCount != 1 ? "s" : "") in cart
+                </div>
+            </div>
+        </turbo-frame>
 
-@foreach (var item in Model.Items)
-{
-    <turbo-frame id="item_@item.Id" asp-frame-prefix="item_">
-        <div class="cart-item">
-            <strong>@item.Name</strong>
-            <br />
-            Price: @item.Price.ToString("C") x @item.Quantity = @((item.Price * item.Quantity).ToString("C"))
-            <br />
-            <form method="post" asp-page-handler="RemoveItem" asp-route-itemId="@item.Id" data-turbo-frame="item_@item.Id">
-                <button type="submit" class="btn btn-danger">Remove</button>
+        <h3>Add Item</h3>
+        <turbo-frame id="add-item-form">
+            <form method="post" asp-page-handler="AddItem">
+                <div class="form-row">
+                    <input type="text" name="name" placeholder="Item name" required style="flex: 1;" />
+                </div>
+                <div class="form-row">
+                    <input type="number" name="price" placeholder="Price" step="0.01" min="0.01" required style="width: 120px;" />
+                    <button type="submit" class="btn">Add Item</button>
+                </div>
             </form>
-        </div>
-    </turbo-frame>
-}
+        </turbo-frame>
+    </div>
+</div>
 
-<h2>Add Item</h2>
-<turbo-frame id="add-item-form">
-    <form method="post" asp-page-handler="AddItem">
-        <input type="text" name="name" placeholder="Item name" required />
-        <input type="number" name="price" placeholder="Price" step="0.01" required />
-        <button type="submit" class="btn">Add Item</button>
-    </form>
-</turbo-frame>
-
-<p><a href="/" class="btn">Back to Home</a></p>
+<a href="/" class="back-link">&larr; Back to Home</a>

@@ -4,26 +4,44 @@
     ViewData["Title"] = "Home";
 }
 
-<h1>Tombatron.Turbo Sample Application</h1>
+<h1>Welcome to Tombatron.Turbo</h1>
+<p>A Hotwire Turbo implementation for ASP.NET Core with compile-time frame optimization and SignalR-powered real-time streams.</p>
 
-<p>
-    This sample demonstrates the Turbo Frame functionality of Tombatron.Turbo.
-</p>
+<div class="card">
+    <h2>Turbo Frames</h2>
+    <p>Turbo Frames decompose pages into independent contexts that can be lazy-loaded and updated independently.</p>
 
-<h2>Static Turbo Frame Example</h2>
-<p>This frame has a static ID and can be targeted directly:</p>
+    <turbo-frame id="welcome-message">
+        <div class="cart-item">
+            <strong>Dynamic Content</strong>
+            <p style="margin: 8px 0 0; color: var(--text-secondary);">
+                This content is inside a turbo-frame. Current time: <strong>@DateTime.Now.ToString("HH:mm:ss")</strong>
+            </p>
+            <div style="margin-top: 12px;">
+                <a href="/?handler=RefreshWelcome" class="btn btn-sm" data-turbo-frame="welcome-message">
+                    Refresh Frame
+                </a>
+            </div>
+        </div>
+    </turbo-frame>
+</div>
 
-<turbo-frame id="welcome-message">
-    <div class="cart-item">
-        <strong>Welcome!</strong>
-        <p>This content is inside a turbo-frame with id="welcome-message".</p>
-        <p>Current time: @DateTime.Now.ToString("HH:mm:ss")</p>
-        <a href="/?handler=RefreshWelcome" class="btn" data-turbo-frame="welcome-message">
-            Refresh Frame
-        </a>
+<div class="card">
+    <h2>Explore the Demo</h2>
+    <p>Check out these examples to see Turbo in action:</p>
+
+    <div style="display: flex; gap: 12px; margin-top: 16px;">
+        <a href="/Cart" class="btn">Shopping Cart</a>
+        <a href="/Streams" class="btn btn-secondary">Real-time Streams</a>
     </div>
-</turbo-frame>
+</div>
 
-<h2>Navigation Between Pages</h2>
-<p>Click the link below to navigate to the cart page. Notice how Turbo handles the navigation:</p>
-<a href="/Cart" class="btn">Go to Cart</a>
+<div class="info-box">
+    <h3>Key Features</h3>
+    <ul>
+        <li><strong>Turbo Frames</strong> - Partial page updates without full reloads</li>
+        <li><strong>Turbo Streams</strong> - Real-time updates via SignalR</li>
+        <li><strong>Compile-time Optimization</strong> - Roslyn source generators for frame detection</li>
+        <li><strong>Type Safety</strong> - Roslyn analyzers enforce prefix rules for dynamic IDs</li>
+    </ul>
+</div>
