@@ -12,10 +12,24 @@ public sealed class TurboOptions
     public string HubPath { get; set; } = "/turbo-hub";
 
     /// <summary>
-    /// Gets or sets whether to require authentication for stream subscriptions.
+    /// Gets or sets whether to use signed stream names for subscription security.
+    /// When enabled, clients can only subscribe to streams that have been cryptographically
+    /// signed by the server (similar to Rails' Turbo Streams approach).
     /// Default is true.
     /// </summary>
-    public bool RequireAuthentication { get; set; } = true;
+    /// <remarks>
+    /// Signed stream names use ASP.NET Core's Data Protection API for signing.
+    /// This provides security without requiring authentication - if the server rendered
+    /// the stream subscription tag, the client is implicitly authorized to subscribe.
+    /// </remarks>
+    public bool UseSignedStreamNames { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the expiration time for signed stream name tokens.
+    /// After this duration, clients will need to refresh the page to get new tokens.
+    /// Default is 24 hours. Set to null for no expiration.
+    /// </summary>
+    public TimeSpan? SignedStreamNameExpiration { get; set; } = TimeSpan.FromHours(24);
 
     /// <summary>
     /// Gets or sets whether to automatically add the Vary: Turbo-Frame header to responses.
@@ -25,7 +39,7 @@ public sealed class TurboOptions
 
     /// <summary>
     /// Gets or sets the default stream name pattern for authenticated users.
-    /// Use {0} as placeholder for the username.
+    /// Use {0} as placeholder for the user identifier.
     /// Default is "user:{0}".
     /// </summary>
     public string DefaultUserStreamPattern { get; set; } = "user:{0}";

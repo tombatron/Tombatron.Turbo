@@ -35,7 +35,7 @@ public static class TurboServiceCollectionExtensions
     /// builder.Services.AddTurbo(options =>
     /// {
     ///     options.HubPath = "/my-turbo-hub";
-    ///     options.RequireAuthentication = false;
+    ///     options.UseSignedStreamNames = false;
     /// });
     /// </code>
     /// </example>

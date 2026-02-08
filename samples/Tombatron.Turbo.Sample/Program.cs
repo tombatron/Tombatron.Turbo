@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTurbo(options =>
 {
     options.HubPath = "/turbo-hub";
-    options.RequireAuthentication = false;
+    options.UseSignedStreamNames = false;
 });
 
 builder.Services.AddRazorPages();

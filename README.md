@@ -103,7 +103,7 @@ public class CartController : Controller
 builder.Services.AddTurbo(options =>
 {
     options.HubPath = "/turbo-hub";
-    options.RequireAuthentication = true;
+    options.UseSignedStreamNames = true;
     options.DefaultUserStreamPattern = "user:{0}";
     options.DefaultSessionStreamPattern = "session:{0}";
 });

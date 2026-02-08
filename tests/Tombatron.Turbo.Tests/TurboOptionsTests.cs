@@ -13,7 +13,8 @@ public class TurboOptionsTests
 
         // Assert
         options.HubPath.Should().Be("/turbo-hub");
-        options.RequireAuthentication.Should().BeTrue();
+        options.UseSignedStreamNames.Should().BeTrue();
+        options.SignedStreamNameExpiration.Should().Be(TimeSpan.FromHours(24));
         options.AddVaryHeader.Should().BeTrue();
         options.DefaultUserStreamPattern.Should().Be("user:{0}");
         options.DefaultSessionStreamPattern.Should().Be("session:{0}");
@@ -141,7 +142,8 @@ public class TurboOptionsTests
         var options = new TurboOptions
         {
             HubPath = "/custom-hub",
-            RequireAuthentication = false,
+            UseSignedStreamNames = false,
+            SignedStreamNameExpiration = TimeSpan.FromHours(12),
             AddVaryHeader = false,
             DefaultUserStreamPattern = "u:{0}",
             DefaultSessionStreamPattern = "s:{0}",
@@ -151,11 +153,25 @@ public class TurboOptionsTests
 
         // Assert
         options.HubPath.Should().Be("/custom-hub");
-        options.RequireAuthentication.Should().BeFalse();
+        options.UseSignedStreamNames.Should().BeFalse();
+        options.SignedStreamNameExpiration.Should().Be(TimeSpan.FromHours(12));
         options.AddVaryHeader.Should().BeFalse();
         options.DefaultUserStreamPattern.Should().Be("u:{0}");
         options.DefaultSessionStreamPattern.Should().Be("s:{0}");
         options.EnableAutoReconnect.Should().BeFalse();
         options.MaxReconnectAttempts.Should().Be(10);
+    }
+
+    [Fact]
+    public void SignedStreamNameExpiration_CanBeSetToNull()
+    {
+        // Arrange
+        var options = new TurboOptions
+        {
+            SignedStreamNameExpiration = null
+        };
+
+        // Assert
+        options.SignedStreamNameExpiration.Should().BeNull();
     }
 }

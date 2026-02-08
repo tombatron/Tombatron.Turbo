@@ -21,7 +21,7 @@ public class TurboServiceCollectionExtensionsTests
 
         options.Should().NotBeNull();
         options.HubPath.Should().Be("/turbo-hub");
-        options.RequireAuthentication.Should().BeTrue();
+        options.UseSignedStreamNames.Should().BeTrue();
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class TurboServiceCollectionExtensionsTests
         services.AddTurbo(options =>
         {
             options.HubPath = "/my-hub";
-            options.RequireAuthentication = false;
+            options.UseSignedStreamNames = false;
             options.MaxReconnectAttempts = 10;
         });
 
@@ -44,7 +44,7 @@ public class TurboServiceCollectionExtensionsTests
 
         options.Should().NotBeNull();
         options.HubPath.Should().Be("/my-hub");
-        options.RequireAuthentication.Should().BeFalse();
+        options.UseSignedStreamNames.Should().BeFalse();
         options.MaxReconnectAttempts.Should().Be(10);
     }
 
