@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Tombatron.Turbo.Middleware;
 
 namespace Tombatron.Turbo;
 
@@ -59,6 +61,12 @@ public static class TurboServiceCollectionExtensions
 
         services.AddSingleton(options);
         services.AddSignalR();
+
+        // Register the result filter for automatic sub-template routing
+        services.Configure<MvcOptions>(mvcOptions =>
+        {
+            mvcOptions.Filters.Add<TurboFrameResultFilter>();
+        });
 
         // ITurbo will be registered in a later milestone when TurboService is implemented
         // services.AddSingleton<ITurbo, TurboService>();

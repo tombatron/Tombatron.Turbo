@@ -1,0 +1,47 @@
+@page
+@model Tombatron.Turbo.Sample.Pages.Cart.IndexModel
+@{
+    ViewData["Title"] = "Shopping Cart";
+}
+
+<h1>Shopping Cart</h1>
+
+<p>This page demonstrates both static and dynamic turbo-frames.</p>
+
+<h2>Cart Summary (Static Frame)</h2>
+<turbo-frame id="cart-summary">
+    <div class="cart-item">
+        <strong>Cart Total:</strong> @Model.CartTotal.ToString("C")
+        <br />
+        <small>@Model.ItemCount items in cart</small>
+    </div>
+</turbo-frame>
+
+<h2>Cart Items (Dynamic Frames with Prefix)</h2>
+<p>Each item below is a separate turbo-frame with a dynamic ID using the <code>item_</code> prefix:</p>
+
+@foreach (var item in Model.Items)
+{
+    <turbo-frame id="item_@item.Id" asp-frame-prefix="item_">
+        <div class="cart-item">
+            <strong>@item.Name</strong>
+            <br />
+            Price: @item.Price.ToString("C") x @item.Quantity = @((item.Price * item.Quantity).ToString("C"))
+            <br />
+            <form method="post" asp-page-handler="RemoveItem" asp-route-itemId="@item.Id" data-turbo-frame="item_@item.Id">
+                <button type="submit" class="btn btn-danger">Remove</button>
+            </form>
+        </div>
+    </turbo-frame>
+}
+
+<h2>Add Item</h2>
+<turbo-frame id="add-item-form">
+    <form method="post" asp-page-handler="AddItem">
+        <input type="text" name="name" placeholder="Item name" required />
+        <input type="number" name="price" placeholder="Price" step="0.01" required />
+        <button type="submit" class="btn">Add Item</button>
+    </form>
+</turbo-frame>
+
+<p><a href="/" class="btn">Back to Home</a></p>

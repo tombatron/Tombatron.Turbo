@@ -1,0 +1,111 @@
+using Microsoft.AspNetCore.Http;
+using Tombatron.Turbo.Middleware;
+
+namespace Tombatron.Turbo;
+
+/// <summary>
+/// Extension methods for accessing Turbo Frame request information from HttpContext.
+/// </summary>
+public static class TurboHttpContextExtensions
+{
+    /// <summary>
+    /// Gets whether the current request is a Turbo Frame request.
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <returns>True if the request contains the Turbo-Frame header.</returns>
+    public static bool IsTurboFrameRequest(this HttpContext context)
+    {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+
+        return context.Items.TryGetValue(TurboFrameMiddleware.IsTurboFrameRequestKey, out var value)
+               && value is true;
+    }
+
+    /// <summary>
+    /// Gets the requested Turbo Frame ID from the current request.
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <returns>The frame ID, or null if this is not a Turbo Frame request.</returns>
+    public static string? GetTurboFrameId(this HttpContext context)
+    {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+
+        if (context.Items.TryGetValue(TurboFrameMiddleware.FrameIdKey, out var value))
+        {
+            return value as string;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Gets the resolved template name for the current Turbo Frame request.
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <returns>The template name, or null if not resolved.</returns>
+    public static string? GetTurboTemplateName(this HttpContext context)
+    {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+
+        if (context.Items.TryGetValue(TurboFrameMiddleware.TemplateNameKey, out var value))
+        {
+            return value as string;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Checks if the current Turbo Frame request matches the specified frame ID.
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <param name="frameId">The frame ID to check against.</param>
+    /// <returns>True if the request is for the specified frame.</returns>
+    public static bool IsTurboFrameRequest(this HttpContext context, string frameId)
+    {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+
+        if (string.IsNullOrEmpty(frameId))
+        {
+            return false;
+        }
+
+        string? requestedFrameId = context.GetTurboFrameId();
+        return string.Equals(requestedFrameId, frameId, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Checks if the current Turbo Frame request matches frames with the specified prefix.
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <param name="prefix">The frame ID prefix to check against.</param>
+    /// <returns>True if the request is for a frame with the specified prefix.</returns>
+    public static bool IsTurboFrameRequestWithPrefix(this HttpContext context, string prefix)
+    {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+
+        if (string.IsNullOrEmpty(prefix))
+        {
+            return false;
+        }
+
+        string? requestedFrameId = context.GetTurboFrameId();
+        return requestedFrameId != null &&
+               requestedFrameId.StartsWith(prefix, StringComparison.Ordinal);
+    }
+}

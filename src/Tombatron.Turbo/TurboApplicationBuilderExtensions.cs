@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Tombatron.Turbo.Middleware;
 
 namespace Tombatron.Turbo;
 
@@ -28,8 +29,7 @@ public static class TurboApplicationBuilderExtensions
             throw new ArgumentNullException(nameof(app));
         }
 
-        // Middleware will be registered in a later milestone
-        // app.UseMiddleware<TurboFrameMiddleware>();
+        app.UseMiddleware<TurboFrameMiddleware>();
 
         return app;
     }

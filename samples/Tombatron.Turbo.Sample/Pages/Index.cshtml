@@ -1,0 +1,29 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<h1>Tombatron.Turbo Sample Application</h1>
+
+<p>
+    This sample demonstrates the Turbo Frame functionality of Tombatron.Turbo.
+</p>
+
+<h2>Static Turbo Frame Example</h2>
+<p>This frame has a static ID and can be targeted directly:</p>
+
+<turbo-frame id="welcome-message">
+    <div class="cart-item">
+        <strong>Welcome!</strong>
+        <p>This content is inside a turbo-frame with id="welcome-message".</p>
+        <p>Current time: @DateTime.Now.ToString("HH:mm:ss")</p>
+        <a href="/?handler=RefreshWelcome" class="btn" data-turbo-frame="welcome-message">
+            Refresh Frame
+        </a>
+    </div>
+</turbo-frame>
+
+<h2>Navigation Between Pages</h2>
+<p>Click the link below to navigate to the cart page. Notice how Turbo handles the navigation:</p>
+<a href="/Cart" class="btn">Go to Cart</a>
