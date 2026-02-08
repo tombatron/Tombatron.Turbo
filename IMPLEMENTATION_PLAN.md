@@ -125,7 +125,7 @@ Tombatron.Turbo/
 ---
 
 ## Milestone 2: Source Generator - Frame Detection
-**Status:** 🔴 Not Started
+**Status:** 🟢 Complete
 
 ### Objectives
 - Implement Roslyn source generator
@@ -134,67 +134,60 @@ Tombatron.Turbo/
 - Generate metadata for runtime lookup
 
 ### Tasks
-- [ ] Set up source generator project structure:
-  - [ ] Reference `Microsoft.CodeAnalysis.CSharp`
-  - [ ] Reference `Microsoft.CodeAnalysis.Analyzers`
-  - [ ] Implement `IIncrementalGenerator`
-- [ ] Implement Razor file discovery:
-  - [ ] `src/Tombatron.Turbo.SourceGenerator/RazorFileProvider.cs`
-  - [ ] Find all `.cshtml` files in project
-  - [ ] Read file contents
-  - [ ] Use pure functions for file parsing
-- [ ] Implement frame detection:
-  - [ ] `src/Tombatron.Turbo.SourceGenerator/FrameParser.cs`
-  - [ ] Parse `<turbo-frame>` tags (pure function)
-  - [ ] Extract `id` attribute
-  - [ ] Extract `asp-frame-prefix` attribute if present
-  - [ ] Detect static vs dynamic IDs
-  - [ ] Return immutable data structures
-- [ ] Implement sub-template generation for static IDs:
-  - [ ] `src/Tombatron.Turbo.SourceGenerator/StaticFrameGenerator.cs`
-  - [ ] Generate `ViewName.frame_id.cshtml` (pure function)
-  - [ ] Extract frame content
-  - [ ] Set `Layout = null`
-- [ ] Implement sub-template generation for dynamic IDs:
-  - [ ] `src/Tombatron.Turbo.SourceGenerator/DynamicFrameGenerator.cs`
-  - [ ] Generate `ViewName.prefix_.cshtml` (pure function)
-  - [ ] Include `@{ var frameId = ViewBag.TurboFrameId; }`
-  - [ ] Use `frameId` in template
-- [ ] Generate runtime metadata:
-  - [ ] `src/Tombatron.Turbo.SourceGenerator/MetadataGenerator.cs`
-  - [ ] Create lookup dictionary: View → Frames (pure function)
-  - [ ] Create lookup dictionary: View → Prefixes
-  - [ ] Generate as C# source file
-- [ ] Write comprehensive unit tests:
-  - [ ] `tests/Tombatron.Turbo.Tests/SourceGenerator/RazorFileProviderTests.cs`
-    - [ ] Test finding cshtml files
-    - [ ] Test with no files
-    - [ ] Test with nested directories
-    - [ ] Test file content reading
-  - [ ] `tests/Tombatron.Turbo.Tests/SourceGenerator/FrameParserTests.cs`
-    - [ ] Test parsing static frame IDs
-    - [ ] Test parsing dynamic frame IDs
-    - [ ] Test parsing with prefix
-    - [ ] Test parsing without prefix
-    - [ ] Test malformed HTML
-    - [ ] Test multiple frames
-    - [ ] Test nested frames
-    - [ ] Test frames with attributes
-  - [ ] `tests/Tombatron.Turbo.Tests/SourceGenerator/StaticFrameGeneratorTests.cs`
-    - [ ] Test sub-template generation
-    - [ ] Test content extraction
-    - [ ] Test layout removal
-    - [ ] Test with various frame contents
-  - [ ] `tests/Tombatron.Turbo.Tests/SourceGenerator/DynamicFrameGeneratorTests.cs`
-    - [ ] Test prefix template generation
-    - [ ] Test ViewBag.TurboFrameId inclusion
-    - [ ] Test with various prefixes
-  - [ ] `tests/Tombatron.Turbo.Tests/SourceGenerator/MetadataGeneratorTests.cs`
-    - [ ] Test metadata dictionary generation
-    - [ ] Test with static frames only
-    - [ ] Test with dynamic frames only
-    - [ ] Test with mixed frames
-    - [ ] Test with no frames
+- [x] Set up source generator project structure:
+  - [x] Reference `Microsoft.CodeAnalysis.CSharp`
+  - [x] Reference `Microsoft.CodeAnalysis.Analyzers`
+  - [x] Implement `IIncrementalGenerator`
+- [x] Implement Razor file discovery:
+  - [x] Via `AdditionalTextsProvider` in generator (no separate RazorFileProvider needed)
+  - [x] Find all `.cshtml` files in project
+  - [x] Read file contents
+  - [x] Use pure functions for file parsing
+- [x] Implement frame detection:
+  - [x] `src/Tombatron.Turbo.SourceGenerator/FrameParser.cs`
+  - [x] Parse `<turbo-frame>` tags (pure function)
+  - [x] Extract `id` attribute
+  - [x] Extract `asp-frame-prefix` attribute if present
+  - [x] Detect static vs dynamic IDs
+  - [x] Return immutable data structures (records)
+- [x] Implement sub-template generation for static IDs:
+  - [x] `src/Tombatron.Turbo.SourceGenerator/TemplateGenerator.cs` (combined static/dynamic)
+  - [x] Generate template content (pure function)
+  - [x] Extract frame content
+  - [x] Set `Layout = null`
+- [x] Implement sub-template generation for dynamic IDs:
+  - [x] `src/Tombatron.Turbo.SourceGenerator/TemplateGenerator.cs` (combined)
+  - [x] Generate template content (pure function)
+  - [x] Include `var turboFrameId = ViewBag.TurboFrameId`
+  - [x] Use `turboFrameId` in template
+- [x] Generate runtime metadata:
+  - [x] `src/Tombatron.Turbo.SourceGenerator/MetadataGenerator.cs`
+  - [x] Create lookup dictionary: FrameId → Template (pure function)
+  - [x] Create lookup dictionary: Prefix → Template
+  - [x] Generate as C# source file with FrozenDictionary
+- [x] Write comprehensive unit tests:
+  - [x] `tests/Tombatron.Turbo.Tests/SourceGenerator/RazorFileInfoTests.cs`
+    - [x] Test model properties and filtering
+  - [x] `tests/Tombatron.Turbo.Tests/SourceGenerator/FrameParserTests.cs`
+    - [x] Test parsing static frame IDs
+    - [x] Test parsing dynamic frame IDs
+    - [x] Test parsing with prefix
+    - [x] Test parsing without prefix
+    - [x] Test malformed HTML
+    - [x] Test multiple frames
+    - [x] Test nested frames
+    - [x] Test frames with attributes
+  - [x] `tests/Tombatron.Turbo.Tests/SourceGenerator/TemplateGeneratorTests.cs`
+    - [x] Test static sub-template generation
+    - [x] Test dynamic sub-template generation
+    - [x] Test layout removal
+    - [x] Test ViewBag.TurboFrameId inclusion
+  - [x] `tests/Tombatron.Turbo.Tests/SourceGenerator/MetadataGeneratorTests.cs`
+    - [x] Test metadata dictionary generation
+    - [x] Test with static frames only
+    - [x] Test with dynamic frames only
+    - [x] Test with mixed frames
+    - [x] Test with no frames
 
 ### Acceptance Criteria
 - ✅ Generator discovers all `.cshtml` files
@@ -1016,12 +1009,12 @@ docs/
 ## Progress Tracking
 
 ### Overall Status
-- **Milestones Completed:** 1 / 9
+- **Milestones Completed:** 2 / 9
 - **Current Phase:** Development
 
 ### Milestone Summary
 1. 🟢 Foundation & Core Infrastructure
-2. ⚪ Source Generator
+2. 🟢 Source Generator
 3. ⚪ Roslyn Analyzer
 4. ⚪ Middleware & Tag Helper
 5. ⚪ Turbo Streams - Server
