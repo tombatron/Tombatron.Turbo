@@ -1,0 +1,68 @@
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Tombatron.Turbo;
+
+/// <summary>
+/// Extension methods for configuring Turbo services in the dependency injection container.
+/// </summary>
+public static class TurboServiceCollectionExtensions
+{
+    /// <summary>
+    /// Adds Turbo services to the specified <see cref="IServiceCollection"/>.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when services is null.</exception>
+    /// <example>
+    /// <code>
+    /// builder.Services.AddTurbo();
+    /// </code>
+    /// </example>
+    public static IServiceCollection AddTurbo(this IServiceCollection services)
+    {
+        return services.AddTurbo(_ => { });
+    }
+
+    /// <summary>
+    /// Adds Turbo services to the specified <see cref="IServiceCollection"/> with custom configuration.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
+    /// <param name="configure">An action to configure the <see cref="TurboOptions"/>.</param>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when services or configure is null.</exception>
+    /// <example>
+    /// <code>
+    /// builder.Services.AddTurbo(options =>
+    /// {
+    ///     options.HubPath = "/my-turbo-hub";
+    ///     options.RequireAuthentication = false;
+    /// });
+    /// </code>
+    /// </example>
+    public static IServiceCollection AddTurbo(
+        this IServiceCollection services,
+        Action<TurboOptions> configure)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        if (configure == null)
+        {
+            throw new ArgumentNullException(nameof(configure));
+        }
+
+        TurboOptions options = new();
+        configure(options);
+        options.Validate();
+
+        services.AddSingleton(options);
+        services.AddSignalR();
+
+        // ITurbo will be registered in a later milestone when TurboService is implemented
+        // services.AddSingleton<ITurbo, TurboService>();
+
+        return services;
+    }
+}
