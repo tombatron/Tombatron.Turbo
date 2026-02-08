@@ -1,0 +1,244 @@
+using FluentAssertions;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Tombatron.Turbo.Streams;
+using Xunit;
+
+namespace Tombatron.Turbo.Tests.Streams;
+
+/// <summary>
+/// Tests for the TurboService class.
+/// </summary>
+public class TurboServiceTests
+{
+    private readonly Mock<IHubContext<TurboHub>> _mockHubContext;
+    private readonly Mock<IHubClients> _mockClients;
+    private readonly Mock<IClientProxy> _mockClientProxy;
+    private readonly Mock<ILogger<TurboService>> _mockLogger;
+    private readonly TurboService _service;
+
+    public TurboServiceTests()
+    {
+        _mockHubContext = new Mock<IHubContext<TurboHub>>();
+        _mockClients = new Mock<IHubClients>();
+        _mockClientProxy = new Mock<IClientProxy>();
+        _mockLogger = new Mock<ILogger<TurboService>>();
+
+        _mockHubContext.Setup(h => h.Clients).Returns(_mockClients.Object);
+        _mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(_mockClientProxy.Object);
+        _mockClients.Setup(c => c.All).Returns(_mockClientProxy.Object);
+
+        _service = new TurboService(_mockHubContext.Object, _mockLogger.Object);
+    }
+
+    [Fact]
+    public async Task Stream_WithValidStreamName_BroadcastsToGroup()
+    {
+        // Arrange
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.Stream("test-stream", builder => builder.Append("target", "<div>Content</div>"));
+
+        // Assert
+        _mockClients.Verify(c => c.Group("test-stream"), Times.Once);
+        capturedHtml.Should().Contain("action=\"append\"");
+        capturedHtml.Should().Contain("target=\"target\"");
+        capturedHtml.Should().Contain("<div>Content</div>");
+    }
+
+    [Fact]
+    public async Task Stream_WithNullStreamName_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            _service.Stream((string)null!, builder => builder.Append("target", "<div>Content</div>")));
+    }
+
+    [Fact]
+    public async Task Stream_WithEmptyStreamName_ThrowsArgumentException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.Stream("", builder => builder.Append("target", "<div>Content</div>")));
+    }
+
+    [Fact]
+    public async Task Stream_WithWhitespaceStreamName_ThrowsArgumentException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.Stream("   ", builder => builder.Append("target", "<div>Content</div>")));
+    }
+
+    [Fact]
+    public async Task Stream_WithNullBuilder_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            _service.Stream("test-stream", null!));
+    }
+
+    [Fact]
+    public async Task Stream_WithNoActions_DoesNotBroadcast()
+    {
+        // Act
+        await _service.Stream("test-stream", _ => { });
+
+        // Assert
+        _mockClientProxy.Verify(
+            c => c.SendCoreAsync(It.IsAny<string>(), It.IsAny<object?[]>(), default),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Stream_WithMultipleStreamNames_BroadcastsToAllGroups()
+    {
+        // Arrange
+        var streamNames = new[] { "stream-1", "stream-2", "stream-3" };
+
+        // Act
+        await _service.Stream(streamNames, builder => builder.Append("target", "<div>Content</div>"));
+
+        // Assert
+        foreach (string streamName in streamNames)
+        {
+            _mockClients.Verify(c => c.Group(streamName), Times.Once);
+        }
+    }
+
+    [Fact]
+    public async Task Stream_WithNullStreamNames_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            _service.Stream((IEnumerable<string>)null!, builder => builder.Append("target", "<div>Content</div>")));
+    }
+
+    [Fact]
+    public async Task Stream_WithEmptyStreamNames_DoesNotBroadcast()
+    {
+        // Arrange
+        var streamNames = Array.Empty<string>();
+
+        // Act
+        await _service.Stream(streamNames, builder => builder.Append("target", "<div>Content</div>"));
+
+        // Assert
+        _mockClientProxy.Verify(
+            c => c.SendCoreAsync(It.IsAny<string>(), It.IsAny<object?[]>(), default),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Stream_WithNullInStreamNames_ThrowsArgumentException()
+    {
+        // Arrange
+        var streamNames = new[] { "stream-1", null!, "stream-2" };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.Stream(streamNames, builder => builder.Append("target", "<div>Content</div>")));
+    }
+
+    [Fact]
+    public async Task Stream_WithEmptyStringInStreamNames_ThrowsArgumentException()
+    {
+        // Arrange
+        var streamNames = new[] { "stream-1", "", "stream-2" };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.Stream(streamNames, builder => builder.Append("target", "<div>Content</div>")));
+    }
+
+    [Fact]
+    public async Task Broadcast_SendsToAllClients()
+    {
+        // Arrange
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.Broadcast(builder => builder.Update("announcement", "<p>Hello everyone!</p>"));
+
+        // Assert
+        _mockClients.Verify(c => c.All, Times.Once);
+        capturedHtml.Should().Contain("action=\"update\"");
+        capturedHtml.Should().Contain("<p>Hello everyone!</p>");
+    }
+
+    [Fact]
+    public async Task Broadcast_WithNullBuilder_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() => _service.Broadcast(null!));
+    }
+
+    [Fact]
+    public async Task Broadcast_WithNoActions_DoesNotBroadcast()
+    {
+        // Act
+        await _service.Broadcast(_ => { });
+
+        // Assert
+        _mockClientProxy.Verify(
+            c => c.SendCoreAsync(It.IsAny<string>(), It.IsAny<object?[]>(), default),
+            Times.Never);
+    }
+
+    [Fact]
+    public void Constructor_WithNullHubContext_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new TurboService(null!, _mockLogger.Object));
+    }
+
+    [Fact]
+    public void Constructor_WithNullLogger_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new TurboService(_mockHubContext.Object, null!));
+    }
+
+    [Fact]
+    public async Task Stream_WithMultipleActions_BuildsAllActions()
+    {
+        // Arrange
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.Stream("test-stream", builder =>
+        {
+            builder.Append("list", "<li>Item 1</li>");
+            builder.Append("list", "<li>Item 2</li>");
+            builder.Update("counter", "<span>2</span>");
+        });
+
+        // Assert
+        capturedHtml.Should().Contain("<li>Item 1</li>");
+        capturedHtml.Should().Contain("<li>Item 2</li>");
+        capturedHtml.Should().Contain("<span>2</span>");
+    }
+}

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Tombatron.Turbo.Middleware;
+using Tombatron.Turbo.Streams;
 
 namespace Tombatron.Turbo;
 
@@ -68,8 +70,9 @@ public static class TurboServiceCollectionExtensions
             mvcOptions.Filters.Add<TurboFrameResultFilter>();
         });
 
-        // ITurbo will be registered in a later milestone when TurboService is implemented
-        // services.AddSingleton<ITurbo, TurboService>();
+        // Register Turbo Streams services
+        services.TryAddSingleton<ITurboStreamAuthorization, DefaultTurboStreamAuthorization>();
+        services.AddSingleton<ITurbo, TurboService>();
 
         return services;
     }
