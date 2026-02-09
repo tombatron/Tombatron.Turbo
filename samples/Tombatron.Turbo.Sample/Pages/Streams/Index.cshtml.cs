@@ -36,7 +36,7 @@ public class IndexModel : PageModel
         });
 
         // Return 204 No Content to tell Turbo not to navigate
-        return NoContent();
+        return new NoContentResult();
     }
 
     /// <summary>
@@ -55,7 +55,7 @@ public class IndexModel : PageModel
         });
 
         // Return 204 No Content to tell Turbo not to navigate
-        return NoContent();
+        return new NoContentResult();
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public class IndexModel : PageModel
         });
 
         // Return 204 No Content to tell Turbo not to navigate
-        return NoContent();
+        return new NoContentResult();
     }
 
     /// <summary>
@@ -91,6 +91,6 @@ public class IndexModel : PageModel
         });
 
         // Return 204 No Content to tell Turbo not to navigate
-        return NoContent();
+        return new NoContentResult();
     }
 }
