@@ -430,6 +430,11 @@ class TurboStreamSourceSignalR extends HTMLElement {
             return;
         }
 
+        // Ensure hubUrl is set (may not be if attributeChangedCallback fires for 'stream' before 'hub-url')
+        if (!this._hubUrl) {
+            this._hubUrl = this.getAttribute('hub-url') || '/turbo-hub';
+        }
+
         try {
             const success = await connectionManager.subscribe(this._streamName, this._hubUrl);
             this._subscribed = success;
