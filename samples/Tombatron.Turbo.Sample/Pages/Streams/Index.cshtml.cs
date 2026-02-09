@@ -35,8 +35,8 @@ public class IndexModel : PageModel
                 $"<div class=\"stream-notification\"><strong>{timestamp}</strong>: {System.Net.WebUtility.HtmlEncode(message)}</div>");
         });
 
-        // Return a minimal response for the form
-        return Content("");
+        // Return 204 No Content to tell Turbo not to navigate
+        return NoContent();
     }
 
     /// <summary>
@@ -54,7 +54,8 @@ public class IndexModel : PageModel
             builder.Update("counter-value", $"<strong>{counter}</strong>");
         });
 
-        return Content("");
+        // Return 204 No Content to tell Turbo not to navigate
+        return NoContent();
     }
 
     /// <summary>
@@ -75,7 +76,8 @@ public class IndexModel : PageModel
                 $"<div class=\"stream-notification\"><strong>[{timestamp}] Broadcast:</strong> {System.Net.WebUtility.HtmlEncode(message)}</div>");
         });
 
-        return Content("");
+        // Return 204 No Content to tell Turbo not to navigate
+        return NoContent();
     }
 
     /// <summary>
@@ -88,6 +90,7 @@ public class IndexModel : PageModel
             builder.Update("notification-list", "");
         });
 
-        return Content("");
+        // Return 204 No Content to tell Turbo not to navigate
+        return NoContent();
     }
 }
