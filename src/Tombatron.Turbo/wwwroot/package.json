@@ -1,34 +1,65 @@
 {
   "name": "@tombatron/turbo-signalr",
   "version": "1.0.0",
-  "description": "SignalR adapter for Hotwire Turbo Streams",
+  "description": "SignalR adapter for Hotwire Turbo Streams - enables real-time DOM updates via ASP.NET Core SignalR",
   "type": "module",
   "main": "dist/turbo-signalr.js",
   "module": "dist/turbo-signalr.esm.js",
+  "types": "dist/turbo-signalr.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/turbo-signalr.esm.js",
+      "require": "./dist/turbo-signalr.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
   "scripts": {
     "build": "rollup -c",
     "build:watch": "rollup -c -w",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint src/**/*.js tests/**/*.js"
+    "lint": "eslint src/**/*.js tests/**/*.js",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "turbo",
     "hotwire",
     "signalr",
-    "aspnetcore"
+    "aspnetcore",
+    "realtime",
+    "websocket",
+    "turbo-streams"
   ],
   "author": "tombatron",
   "license": "MIT",
-  "dependencies": {
-    "@microsoft/signalr": "^8.0.0"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tombatron/Tombatron.Turbo.git",
+    "directory": "src/Tombatron.Turbo/wwwroot"
+  },
+  "homepage": "https://github.com/tombatron/Tombatron.Turbo#readme",
+  "bugs": {
+    "url": "https://github.com/tombatron/Tombatron.Turbo/issues"
+  },
+  "peerDependencies": {
+    "@microsoft/signalr": ">=6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@microsoft/signalr": {
+      "optional": false
+    }
   },
   "devDependencies": {
+    "@microsoft/signalr": "^8.0.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
     "eslint": "^8.57.0",
+    "jsdom": "^24.0.0",
     "rollup": "^4.9.0",
-    "vitest": "^1.2.0",
-    "jsdom": "^24.0.0"
+    "vitest": "^1.2.0"
   }
 }

@@ -140,8 +140,11 @@ yarn-debug.log
 yarn-error.log
 
 # TypeScript
-*.js.map
 *.tsbuildinfo
+
+# JS source maps (except for bundled dist files)
+*.js.map
+!src/Tombatron.Turbo/wwwroot/dist/*.map
 
 # Windows
 Thumbs.db

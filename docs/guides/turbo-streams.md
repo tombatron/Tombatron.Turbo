@@ -36,14 +36,16 @@ Add to your layout:
 <!-- Turbo.js from CDN -->
 <script type="module" src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.min.js"></script>
 
-<!-- SignalR from CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8/dist/browser/signalr.min.js"></script>
+<!-- Turbo SignalR adapter (bundled with SignalR) -->
+<script src="_content/Tombatron.Turbo/dist/turbo-signalr.bundled.min.js"></script>
+```
 
-<!-- Turbo SignalR adapter (inline or from your bundle) -->
-<script>
-// Custom element for SignalR stream connections
-// See samples for full implementation
-</script>
+**Alternative: Using npm or CDN separately**
+
+```html
+<!-- Option 2: From npm/CDN (requires separate SignalR) -->
+<script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8/dist/browser/signalr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tombatron/turbo-signalr/dist/turbo-signalr.js"></script>
 ```
 
 ### 4. Subscribe to Streams

@@ -1,0 +1,20 @@
+# Test files
+tests/
+*.test.js
+vitest.config.js
+
+# Config files
+.eslintrc.json
+rollup.config.js
+
+# Build artifacts that npm doesn't need
+*.bundled.*
+*.map
+
+# Editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

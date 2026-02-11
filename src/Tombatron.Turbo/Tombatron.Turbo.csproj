@@ -1,10 +1,16 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- Enable Razor class library features for static web assets -->
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+
+    <!-- Static web assets are served from wwwroot automatically -->
+    <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
 
     <!-- NuGet Package Metadata -->
     <PackageId>Tombatron.Turbo</PackageId>
@@ -32,6 +38,25 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Tombatron.Turbo.Tests" />
+  </ItemGroup>
+
+  <!-- Exclude npm development files from the package -->
+  <ItemGroup>
+    <Content Remove="wwwroot\node_modules\**" />
+    <Content Remove="wwwroot\tests\**" />
+    <Content Remove="wwwroot\src\**" />
+    <Content Remove="wwwroot\package.json" />
+    <Content Remove="wwwroot\package-lock.json" />
+    <Content Remove="wwwroot\rollup.config.js" />
+    <Content Remove="wwwroot\vitest.config.js" />
+    <Content Remove="wwwroot\.eslintrc.json" />
+    <Content Remove="wwwroot\.npmignore" />
+    <Content Remove="wwwroot\README.md" />
+    <!-- Exclude non-bundled versions (npm only) -->
+    <Content Remove="wwwroot\dist\turbo-signalr.js" />
+    <Content Remove="wwwroot\dist\turbo-signalr.js.map" />
+    <Content Remove="wwwroot\dist\turbo-signalr.esm.js" />
+    <Content Remove="wwwroot\dist\turbo-signalr.esm.js.map" />
   </ItemGroup>
 
 </Project>

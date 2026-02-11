@@ -137,6 +137,14 @@ public class CartController : Controller
 }
 ```
 
+### Include the Client Script
+
+```html
+<!-- In your layout: Turbo.js + SignalR adapter -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.min.js"></script>
+<script src="_content/Tombatron.Turbo/dist/turbo-signalr.bundled.min.js"></script>
+```
+
 ### Subscribe to Streams in Your View
 
 ```html
