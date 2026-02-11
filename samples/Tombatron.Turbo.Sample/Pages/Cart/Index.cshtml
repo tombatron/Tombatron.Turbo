@@ -15,7 +15,7 @@
         <div id="cart-items">
             @foreach (var item in Model.Items)
             {
-                <turbo-frame id="item_@item.Id" asp-frame-prefix="item_">
+                <turbo-frame id="item_@item.Id">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <strong>@item.Name</strong>

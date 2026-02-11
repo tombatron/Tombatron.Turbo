@@ -31,23 +31,6 @@ public class TurboFrameTagHelperTests
     }
 
     [Fact]
-    public void Process_RemovesAspFramePrefixAttribute()
-    {
-        // Arrange
-        var tagHelper = CreateTagHelper();
-        tagHelper.FramePrefix = "item_";
-        var context = CreateTagHelperContext();
-        var output = CreateTagHelperOutput("turbo-frame");
-        output.Attributes.Add("asp-frame-prefix", "item_");
-
-        // Act
-        tagHelper.Process(context, output);
-
-        // Assert
-        output.Attributes.Should().NotContain(a => a.Name == "asp-frame-prefix");
-    }
-
-    [Fact]
     public void Process_WithSrc_AddsSrcAttribute()
     {
         // Arrange
@@ -179,7 +162,6 @@ public class TurboFrameTagHelperTests
     {
         // Arrange
         var tagHelper = CreateTagHelper();
-        tagHelper.FramePrefix = "item_";
         tagHelper.Src = "/products/list";
         tagHelper.Loading = "lazy";
         tagHelper.Disabled = true;
@@ -187,14 +169,12 @@ public class TurboFrameTagHelperTests
         tagHelper.Autoscroll = true;
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
-        output.Attributes.Add("asp-frame-prefix", "item_");
         output.Attributes.Add("id", "item_123");
 
         // Act
         tagHelper.Process(context, output);
 
         // Assert
-        output.Attributes.Should().NotContain(a => a.Name == "asp-frame-prefix");
         output.Attributes.Should().Contain(a => a.Name == "id");
         output.Attributes.Should().Contain(a => a.Name == "src");
         output.Attributes.Should().Contain(a => a.Name == "loading");

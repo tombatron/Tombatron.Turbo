@@ -7,8 +7,6 @@ namespace Tombatron.Turbo.TagHelpers;
 /// </summary>
 /// <remarks>
 /// This tag helper renders a standard HTML <c>&lt;turbo-frame&gt;</c> element.
-/// The <c>asp-frame-prefix</c> attribute is used for compile-time validation only
-/// and is stripped from the rendered output.
 ///
 /// For turbo-frame requests, create a page handler that checks for the Turbo-Frame
 /// header and returns a partial view:
@@ -38,14 +36,6 @@ public class TurboFrameTagHelper : TagHelper
     /// </summary>
     [HtmlAttributeName("id")]
     public string? Id { get; set; }
-
-    /// <summary>
-    /// The frame prefix used for dynamic ID validation.
-    /// This attribute is consumed by the Roslyn analyzer and source generator,
-    /// and is stripped from the rendered output.
-    /// </summary>
-    [HtmlAttributeName("asp-frame-prefix")]
-    public string? FramePrefix { get; set; }
 
     /// <summary>
     /// The URL to load content from lazily or when refreshed.
@@ -99,9 +89,6 @@ public class TurboFrameTagHelper : TagHelper
 
         // Keep the tag name as turbo-frame
         output.TagName = "turbo-frame";
-
-        // Remove the asp-frame-prefix attribute from output (it's only for compile-time)
-        output.Attributes.RemoveAll("asp-frame-prefix");
 
         // Get the frame id from context attributes if not set via property binding
         var frameId = Id ?? context.AllAttributes["id"]?.Value?.ToString();
