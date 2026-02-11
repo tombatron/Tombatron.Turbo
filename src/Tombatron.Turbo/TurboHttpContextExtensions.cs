@@ -45,26 +45,6 @@ public static class TurboHttpContextExtensions
     }
 
     /// <summary>
-    /// Gets the resolved template name for the current Turbo Frame request.
-    /// </summary>
-    /// <param name="context">The HTTP context.</param>
-    /// <returns>The template name, or null if not resolved.</returns>
-    public static string? GetTurboTemplateName(this HttpContext context)
-    {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
-
-        if (context.Items.TryGetValue(TurboFrameMiddleware.TemplateNameKey, out var value))
-        {
-            return value as string;
-        }
-
-        return null;
-    }
-
-    /// <summary>
     /// Checks if the current Turbo Frame request matches the specified frame ID.
     /// </summary>
     /// <param name="context">The HTTP context.</param>

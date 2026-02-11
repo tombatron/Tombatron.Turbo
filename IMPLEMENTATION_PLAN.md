@@ -1,9 +1,13 @@
 # Tombatron.Turbo - Implementation Plan
 
 ## Project Overview
-Hotwire Turbo for ASP.NET Core with compile-time frame optimization and SignalR-powered real-time streams.
+Hotwire Turbo for ASP.NET Core with SignalR-powered real-time streams.
 
-**Core Rule:** Static frame IDs only, unless you provide a prefix. Dynamic IDs without prefix = compile error.
+**Architecture:** Manual partials approach - check for `Turbo-Frame` header in handlers and return
+partial views explicitly. Simple, predictable, and gives full control to developers.
+
+**Compile-Time Validation:** Static frame IDs only, unless you provide a prefix.
+Dynamic IDs without prefix = compile error.
 
 ## Coding Standards
 
@@ -311,90 +315,79 @@ tests/Tombatron.Turbo.Tests/Analyzers/
 ---
 
 ## Milestone 4: Middleware & Tag Helper
-**Status:** 🟢 Complete
+**Status:** 🟢 Complete (Simplified)
 
 ### Objectives
-- Implement turbo-frame tag helper
-- Implement middleware for frame routing
-- Route requests to correct sub-templates
-- Return 422 for missing frames
+- Implement turbo-frame tag helper (simple passthrough)
+- Implement middleware for header detection
+- Use manual partials approach (like Turbo-Flask)
+
+### Architecture Decision
+**Manual Partials Approach**: Instead of automatic frame filtering/routing, developers check for
+the `Turbo-Frame` header in their handlers and return partials explicitly. This is simpler,
+more predictable, and gives full control to the developer.
+
+```csharp
+public IActionResult OnGetRefresh()
+{
+    if (Request.Headers.ContainsKey("Turbo-Frame"))
+    {
+        return Partial("_MyFrame", Model);
+    }
+    return RedirectToPage();
+}
+```
 
 ### Tasks
 - [x] Implement `<turbo-frame>` tag helper:
   - [x] `src/Tombatron.Turbo/TagHelpers/TurboFrameTagHelper.cs`
   - [x] Render standard `<turbo-frame>` element
-  - [x] Support `id` attribute
-  - [x] Support `asp-frame-prefix` attribute
+  - [x] Support `id`, `src`, `loading`, `disabled`, `target`, `autoscroll` attributes
+  - [x] Support `asp-frame-prefix` attribute (stripped from output, used for compile-time only)
   - [x] Pass through other attributes
-  - [x] Use pure functions for attribute processing
 - [x] Implement middleware:
   - [x] `src/Tombatron.Turbo/Middleware/TurboFrameMiddleware.cs`
   - [x] Detect `Turbo-Frame` request header
-  - [x] Parse requested frame ID (pure function)
-  - [x] Check for exact match in metadata
-  - [x] Check for prefix match in metadata
-  - [x] Route to appropriate sub-template
-  - [x] Set `ViewBag.TurboFrameId` for prefix matches
-  - [x] Return 422 if no match found
-- [x] Implement response handling:
+  - [x] Store frame ID in `HttpContext.Items`
   - [x] Add `Vary: Turbo-Frame` header
-  - [x] Set appropriate content type
-  - [x] Handle both Razor Pages and MVC
-- [x] Update `UseTurbo()` extension:
-  - [x] `src/Tombatron.Turbo/TurboApplicationBuilderExtensions.cs`
-  - [x] Register middleware
-  - [x] Validate configuration
+- [x] Implement helper extensions:
+  - [x] `src/Tombatron.Turbo/TurboHttpContextExtensions.cs`
+  - [x] `IsTurboFrameRequest()` - check if turbo-frame request
+  - [x] `GetTurboFrameId()` - get the requested frame ID
+  - [x] `IsTurboFrameRequest(frameId)` - check for specific frame
+  - [x] `IsTurboFrameRequestWithPrefix(prefix)` - check for dynamic frames
 - [x] Write comprehensive unit tests:
   - [x] `tests/Tombatron.Turbo.Tests/TagHelpers/TurboFrameTagHelperTests.cs`
-    - [x] Test rendering with static ID
-    - [x] Test rendering with dynamic ID and prefix
-    - [x] Test attribute pass-through
-    - [x] Test various attribute combinations
   - [x] `tests/Tombatron.Turbo.Tests/Middleware/TurboFrameMiddlewareTests.cs`
-    - [x] Test header detection
-    - [x] Test frame ID parsing
-    - [x] Test exact match routing
-    - [x] Test prefix match routing
-    - [x] Test ViewBag.TurboFrameId is set
-    - [x] Test 422 response for missing frames
-    - [x] Test Vary header is added
-    - [x] Test without Turbo-Frame header (passthrough)
   - [x] `tests/Tombatron.Turbo.Tests/TurboHttpContextExtensionsTests.cs`
-    - [x] Test IsTurboFrameRequest extensions
-    - [x] Test GetTurboFrameId extensions
-    - [x] Test prefix matching extensions
-- [x] Create sample application:
-  - [x] `samples/Tombatron.Turbo.Sample/Pages/Cart/Index.cshtml`
-  - [x] Static frames example
-  - [x] Dynamic frames with prefix example
-  - [x] Navigation between frames
+- [x] Create sample application with manual partials:
+  - [x] `samples/Tombatron.Turbo.Sample/Pages/Index.cshtml`
+  - [x] `samples/Tombatron.Turbo.Sample/Pages/Shared/_WelcomeMessage.cshtml`
+  - [x] Handler returns partial for turbo-frame requests
 
 ### Notes
-- Added `TurboFrameResultFilter` for automatic sub-template routing in MVC/Razor Pages
-- Added `TurboHttpContextExtensions` for easy access to turbo-frame request info in views/controllers
-- Integration tests deferred to Milestone 8 (Polish & Testing) for end-to-end testing with full infrastructure
+- Simplified from automatic sub-template routing to manual partials approach
+- Removed `TurboFrameResultFilter` - not needed with manual approach
+- Removed automatic frame filtering from tag helper
+- This matches how Turbo-Flask and similar libraries work
 
 ### Acceptance Criteria
-- ✅ Tag helper renders correct HTML
-- ✅ Middleware detects Turbo-Frame header
-- ✅ Static frames route to correct template
-- ✅ Dynamic frames with prefix route correctly
-- ✅ ViewBag.TurboFrameId is set for dynamic frames
-- ✅ Missing frames return 422
-- ✅ Full page renders without Turbo-Frame header
-- ✅ Sample app demonstrates all features
-- ✅ All unit tests pass (177 tests, up from 121)
+- ✅ Tag helper renders correct HTML with all attributes
+- ✅ Middleware detects Turbo-Frame header and stores in HttpContext.Items
+- ✅ Helper extensions work correctly
+- ✅ Vary header is added to responses
+- ✅ Sample app demonstrates manual partials pattern
+- ✅ All unit tests pass (293 tests)
 
-### Files Created
+### Files
 ```
 src/Tombatron.Turbo/
 ├── TagHelpers/
 │   └── TurboFrameTagHelper.cs
 ├── Middleware/
-│   ├── TurboFrameMiddleware.cs
-│   └── TurboFrameResultFilter.cs
+│   └── TurboFrameMiddleware.cs
 ├── TurboHttpContextExtensions.cs
-└── TurboApplicationBuilderExtensions.cs (updated)
+└── TurboApplicationBuilderExtensions.cs
 
 tests/Tombatron.Turbo.Tests/
 ├── TagHelpers/
@@ -405,11 +398,11 @@ tests/Tombatron.Turbo.Tests/
 
 samples/Tombatron.Turbo.Sample/
 ├── Pages/
-│   ├── _ViewImports.cshtml
-│   ├── Shared/
-│   │   └── _Layout.cshtml
 │   ├── Index.cshtml
 │   ├── Index.cshtml.cs
+│   ├── Shared/
+│   │   ├── _Layout.cshtml
+│   │   └── _WelcomeMessage.cshtml
 │   └── Cart/
 │       ├── Index.cshtml
 │       └── Index.cshtml.cs
@@ -804,20 +797,16 @@ samples/
 **Status:** 🔴 Not Started
 
 ### Objectives
-- Source generator sub-template routing optimization (deferred from Milestone 4)
 - Performance optimization
 - Comprehensive testing
 - Security review
 - Error handling improvements
 
+### Notes
+Source generator sub-template routing was removed in favor of manual partials approach.
+The source generator now only provides compile-time validation of frame IDs and prefixes.
+
 ### Tasks
-- [ ] Source generator sub-template routing optimization:
-  - [ ] Wire up generated TurboFrameMetadata to middleware
-  - [ ] Fix AdditionalFiles registration for .cshtml files
-  - [ ] Generate actual sub-template Razor files (not just metadata)
-  - [ ] Implement view location expander for sub-templates
-  - [ ] Test automatic sub-template routing end-to-end
-  - [ ] Benchmark sub-template vs full-page response performance
 - [ ] Performance optimization:
   - [ ] `tests/Tombatron.Turbo.Benchmarks/` - BenchmarkDotNet project
   - [ ] Benchmark frame routing performance

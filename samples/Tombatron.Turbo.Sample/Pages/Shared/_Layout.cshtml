@@ -706,7 +706,9 @@
             }
         }
 
-        customElements.define('turbo-stream-source-signalr', TurboStreamSourceSignalR);
+        if (!customElements.get('turbo-stream-source-signalr')) {
+            customElements.define('turbo-stream-source-signalr', TurboStreamSourceSignalR);
+        }
     })();
     </script>
 </body>

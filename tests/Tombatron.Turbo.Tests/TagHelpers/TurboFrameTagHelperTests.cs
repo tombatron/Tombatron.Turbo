@@ -10,11 +10,16 @@ namespace Tombatron.Turbo.Tests.TagHelpers;
 /// </summary>
 public class TurboFrameTagHelperTests
 {
+    private static TurboFrameTagHelper CreateTagHelper()
+    {
+        return new TurboFrameTagHelper();
+    }
+
     [Fact]
     public void Process_SetsTagNameToTurboFrame()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper();
+        var tagHelper = CreateTagHelper();
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
 
@@ -29,10 +34,8 @@ public class TurboFrameTagHelperTests
     public void Process_RemovesAspFramePrefixAttribute()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper
-        {
-            FramePrefix = "item_"
-        };
+        var tagHelper = CreateTagHelper();
+        tagHelper.FramePrefix = "item_";
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
         output.Attributes.Add("asp-frame-prefix", "item_");
@@ -48,10 +51,8 @@ public class TurboFrameTagHelperTests
     public void Process_WithSrc_AddsSrcAttribute()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper
-        {
-            Src = "/products/123"
-        };
+        var tagHelper = CreateTagHelper();
+        tagHelper.Src = "/products/123";
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
 
@@ -66,7 +67,7 @@ public class TurboFrameTagHelperTests
     public void Process_WithoutSrc_DoesNotAddSrcAttribute()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper();
+        var tagHelper = CreateTagHelper();
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
 
@@ -81,10 +82,8 @@ public class TurboFrameTagHelperTests
     public void Process_WithLoading_AddsLoadingAttribute()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper
-        {
-            Loading = "lazy"
-        };
+        var tagHelper = CreateTagHelper();
+        tagHelper.Loading = "lazy";
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
 
@@ -99,10 +98,8 @@ public class TurboFrameTagHelperTests
     public void Process_WithDisabled_AddsDisabledAttribute()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper
-        {
-            Disabled = true
-        };
+        var tagHelper = CreateTagHelper();
+        tagHelper.Disabled = true;
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
 
@@ -117,10 +114,8 @@ public class TurboFrameTagHelperTests
     public void Process_WithDisabledFalse_DoesNotAddDisabledAttribute()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper
-        {
-            Disabled = false
-        };
+        var tagHelper = CreateTagHelper();
+        tagHelper.Disabled = false;
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
 
@@ -135,10 +130,8 @@ public class TurboFrameTagHelperTests
     public void Process_WithTarget_AddsTargetAttribute()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper
-        {
-            Target = "_top"
-        };
+        var tagHelper = CreateTagHelper();
+        tagHelper.Target = "_top";
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
 
@@ -153,10 +146,8 @@ public class TurboFrameTagHelperTests
     public void Process_WithAutoscroll_AddsAutoscrollAttribute()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper
-        {
-            Autoscroll = true
-        };
+        var tagHelper = CreateTagHelper();
+        tagHelper.Autoscroll = true;
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
 
@@ -171,10 +162,8 @@ public class TurboFrameTagHelperTests
     public void Process_WithAutoscrollFalse_DoesNotAddAutoscrollAttribute()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper
-        {
-            Autoscroll = false
-        };
+        var tagHelper = CreateTagHelper();
+        tagHelper.Autoscroll = false;
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
 
@@ -189,15 +178,13 @@ public class TurboFrameTagHelperTests
     public void Process_WithAllAttributes_SetsAllAttributes()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper
-        {
-            FramePrefix = "item_",
-            Src = "/products/list",
-            Loading = "lazy",
-            Disabled = true,
-            Target = "_top",
-            Autoscroll = true
-        };
+        var tagHelper = CreateTagHelper();
+        tagHelper.FramePrefix = "item_";
+        tagHelper.Src = "/products/list";
+        tagHelper.Loading = "lazy";
+        tagHelper.Disabled = true;
+        tagHelper.Target = "_top";
+        tagHelper.Autoscroll = true;
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
         output.Attributes.Add("asp-frame-prefix", "item_");
@@ -220,7 +207,7 @@ public class TurboFrameTagHelperTests
     public void Process_PreservesExistingAttributes()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper();
+        var tagHelper = CreateTagHelper();
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
         output.Attributes.Add("id", "cart-items");
@@ -240,7 +227,7 @@ public class TurboFrameTagHelperTests
     public void Process_WithNullContext_ThrowsArgumentNullException()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper();
+        var tagHelper = CreateTagHelper();
         var output = CreateTagHelperOutput("turbo-frame");
 
         // Act & Assert
@@ -251,7 +238,7 @@ public class TurboFrameTagHelperTests
     public void Process_WithNullOutput_ThrowsArgumentNullException()
     {
         // Arrange
-        var tagHelper = new TurboFrameTagHelper();
+        var tagHelper = CreateTagHelper();
         var context = CreateTagHelperContext();
 
         // Act & Assert

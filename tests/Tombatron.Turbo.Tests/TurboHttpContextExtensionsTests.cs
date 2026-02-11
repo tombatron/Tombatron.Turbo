@@ -99,43 +99,6 @@ public class TurboHttpContextExtensionsTests
     }
 
     [Fact]
-    public void GetTurboTemplateName_WhenSet_ReturnsTemplateName()
-    {
-        // Arrange
-        var context = new DefaultHttpContext();
-        context.Items[TurboFrameMiddleware.TemplateNameKey] = "Cart_Frame_cartitems";
-
-        // Act
-        string? result = context.GetTurboTemplateName();
-
-        // Assert
-        result.Should().Be("Cart_Frame_cartitems");
-    }
-
-    [Fact]
-    public void GetTurboTemplateName_WhenNotSet_ReturnsNull()
-    {
-        // Arrange
-        var context = new DefaultHttpContext();
-
-        // Act
-        string? result = context.GetTurboTemplateName();
-
-        // Assert
-        result.Should().BeNull();
-    }
-
-    [Fact]
-    public void GetTurboTemplateName_WithNullContext_ThrowsArgumentNullException()
-    {
-        // Arrange
-        HttpContext? context = null;
-
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => context!.GetTurboTemplateName());
-    }
-
-    [Fact]
     public void IsTurboFrameRequest_WithMatchingFrameId_ReturnsTrue()
     {
         // Arrange

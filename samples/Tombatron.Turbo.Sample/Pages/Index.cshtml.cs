@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Tombatron.Turbo.Middleware;
 
 namespace Tombatron.Turbo.Sample.Pages;
 
@@ -11,8 +12,13 @@ public class IndexModel : PageModel
 
     public IActionResult OnGetRefreshWelcome()
     {
-        // This handler is called when the "Refresh Frame" button is clicked
-        // Turbo will only update the welcome-message frame
-        return Page();
+        // For Turbo-Frame requests, return just the partial
+        if (Request.Headers.ContainsKey(TurboFrameMiddleware.TurboFrameHeader))
+        {
+            return Partial("_WelcomeMessage");
+        }
+
+        // For regular requests, redirect to the full page
+        return RedirectToPage();
     }
 }

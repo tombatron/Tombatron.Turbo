@@ -1,8 +1,5 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Tombatron.Turbo.Middleware;
 using Tombatron.Turbo.Streams;
 
 namespace Tombatron.Turbo;
@@ -65,14 +62,8 @@ public static class TurboServiceCollectionExtensions
         services.AddSingleton(options);
         services.AddSignalR();
 
-        // Register IHttpContextAccessor for tag helpers
+        // Register IHttpContextAccessor for TurboTagHelper
         services.AddHttpContextAccessor();
-
-        // Register the result filter for automatic sub-template routing
-        services.Configure<MvcOptions>(mvcOptions =>
-        {
-            mvcOptions.Filters.Add<TurboFrameResultFilter>();
-        });
 
         // Register Turbo Streams services
         services.TryAddSingleton<ITurboStreamAuthorization, DefaultTurboStreamAuthorization>();

@@ -3,9 +3,24 @@ using Microsoft.AspNetCore.Http;
 namespace Tombatron.Turbo.Middleware;
 
 /// <summary>
-/// Middleware that handles Turbo Frame requests by detecting the Turbo-Frame header
-/// and routing to the appropriate sub-template.
+/// Middleware that detects Turbo Frame requests and makes the frame ID available
+/// via HttpContext.Items for use in page handlers and views.
 /// </summary>
+/// <remarks>
+/// This middleware detects the Turbo-Frame header and stores the requested frame ID
+/// in HttpContext.Items. Page handlers can then check for this and return appropriate
+/// partial views:
+/// <code>
+/// public IActionResult OnGetItems()
+/// {
+///     if (HttpContext.Items.ContainsKey(TurboFrameMiddleware.IsTurboFrameRequestKey))
+///     {
+///         return Partial("_Items", Model);
+///     }
+///     return RedirectToPage();
+/// }
+/// </code>
+/// </remarks>
 public class TurboFrameMiddleware
 {
     /// <summary>
@@ -17,11 +32,6 @@ public class TurboFrameMiddleware
     /// The key used to store the requested frame ID in HttpContext.Items.
     /// </summary>
     public const string FrameIdKey = "Turbo.FrameId";
-
-    /// <summary>
-    /// The key used to store the resolved template name in HttpContext.Items.
-    /// </summary>
-    public const string TemplateNameKey = "Turbo.TemplateName";
 
     /// <summary>
     /// The key used to indicate this is a turbo-frame request in HttpContext.Items.
@@ -58,15 +68,9 @@ public class TurboFrameMiddleware
 
         if (!string.IsNullOrEmpty(frameId))
         {
-            // Mark this as a turbo-frame request
+            // Mark this as a turbo-frame request and store the frame ID
             context.Items[IsTurboFrameRequestKey] = true;
             context.Items[FrameIdKey] = frameId;
-
-            // Try to resolve the template using the generated metadata
-            if (TryResolveTemplate(frameId, out string? templateName))
-            {
-                context.Items[TemplateNameKey] = templateName;
-            }
 
             // Add Vary header if configured
             if (_options.AddVaryHeader)
@@ -80,16 +84,6 @@ public class TurboFrameMiddleware
         }
 
         await _next(context);
-
-        // If this was a turbo-frame request and no template was found, return 422
-        if (!string.IsNullOrEmpty(frameId) &&
-            !context.Items.ContainsKey(TemplateNameKey) &&
-            context.Response.StatusCode == StatusCodes.Status200OK)
-        {
-            // Only set 422 if the response hasn't been started
-            // and we didn't find a matching template
-            // This allows controllers/pages to handle frames manually
-        }
     }
 
     /// <summary>
@@ -105,46 +99,6 @@ public class TurboFrameMiddleware
         }
 
         return null;
-    }
-
-    /// <summary>
-    /// Attempts to resolve a template for the given frame ID using generated metadata.
-    /// </summary>
-    /// <param name="frameId">The frame ID to look up.</param>
-    /// <param name="templateName">The resolved template name, if found.</param>
-    /// <returns>True if a template was found, false otherwise.</returns>
-    internal static bool TryResolveTemplate(string frameId, out string? templateName)
-    {
-        // This will be called by the generated TurboFrameMetadata class
-        // For now, we use reflection or a registered service to find it
-        // In a real implementation, the source generator would register the lookup
-        templateName = null;
-
-        try
-        {
-            // Try to find the generated TurboFrameMetadata class
-            var metadataType = Type.GetType("Tombatron.Turbo.Generated.TurboFrameMetadata");
-            if (metadataType != null)
-            {
-                var method = metadataType.GetMethod("TryGetTemplate");
-                if (method != null)
-                {
-                    var parameters = new object?[] { frameId, null };
-                    bool result = (bool)method.Invoke(null, parameters)!;
-                    if (result)
-                    {
-                        templateName = parameters[1] as string;
-                        return true;
-                    }
-                }
-            }
-        }
-        catch
-        {
-            // If reflection fails, just return false
-        }
-
-        return false;
     }
 
     /// <summary>

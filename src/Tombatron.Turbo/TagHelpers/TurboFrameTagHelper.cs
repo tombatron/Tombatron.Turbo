@@ -6,18 +6,39 @@ namespace Tombatron.Turbo.TagHelpers;
 /// Tag helper for rendering turbo-frame elements with proper attributes.
 /// </summary>
 /// <remarks>
-/// This tag helper renders a standard HTML <c>&lt;turbo-frame&gt;</c> element and handles
-/// the <c>asp-frame-prefix</c> attribute which is used for compile-time validation only.
+/// This tag helper renders a standard HTML <c>&lt;turbo-frame&gt;</c> element.
+/// The <c>asp-frame-prefix</c> attribute is used for compile-time validation only
+/// and is stripped from the rendered output.
+///
+/// For turbo-frame requests, create a page handler that checks for the Turbo-Frame
+/// header and returns a partial view:
+/// <code>
+/// public IActionResult OnGetItems()
+/// {
+///     if (Request.Headers.ContainsKey("Turbo-Frame"))
+///     {
+///         return Partial("_CartItems", Model);
+///     }
+///     return RedirectToPage();
+/// }
+/// </code>
 ///
 /// Usage:
 /// <code>
-/// &lt;turbo-frame id="cart-items"&gt;...&lt;/turbo-frame&gt;
-/// &lt;turbo-frame id="item_@Model.Id" asp-frame-prefix="item_"&gt;...&lt;/turbo-frame&gt;
+/// &lt;turbo-frame id="cart-items" src="/Cart?handler=Items"&gt;
+///     Loading...
+/// &lt;/turbo-frame&gt;
 /// </code>
 /// </remarks>
 [HtmlTargetElement("turbo-frame", TagStructure = TagStructure.NormalOrSelfClosing)]
 public class TurboFrameTagHelper : TagHelper
 {
+    /// <summary>
+    /// The unique identifier for this turbo-frame element.
+    /// </summary>
+    [HtmlAttributeName("id")]
+    public string? Id { get; set; }
+
     /// <summary>
     /// The frame prefix used for dynamic ID validation.
     /// This attribute is consumed by the Roslyn analyzer and source generator,
@@ -27,7 +48,7 @@ public class TurboFrameTagHelper : TagHelper
     public string? FramePrefix { get; set; }
 
     /// <summary>
-    /// The URL to load content from when the frame becomes visible.
+    /// The URL to load content from lazily or when refreshed.
     /// Maps to the <c>src</c> attribute.
     /// </summary>
     [HtmlAttributeName("src")]
@@ -81,6 +102,15 @@ public class TurboFrameTagHelper : TagHelper
 
         // Remove the asp-frame-prefix attribute from output (it's only for compile-time)
         output.Attributes.RemoveAll("asp-frame-prefix");
+
+        // Get the frame id from context attributes if not set via property binding
+        var frameId = Id ?? context.AllAttributes["id"]?.Value?.ToString();
+
+        // Ensure the id attribute is present (it may have been consumed by property binding)
+        if (!string.IsNullOrEmpty(frameId) && !output.Attributes.ContainsName("id"))
+        {
+            output.Attributes.SetAttribute("id", frameId);
+        }
 
         // Add src attribute if specified
         if (!string.IsNullOrEmpty(Src))

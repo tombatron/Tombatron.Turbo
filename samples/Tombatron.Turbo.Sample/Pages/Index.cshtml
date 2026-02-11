@@ -11,19 +11,7 @@
     <h2>Turbo Frames</h2>
     <p>Turbo Frames decompose pages into independent contexts that can be lazy-loaded and updated independently.</p>
 
-    <turbo-frame id="welcome-message">
-        <div class="cart-item">
-            <strong>Dynamic Content</strong>
-            <p style="margin: 8px 0 0; color: var(--text-secondary);">
-                This content is inside a turbo-frame. Current time: <strong>@DateTime.Now.ToString("HH:mm:ss")</strong>
-            </p>
-            <div style="margin-top: 12px;">
-                <a href="/?handler=RefreshWelcome" class="btn btn-sm" data-turbo-frame="welcome-message">
-                    Refresh Frame
-                </a>
-            </div>
-        </div>
-    </turbo-frame>
+    <partial name="_WelcomeMessage" />
 </div>
 
 <div class="card">
