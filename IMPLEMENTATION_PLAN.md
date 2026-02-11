@@ -667,7 +667,7 @@ samples/Tombatron.Turbo.Sample/Pages/
 ---
 
 ## Milestone 7: Documentation & Samples
-**Status:** 🔴 Not Started
+**Status:** 🟡 In Progress
 
 ### Objectives
 - Write comprehensive documentation
@@ -676,53 +676,52 @@ samples/Tombatron.Turbo.Sample/Pages/
 - Write migration guides
 
 ### Tasks
-- [ ] Update README.md:
-  - [ ] Project overview
-  - [ ] Installation instructions
-  - [ ] Quick start guide
-  - [ ] Basic examples (frames and streams)
-  - [ ] Link to full documentation
-  - [ ] Badge for NuGet version
-  - [ ] Badge for build status
-  - [ ] Coding standards reference
-- [ ] Write API documentation:
-  - [ ] `docs/api/ITurbo.md`
-  - [ ] `docs/api/ITurboStreamBuilder.md`
-  - [ ] `docs/api/TurboOptions.md`
-  - [ ] `docs/api/TagHelpers.md`
-  - [ ] Document all public APIs with examples
-- [ ] Write feature guides:
-  - [ ] `docs/guides/turbo-frames.md`
-    - [ ] Static frames
-    - [ ] Dynamic frames with prefixes
-    - [ ] Navigation patterns
-    - [ ] Lazy loading
-    - [ ] Best practices
-  - [ ] `docs/guides/turbo-streams.md`
-    - [ ] Setting up streaming
-    - [ ] Stream naming conventions
-    - [ ] Broadcasting patterns
-    - [ ] Authorization
-    - [ ] Best practices
-  - [ ] `docs/guides/authorization.md`
-    - [ ] Implementing ITurboStreamAuthorization
-    - [ ] Stream security patterns
-    - [ ] User vs resource streams
-    - [ ] Testing authorization
-  - [ ] `docs/guides/troubleshooting.md`
-    - [ ] Common issues
-    - [ ] Debugging tips
-    - [ ] Performance optimization
-    - [ ] Error messages explained
-  - [ ] `docs/guides/testing.md`
-    - [ ] Testing frames
-    - [ ] Testing streams
-    - [ ] Integration testing
-    - [ ] Mocking strategies
-- [ ] Write migration guides:
-  - [ ] `docs/migration/from-react.md`
-  - [ ] `docs/migration/from-blazor-server.md`
-  - [ ] `docs/migration/from-htmx.md`
+- [x] Update README.md:
+  - [x] Project overview
+  - [x] Installation instructions
+  - [x] Quick start guide
+  - [x] Basic examples (frames and streams)
+  - [x] Link to full documentation
+  - [x] Badge for NuGet version
+  - [x] Badge for build status
+  - [x] Coding standards reference
+- [x] Write API documentation:
+  - [x] `docs/api/ITurbo.md`
+  - [x] `docs/api/ITurboStreamBuilder.md`
+  - [x] `docs/api/TurboOptions.md`
+  - [x] `docs/api/TagHelpers.md`
+  - [x] Document all public APIs with examples
+- [x] Write feature guides:
+  - [x] `docs/guides/turbo-frames.md`
+    - [x] Static frames
+    - [x] Dynamic frames with prefixes
+    - [x] Navigation patterns
+    - [x] Lazy loading
+    - [x] Best practices
+  - [x] `docs/guides/turbo-streams.md`
+    - [x] Setting up streaming
+    - [x] Stream naming conventions
+    - [x] Broadcasting patterns
+    - [x] Authorization
+    - [x] Best practices
+  - [x] `docs/guides/authorization.md`
+    - [x] Implementing ITurboStreamAuthorization
+    - [x] Stream security patterns
+    - [x] User vs resource streams
+    - [x] Testing authorization
+  - [x] `docs/guides/troubleshooting.md`
+    - [x] Common issues
+    - [x] Debugging tips
+    - [x] Performance optimization
+    - [x] Error messages explained
+  - [x] `docs/guides/testing.md`
+    - [x] Testing frames
+    - [x] Testing streams
+    - [x] Integration testing
+    - [x] Mocking strategies
+- [x] Write migration guides:
+  - [x] `docs/migration/from-blazor-server.md`
+  - [x] `docs/migration/from-htmx.md`
 - [ ] Create sample applications:
   - [ ] E-commerce cart (existing, enhance):
     - [ ] Product listing with frames
@@ -1029,7 +1028,7 @@ docs/
 4. 🟢 Middleware & Tag Helper
 5. 🟢 Turbo Streams - Server
 6. 🟢 Turbo Streams - Client
-7. ⚪ Documentation & Samples
+7. 🟡 Documentation & Samples
 8. ⚪ Polish & Testing
 9. ⚪ Release
 

@@ -37,7 +37,14 @@ app.MapRazorPages();
 app.MapTurboHub(); // For Turbo Streams
 ```
 
-### 3. Create a Turbo Frame with a Partial
+### 3. Add Tag Helpers
+
+```razor
+@* _ViewImports.cshtml *@
+@addTagHelper *, Tombatron.Turbo
+```
+
+### 4. Create a Turbo Frame with a Partial
 
 Create a partial view for your frame content:
 
@@ -59,7 +66,7 @@ Use the partial in your page:
 <partial name="_CartItems" model="Model" />
 ```
 
-### 4. Handle Frame Requests in Your Page Model
+### 5. Handle Frame Requests in Your Page Model
 
 ```csharp
 public class CartModel : PageModel
@@ -76,7 +83,7 @@ public class CartModel : PageModel
         Items = GetCartItems();
 
         // For Turbo-Frame requests, return just the partial
-        if (Request.Headers.ContainsKey("Turbo-Frame"))
+        if (HttpContext.IsTurboFrameRequest())
         {
             return Partial("_CartItems", this);
         }
@@ -87,7 +94,7 @@ public class CartModel : PageModel
 }
 ```
 
-### 5. Link to the Handler
+### 6. Link to the Handler
 
 ```html
 <turbo-frame id="cart-items" src="/Cart?handler=Refresh">
@@ -133,10 +140,30 @@ public class CartController : Controller
 ### Subscribe to Streams in Your View
 
 ```html
+<!-- Using the turbo tag helper -->
+<turbo stream="notifications"></turbo>
+
+<!-- Or directly -->
 <turbo-stream-source-signalr stream="user:@User.Identity.Name" hub-url="/turbo-hub">
 </turbo-stream-source-signalr>
 
 <div id="cart-total">$0.00</div>
+```
+
+## Stream Actions
+
+```csharp
+await _turbo.Stream("notifications", builder =>
+{
+    builder
+        .Append("list", "<div>New item</div>")    // Add to end
+        .Prepend("list", "<div>First</div>")      // Add to beginning
+        .Replace("item-1", "<div>Updated</div>")  // Replace element
+        .Update("count", "42")                     // Update inner content
+        .Remove("old-item")                        // Remove element
+        .Before("btn", "<div>Before</div>")       // Insert before
+        .After("btn", "<div>After</div>");        // Insert after
+});
 ```
 
 ## Configuration
@@ -181,6 +208,47 @@ if (HttpContext.IsTurboFrameRequestWithPrefix("item_"))
 4. Turbo.js extracts the matching frame from the response and updates the DOM
 
 This approach is simple, explicit, and gives you full control over what content is returned.
+
+## Documentation
+
+### Guides
+- [Turbo Frames Guide](docs/guides/turbo-frames.md) - Partial page updates
+- [Turbo Streams Guide](docs/guides/turbo-streams.md) - Real-time updates
+- [Authorization Guide](docs/guides/authorization.md) - Securing streams
+- [Testing Guide](docs/guides/testing.md) - Testing strategies
+- [Troubleshooting](docs/guides/troubleshooting.md) - Common issues
+
+### API Reference
+- [ITurbo](docs/api/ITurbo.md) - Main service interface
+- [ITurboStreamBuilder](docs/api/ITurboStreamBuilder.md) - Stream builder
+- [TurboOptions](docs/api/TurboOptions.md) - Configuration
+- [Tag Helpers](docs/api/TagHelpers.md) - Razor tag helpers
+
+### Migration Guides
+- [From Blazor Server](docs/migration/from-blazor-server.md)
+- [From HTMX](docs/migration/from-htmx.md)
+
+## Sample Application
+
+The repository includes a sample application demonstrating:
+- Turbo Frames for partial updates
+- Turbo Streams for real-time features
+- Shopping cart with add/remove operations
+- Live notifications and counters
+
+Run the sample:
+
+```bash
+cd samples/Tombatron.Turbo.Sample
+dotnet run
+```
+
+## Requirements
+
+- .NET 9.0 or later
+- ASP.NET Core
+- Turbo.js 8.x (client-side)
+- SignalR (for Turbo Streams)
 
 ## License
 
