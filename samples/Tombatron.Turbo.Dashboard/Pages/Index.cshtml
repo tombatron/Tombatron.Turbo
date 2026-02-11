@@ -1,0 +1,90 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<!-- The broadcast stream delivers updates to all connected clients -->
+<!-- No explicit subscription needed - Turbo.Broadcast() sends to everyone -->
+
+<div class="dashboard">
+    <div class="header">
+        <h1>Live Dashboard</h1>
+        <div class="connection-badge">
+            <span id="connection-dot" class="connection-dot disconnected"></span>
+            <span id="connection-text">Connecting...</span>
+        </div>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-label">Active Users</div>
+            <div class="metric-value accent" id="metric-users">@Model.FormatNumber(Model.Metrics.ActiveUsers)</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Requests/sec</div>
+            <div class="metric-value" id="metric-rps">@Model.FormatNumber(Model.Metrics.RequestsPerSecond)</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">
+                CPU Usage
+                <span id="status-cpu">@Html.Raw(Model.RenderStatus(Model.Metrics.GetCpuStatus()))</span>
+            </div>
+            <div class="metric-value" id="metric-cpu">@Model.Metrics.CpuUsage.ToString("F1")%</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">
+                Memory
+                <span id="status-memory">@Html.Raw(Model.RenderStatus(Model.Metrics.GetMemoryStatus()))</span>
+            </div>
+            <div class="metric-value" id="metric-memory">@Model.Metrics.MemoryUsage.ToString("F1")%</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Errors (24h)</div>
+            <div class="metric-value danger" id="metric-errors">@Model.Metrics.ErrorCount</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">
+                Response Time
+                <span id="status-response">@Html.Raw(Model.RenderStatus(Model.Metrics.GetResponseTimeStatus()))</span>
+            </div>
+            <div class="metric-value" id="metric-response">@Model.Metrics.ResponseTime.ToString("F1")ms</div>
+        </div>
+    </div>
+
+    <!-- Panels -->
+    <div class="panels-grid">
+        <div class="panel">
+            <div class="panel-header">
+                📈 Response Time Trend
+            </div>
+            <div class="panel-content">
+                <div class="chart-container">
+                    <div id="chart-data">
+                        @Html.Raw(Model.RenderChart())
+                    </div>
+                </div>
+                <p class="info-text">Response time over the last 40 seconds</p>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                ⚡ Recent Activity
+            </div>
+            <div class="panel-content">
+                <div id="activity-feed">
+                    @Html.Raw(Model.RenderActivityFeed())
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p class="info-text" style="margin-top: 24px;">
+        Metrics update every 2 seconds via Turbo Streams broadcast. Open multiple tabs to see synchronized updates.
+    </p>
+</div>
+
+<!-- Subscribe to receive broadcasts -->
+<turbo-stream-source-signalr stream="broadcast" hub-url="/turbo-hub"></turbo-stream-source-signalr>

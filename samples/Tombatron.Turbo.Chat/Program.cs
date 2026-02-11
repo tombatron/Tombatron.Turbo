@@ -1,4 +1,5 @@
 using Tombatron.Turbo;
+using Tombatron.Turbo.Chat;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -10,17 +11,19 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 builder.Services.AddTurbo(options =>
 {
     options.HubPath = "/turbo-hub";
-    options.UseSignedStreamNames = false;
 });
 
-// Add session support for the counter demo
+// Add session for user identity (in a real app, use proper authentication)
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.IdleTimeout = TimeSpan.FromHours(2);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+// Register our chat service
+builder.Services.AddSingleton<ChatService>();
 
 builder.Services.AddRazorPages();
 
@@ -34,20 +37,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
-// Use session
 app.UseSession();
-
-// Use Turbo middleware
 app.UseTurbo();
-
 app.UseAuthorization();
 
 app.MapRazorPages();
-
-// Map the Turbo SignalR hub for streaming
 app.MapTurboHub();
 
 app.Run();

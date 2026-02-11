@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace Tombatron.Turbo.Middleware;
 
@@ -40,16 +41,19 @@ public class TurboFrameMiddleware
 
     private readonly RequestDelegate _next;
     private readonly TurboOptions _options;
+    private readonly ILogger<TurboFrameMiddleware> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TurboFrameMiddleware"/> class.
     /// </summary>
     /// <param name="next">The next middleware in the pipeline.</param>
     /// <param name="options">The Turbo configuration options.</param>
-    public TurboFrameMiddleware(RequestDelegate next, TurboOptions options)
+    /// <param name="logger">The logger instance.</param>
+    public TurboFrameMiddleware(RequestDelegate next, TurboOptions options, ILogger<TurboFrameMiddleware> logger)
     {
         _next = next ?? throw new ArgumentNullException(nameof(next));
         _options = options ?? throw new ArgumentNullException(nameof(options));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -71,6 +75,12 @@ public class TurboFrameMiddleware
             // Mark this as a turbo-frame request and store the frame ID
             context.Items[IsTurboFrameRequestKey] = true;
             context.Items[FrameIdKey] = frameId;
+
+            _logger.LogDebug(
+                "Turbo-Frame request detected for frame {FrameId} on {Method} {Path}",
+                frameId,
+                context.Request.Method,
+                context.Request.Path);
 
             // Add Vary header if configured
             if (_options.AddVaryHeader)

@@ -1,4 +1,5 @@
 using Tombatron.Turbo;
+using Tombatron.Turbo.Dashboard;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -10,17 +11,11 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 builder.Services.AddTurbo(options =>
 {
     options.HubPath = "/turbo-hub";
-    options.UseSignedStreamNames = false;
 });
 
-// Add session support for the counter demo
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
+// Register our metrics service and background updater
+builder.Services.AddSingleton<MetricsService>();
+builder.Services.AddHostedService<MetricsUpdater>();
 
 builder.Services.AddRazorPages();
 
@@ -34,20 +29,11 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
-// Use session
-app.UseSession();
-
-// Use Turbo middleware
 app.UseTurbo();
-
 app.UseAuthorization();
 
 app.MapRazorPages();
-
-// Map the Turbo SignalR hub for streaming
 app.MapTurboHub();
 
 app.Run();

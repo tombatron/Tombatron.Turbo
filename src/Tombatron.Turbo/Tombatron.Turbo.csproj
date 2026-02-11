@@ -9,9 +9,6 @@
     <!-- Enable Razor class library features for static web assets -->
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 
-    <!-- Static web assets are served from wwwroot automatically -->
-    <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
-
     <!-- NuGet Package Metadata -->
     <PackageId>Tombatron.Turbo</PackageId>
     <Version>1.0.0</Version>
@@ -38,9 +35,10 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Tombatron.Turbo.Tests" />
+    <InternalsVisibleTo Include="Tombatron.Turbo.Benchmarks" />
   </ItemGroup>
 
-  <!-- Exclude npm development files from the package -->
+  <!-- Exclude npm development files from the package, keeping only bundled dist files -->
   <ItemGroup>
     <Content Remove="wwwroot\node_modules\**" />
     <Content Remove="wwwroot\tests\**" />
@@ -52,7 +50,7 @@
     <Content Remove="wwwroot\.eslintrc.json" />
     <Content Remove="wwwroot\.npmignore" />
     <Content Remove="wwwroot\README.md" />
-    <!-- Exclude non-bundled versions (npm only) -->
+    <!-- Exclude non-bundled versions (npm only, not needed for ASP.NET apps) -->
     <Content Remove="wwwroot\dist\turbo-signalr.js" />
     <Content Remove="wwwroot\dist\turbo-signalr.js.map" />
     <Content Remove="wwwroot\dist\turbo-signalr.esm.js" />

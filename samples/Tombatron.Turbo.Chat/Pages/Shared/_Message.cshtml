@@ -1,0 +1,12 @@
+@model Tombatron.Turbo.Chat.ChatMessage
+
+<div class="message" id="message-@Model.Id">
+    <div class="message-avatar">@Model.Username[0].ToString().ToUpper()</div>
+    <div class="message-content">
+        <div class="message-header">
+            <span class="message-username">@Model.Username</span>
+            <span class="message-timestamp">@Model.Timestamp.ToLocalTime().ToString("h:mm tt")</span>
+        </div>
+        <div class="message-text">@Model.Content</div>
+    </div>
+</div>

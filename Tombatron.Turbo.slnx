@@ -1,4 +1,9 @@
 <Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/Tombatron.Turbo.Chat/Tombatron.Turbo.Chat.csproj" />
+    <Project Path="samples/Tombatron.Turbo.Dashboard/Tombatron.Turbo.Dashboard.csproj" />
+  </Folder>
+  <Folder Name="/src/" />
   <Project Path="samples/Tombatron.Turbo.Sample/Tombatron.Turbo.Sample.csproj" />
   <Project Path="src/Tombatron.Turbo.Analyzers/Tombatron.Turbo.Analyzers.csproj" />
   <Project Path="src/Tombatron.Turbo.SourceGenerator/Tombatron.Turbo.SourceGenerator.csproj" />

@@ -1,5 +1,7 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Tombatron.Turbo.Middleware;
 using Xunit;
@@ -12,10 +14,12 @@ namespace Tombatron.Turbo.Tests.Middleware;
 public class TurboFrameMiddlewareTests
 {
     private readonly TurboOptions _options;
+    private readonly ILogger<TurboFrameMiddleware> _logger;
 
     public TurboFrameMiddlewareTests()
     {
         _options = new TurboOptions();
+        _logger = NullLogger<TurboFrameMiddleware>.Instance;
     }
 
     [Fact]
@@ -111,7 +115,7 @@ public class TurboFrameMiddlewareTests
             return Task.CompletedTask;
         };
 
-        var middleware = new TurboFrameMiddleware(next, _options);
+        var middleware = new TurboFrameMiddleware(next, _options, _logger);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -220,7 +224,7 @@ public class TurboFrameMiddlewareTests
     public void Constructor_WithNullNext_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new TurboFrameMiddleware(null!, _options));
+        Assert.Throws<ArgumentNullException>(() => new TurboFrameMiddleware(null!, _options, _logger));
     }
 
     [Fact]
@@ -230,7 +234,17 @@ public class TurboFrameMiddlewareTests
         RequestDelegate next = _ => Task.CompletedTask;
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new TurboFrameMiddleware(next, null!));
+        Assert.Throws<ArgumentNullException>(() => new TurboFrameMiddleware(next, null!, _logger));
+    }
+
+    [Fact]
+    public void Constructor_WithNullLogger_ThrowsArgumentNullException()
+    {
+        // Arrange
+        RequestDelegate next = _ => Task.CompletedTask;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new TurboFrameMiddleware(next, _options, null!));
     }
 
     [Theory]
@@ -259,6 +273,6 @@ public class TurboFrameMiddlewareTests
 
     private TurboFrameMiddleware CreateMiddleware(HttpContext context, TurboOptions? options = null)
     {
-        return new TurboFrameMiddleware(_ => Task.CompletedTask, options ?? _options);
+        return new TurboFrameMiddleware(_ => Task.CompletedTask, options ?? _options, _logger);
     }
 }

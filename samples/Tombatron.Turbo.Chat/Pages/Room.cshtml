@@ -1,0 +1,140 @@
+@page "{id}"
+@model RoomModel
+@{
+    ViewData["Title"] = $"#{Model.Room?.Name ?? "Chat"}";
+}
+
+<!-- Subscribe to room-specific stream -->
+<turbo-stream-source-signalr stream="room:@Model.RoomId" hub-url="/turbo-hub"></turbo-stream-source-signalr>
+
+<div class="app-container">
+    <!-- Sidebar with rooms -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            Turbo Chat
+        </div>
+
+        <div class="room-list">
+            @foreach (var room in Model.Rooms)
+            {
+                <a href="/Room/@room.Id"
+                   class="room-item @(room.Id == Model.RoomId ? "active" : "")">
+                    @room.Name
+                </a>
+            }
+        </div>
+
+        <div class="user-panel">
+            <div class="user-avatar">@Model.Username[0].ToString().ToUpper()</div>
+            <div class="user-name">@Model.Username</div>
+            <div id="connection-dot" class="connection-dot disconnected"></div>
+        </div>
+    </div>
+
+    <!-- Main chat area -->
+    <div class="chat-area">
+        <div class="chat-header">
+            <h2>@Model.Room?.Name</h2>
+            <span class="chat-description">@Model.Room?.Description</span>
+        </div>
+
+        <!-- Messages container -->
+        <div class="messages-container" id="messages-container">
+            <div id="messages">
+                @if (!Model.Messages.Any())
+                {
+                    <div class="empty-messages">
+                        No messages yet. Start the conversation!
+                    </div>
+                }
+                else
+                {
+                    @foreach (var message in Model.Messages)
+                    {
+                        <partial name="_Message" model="message" />
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div id="typing-indicator" class="typing-indicator"></div>
+
+        <!-- Message input -->
+        <div class="input-area">
+            <form method="post" asp-page-handler="SendMessage" class="message-form" id="message-form">
+                <input type="hidden" name="roomId" value="@Model.RoomId" />
+                <input type="text"
+                       name="content"
+                       class="message-input"
+                       id="message-input"
+                       placeholder="Message #@Model.Room?.Name"
+                       autocomplete="off"
+                       required />
+                <button type="submit" class="send-btn">Send</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function() {
+    const messagesContainer = document.getElementById('messages-container');
+    const messageInput = document.getElementById('message-input');
+    const messageForm = document.getElementById('message-form');
+    const roomId = '@Model.RoomId';
+    let typingTimeout = null;
+    let isTyping = false;
+
+    // Auto-scroll to bottom on new messages
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Scroll to bottom on page load
+    scrollToBottom();
+
+    // Watch for new messages being added
+    const observer = new MutationObserver(() => {
+        scrollToBottom();
+    });
+    observer.observe(document.getElementById('messages'), { childList: true });
+
+    // Handle typing indicator
+    messageInput.addEventListener('input', async function() {
+        if (!isTyping) {
+            isTyping = true;
+            await fetch(`/Room/${roomId}?handler=StartTyping`, {
+                method: 'POST',
+                credentials: 'same-origin'
+            });
+        }
+
+        // Clear existing timeout
+        if (typingTimeout) {
+            clearTimeout(typingTimeout);
+        }
+
+        // Stop typing after 2 seconds of inactivity
+        typingTimeout = setTimeout(async () => {
+            isTyping = false;
+            await fetch(`/Room/${roomId}?handler=StopTyping`, {
+                method: 'POST',
+                credentials: 'same-origin'
+            });
+        }, 2000);
+    });
+
+    // Clear input after form submission
+    messageForm.addEventListener('turbo:submit-end', function() {
+        messageInput.value = '';
+        messageInput.focus();
+        isTyping = false;
+        if (typingTimeout) {
+            clearTimeout(typingTimeout);
+        }
+    });
+})();
+</script>
+}
