@@ -7,8 +7,35 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-js:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/Tombatron.Turbo/wwwroot
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Lint
+      run: npm run lint
+
+    - name: Test
+      run: npm test
+
+    - name: Build
+      run: npm run build
+
+  build-dotnet:
+    runs-on: ubuntu-latest
+    needs: build-js
 
     steps:
     - uses: actions/checkout@v4
@@ -17,6 +44,17 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Build JavaScript
+      working-directory: src/Tombatron.Turbo/wwwroot
+      run: |
+        npm ci
+        npm run build
 
     - name: Restore dependencies
       run: dotnet restore
@@ -35,7 +73,7 @@ jobs:
 
   pack:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-dotnet
 
     steps:
     - uses: actions/checkout@v4
@@ -44,6 +82,17 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Build JavaScript
+      working-directory: src/Tombatron.Turbo/wwwroot
+      run: |
+        npm ci
+        npm run build
 
     - name: Restore dependencies
       run: dotnet restore

@@ -1,0 +1,69 @@
+name: Publish npm Package
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.0.0)'
+        required: true
+        type: string
+      dry_run:
+        description: 'Dry run (do not actually publish)'
+        required: false
+        type: boolean
+        default: false
+
+  # Also trigger on release tags (optional - can be disabled if you prefer manual only)
+  # push:
+  #   tags:
+  #     - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/Tombatron.Turbo/wwwroot
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests
+      run: npm test
+
+    - name: Build
+      run: npm run build
+
+    - name: Update version
+      if: ${{ github.event_name == 'workflow_dispatch' }}
+      run: npm version ${{ inputs.version }} --no-git-tag-version
+
+    - name: Extract version from tag
+      if: ${{ github.event_name == 'push' }}
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        npm version $VERSION --no-git-tag-version
+
+    - name: Publish to npm (dry run)
+      if: ${{ inputs.dry_run == true }}
+      run: npm publish --access public --dry-run
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    - name: Publish to npm
+      if: ${{ inputs.dry_run != true }}
+      run: npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

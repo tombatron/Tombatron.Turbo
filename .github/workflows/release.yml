@@ -17,6 +17,17 @@ jobs:
       with:
         dotnet-version: '9.0.x'
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Build JavaScript
+      working-directory: src/Tombatron.Turbo/wwwroot
+      run: |
+        npm ci
+        npm run build
+
     - name: Restore dependencies
       run: dotnet restore
 
