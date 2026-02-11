@@ -15,7 +15,19 @@
         <div id="cart-items">
             @foreach (var item in Model.Items)
             {
-                <partial name="Shared/_CartItem" model="item" />
+                <turbo-frame id="item_@item.Id" asp-frame-prefix="item_">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>@item.Name</strong>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px;">
+                                @item.Price.ToString("C") &times; @item.Quantity = <strong>@((item.Price * item.Quantity).ToString("C"))</strong>
+                            </div>
+                        </div>
+                        <form method="post" asp-page-handler="RemoveItem" asp-route-itemId="@item.Id">
+                            <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                        </form>
+                    </div>
+                </turbo-frame>
             }
         </div>
 
@@ -29,10 +41,29 @@
 
     <div>
         <h2>Cart Summary</h2>
-        <partial name="Shared/_CartSummary" model="Model" />
+        <turbo-frame id="cart-summary">
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 600; color: var(--accent);">
+                    @Model.CartTotal.ToString("C")
+                </div>
+                <div style="color: var(--text-secondary); margin-top: 4px;">
+                    @Model.ItemCount item@(Model.ItemCount != 1 ? "s" : "") in cart
+                </div>
+            </div>
+        </turbo-frame>
 
         <h3>Add Item</h3>
-        <partial name="Shared/_AddItemForm" model="Model" />
+        <turbo-frame id="add-item-form">
+            <form method="post" asp-page-handler="AddItem">
+                <div class="form-row">
+                    <input type="text" name="name" placeholder="Item name" required style="flex: 1;" />
+                </div>
+                <div class="form-row">
+                    <input type="number" name="price" placeholder="Price" step="0.01" min="0.01" required style="width: 120px;" />
+                    <button type="submit" class="btn">Add Item</button>
+                </div>
+            </form>
+        </turbo-frame>
     </div>
 </div>
 
