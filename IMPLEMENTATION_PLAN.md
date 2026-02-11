@@ -720,7 +720,7 @@ samples/Tombatron.Turbo.Sample/Pages/
     - [ ] Integration testing
     - [ ] Mocking strategies
 - [ ] Write migration guides:
-  - [ ] `docs/migration/from-turbo-rails.md`
+  - [ ] `docs/migration/from-react.md`
   - [ ] `docs/migration/from-blazor-server.md`
   - [ ] `docs/migration/from-htmx.md`
 - [ ] Create sample applications:
@@ -730,18 +730,21 @@ samples/Tombatron.Turbo.Sample/Pages/
     - [ ] Live cart total updates
     - [ ] Checkout flow
     - [ ] README with setup
+    - [ ] Document how Turbo is being used on the page with code snippets.
   - [ ] `samples/Tombatron.Turbo.Chat/` - Real-time chat:
     - [ ] Multiple chat rooms
     - [ ] User-specific streams
     - [ ] Typing indicators
     - [ ] Message history with frames
     - [ ] README with setup
+    - [ ] Document how Turbo is being used on the page with code snippets.
   - [ ] `samples/Tombatron.Turbo.Dashboard/` - Live dashboard:
     - [ ] Real-time metrics
     - [ ] Multiple widgets with frames
     - [ ] Broadcast updates
     - [ ] Auto-refresh data
     - [ ] README with setup
+    - [ ] Document how Turbo is being used on the page with code snippets. 
 - [ ] Add XML documentation comments:
   - [ ] All public interfaces
   - [ ] All public classes
