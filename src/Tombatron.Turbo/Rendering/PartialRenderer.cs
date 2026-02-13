@@ -1,4 +1,3 @@
-using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -17,22 +16,23 @@ namespace Tombatron.Turbo.Rendering;
 public sealed class PartialRenderer : IPartialRenderer
 {
     private readonly IRazorViewEngine _viewEngine;
-    private readonly ITempDataProvider _tempDataProvider;
+    private readonly ITempDataDictionaryFactory _tempDataDictionaryFactory;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PartialRenderer"/> class.
     /// </summary>
     /// <param name="viewEngine">The Razor view engine.</param>
-    /// <param name="tempDataProvider">The temp data provider.</param>
+    /// <param name="tempDataDictionaryFactory">The temp data provider.</param>
     /// <param name="httpContextAccessor">The HTTP context accessor.</param>
     public PartialRenderer(
         IRazorViewEngine viewEngine,
-        ITempDataProvider tempDataProvider,
+        ITempDataDictionaryFactory tempDataDictionaryFactory,
         IHttpContextAccessor httpContextAccessor)
     {
         _viewEngine = viewEngine ?? throw new ArgumentNullException(nameof(viewEngine));
-        _tempDataProvider = tempDataProvider ?? throw new ArgumentNullException(nameof(tempDataProvider));
+        // _tempDataProvider = tempDataProvider ?? throw new ArgumentNullException(nameof(tempDataProvider));
+        _tempDataDictionaryFactory = tempDataDictionaryFactory ?? throw new ArgumentNullException(nameof(tempDataDictionaryFactory));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
     }
 
@@ -66,6 +66,7 @@ public sealed class PartialRenderer : IPartialRenderer
         var viewResult = FindView(actionContext, partialName);
 
         await using var writer = new StringWriter();
+
         var viewContext = new ViewContext(
             actionContext,
             viewResult,
@@ -73,7 +74,7 @@ public sealed class PartialRenderer : IPartialRenderer
             {
                 Model = model
             },
-            new TempDataDictionary(httpContext, _tempDataProvider),
+            _tempDataDictionaryFactory.GetTempData(httpContext),
             writer,
             new HtmlHelperOptions());
 

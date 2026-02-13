@@ -71,7 +71,7 @@ public static class TurboServiceCollectionExtensions
         services.AddSingleton<ITurbo, TurboService>();
 
         // Register partial rendering service
-        services.AddScoped<IPartialRenderer, PartialRenderer>();
+        services.AddSingleton<IPartialRenderer, PartialRenderer>();
 
         return services;
     }
