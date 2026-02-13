@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net;
+using Tombatron.Turbo.Generated;
+using Tombatron.Turbo.Streams;
 
 namespace Tombatron.Turbo.Chat.Pages;
 
@@ -56,17 +58,17 @@ public class RoomModel : PageModel
         // Add message to chat service
         var message = _chatService.AddMessage(roomId, username, content);
 
-        // Broadcast to all subscribers of this room
-        await _turbo.Stream($"room:{roomId}", builder =>
+        // Broadcast to all subscribers of this room using the new ergonomic async syntax
+        await _turbo.Stream($"room:{roomId}", async builder =>
         {
             // Remove empty state message if present
             builder.Remove("empty-messages-placeholder");
 
-            // Append the new message
-            builder.Append("messages", RenderMessage(message));
+            // Append the new message using the PartialTemplate directly
+            await builder.AppendAsync("messages", Partials.Message, message);
 
-            // Clear typing indicator for this user
-            builder.Update("typing-indicator", RenderTypingIndicator(roomId, username));
+            // Update typing indicator (user already removed from typing list by AddMessage)
+            builder.Update("typing-indicator", RenderTypingIndicator(roomId));
         });
 
         return new NoContentResult();
@@ -75,28 +77,17 @@ public class RoomModel : PageModel
     public async Task<IActionResult> OnPostStartTyping(string id)
     {
         var username = HttpContext.Session.GetString("Username");
-        Console.WriteLine($"[StartTyping] id={id}, username={username}");
-
         if (string.IsNullOrEmpty(username))
         {
-            Console.WriteLine("[StartTyping] No username in session, returning");
             return new NoContentResult();
         }
 
         _chatService.StartTyping(id, username);
 
-        var typingUsers = _chatService.GetTypingUsers(id, null);
-        Console.WriteLine($"[StartTyping] Typing users: {string.Join(", ", typingUsers)}");
-
-        // Broadcast typing indicator to room
-        var streamName = $"room:{id}";
-        Console.WriteLine($"[StartTyping] Broadcasting to stream: {streamName}");
-
-        await _turbo.Stream(streamName, builder =>
+        // Broadcast typing indicator to room (don't exclude anyone - all users should see who's typing)
+        await _turbo.Stream($"room:{id}", builder =>
         {
-            var html = RenderTypingIndicator(id, username);
-            Console.WriteLine($"[StartTyping] Typing indicator HTML: {html}");
-            builder.Update("typing-indicator", html);
+            builder.Update("typing-indicator", RenderTypingIndicator(id));
         });
 
         return new NoContentResult();
@@ -115,48 +106,18 @@ public class RoomModel : PageModel
         // Broadcast typing indicator update to room
         await _turbo.Stream($"room:{id}", builder =>
         {
-            builder.Update("typing-indicator", RenderTypingIndicator(id, null));
+            builder.Update("typing-indicator", RenderTypingIndicator(id));
         });
 
         return new NoContentResult();
     }
 
-    private static string RenderMessage(ChatMessage message)
+    private string RenderTypingIndicator(string roomId)
     {
-        var initial = message.Username.Length > 0 ? message.Username[0].ToString().ToUpper() : "?";
-        var time = message.Timestamp.ToLocalTime().ToString("h:mm tt");
-        var escapedContent = WebUtility.HtmlEncode(message.Content);
-        var escapedUsername = WebUtility.HtmlEncode(message.Username);
+        var typingUsers = _chatService.GetTypingUsers(roomId);
+        var usersJson = System.Text.Json.JsonSerializer.Serialize(typingUsers);
 
-        return $@"
-<div class=""message"" id=""message-{message.Id}"">
-    <div class=""message-avatar"">{initial}</div>
-    <div class=""message-content"">
-        <div class=""message-header"">
-            <span class=""message-username"">{escapedUsername}</span>
-            <span class=""message-timestamp"">{time}</span>
-        </div>
-        <div class=""message-text"">{escapedContent}</div>
-    </div>
-</div>";
-    }
-
-    private string RenderTypingIndicator(string roomId, string? excludeUsername)
-    {
-        var typingUsers = _chatService.GetTypingUsers(roomId, excludeUsername);
-
-        if (!typingUsers.Any())
-        {
-            return "";
-        }
-
-        var text = typingUsers.Count switch
-        {
-            1 => $"{typingUsers[0]} is typing...",
-            2 => $"{typingUsers[0]} and {typingUsers[1]} are typing...",
-            _ => "Several people are typing..."
-        };
-
-        return text;
+        // Send data attributes - client JS will filter and render
+        return $@"<span data-typing-users='{WebUtility.HtmlEncode(usersJson)}'></span>";
     }
 }

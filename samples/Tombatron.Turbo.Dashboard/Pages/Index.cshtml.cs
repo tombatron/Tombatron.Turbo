@@ -99,7 +99,7 @@ public class IndexModel : PageModel
     private static string GetTimeAgo(DateTime timestamp)
     {
         var diff = DateTime.UtcNow - timestamp;
-        
+
         if (diff.TotalSeconds < 60)
         {
             return "just now";

@@ -1,4 +1,5 @@
 using System.Text;
+using Tombatron.Turbo.Rendering;
 
 namespace Tombatron.Turbo.Streams;
 
@@ -12,6 +13,14 @@ namespace Tombatron.Turbo.Streams;
 public sealed class TurboStreamBuilder : ITurboStreamBuilder
 {
     private readonly List<string> _actions = new();
+
+    /// <summary>
+    /// Gets or sets the partial renderer for async partial rendering operations.
+    /// </summary>
+    /// <remarks>
+    /// This property is set internally by TurboService when using async Stream overloads.
+    /// </remarks>
+    internal IPartialRenderer? Renderer { get; set; }
 
     /// <inheritdoc />
     public ITurboStreamBuilder Append(string target, string html)

@@ -93,7 +93,7 @@ public class ChatService
         }
     }
 
-    public IReadOnlyList<string> GetTypingUsers(string roomId, string? excludeUsername = null)
+    public IReadOnlyList<string> GetTypingUsers(string roomId)
     {
         lock (_lock)
         {
@@ -102,10 +102,7 @@ public class ChatService
                 return Array.Empty<string>();
             }
 
-            return users
-                .Where(u => u != excludeUsername)
-                .OrderBy(u => u)
-                .ToList();
+            return users.OrderBy(u => u).ToList();
         }
     }
 

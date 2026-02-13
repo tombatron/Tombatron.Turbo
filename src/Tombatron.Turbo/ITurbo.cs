@@ -59,4 +59,58 @@ public interface ITurbo
     /// </code>
     /// </example>
     Task Broadcast(Action<ITurboStreamBuilder> build);
+
+    /// <summary>
+    /// Broadcasts Turbo Stream updates to all clients subscribed to the specified stream,
+    /// with support for async operations like partial rendering.
+    /// </summary>
+    /// <param name="streamName">The name of the stream to broadcast to.</param>
+    /// <param name="buildAsync">An async function that configures the stream updates to send.</param>
+    /// <returns>A task that completes when the broadcast has been sent.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when streamName or buildAsync is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when streamName is empty or whitespace.</exception>
+    /// <example>
+    /// <code>
+    /// await turbo.Stream("room:123", async builder =>
+    /// {
+    ///     await builder.AppendAsync("messages", Partials.Message, message);
+    /// });
+    /// </code>
+    /// </example>
+    Task Stream(string streamName, Func<ITurboStreamBuilder, Task> buildAsync);
+
+    /// <summary>
+    /// Broadcasts Turbo Stream updates to all clients subscribed to any of the specified streams,
+    /// with support for async operations like partial rendering.
+    /// </summary>
+    /// <param name="streamNames">The names of the streams to broadcast to.</param>
+    /// <param name="buildAsync">An async function that configures the stream updates to send.</param>
+    /// <returns>A task that completes when all broadcasts have been sent.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when streamNames or buildAsync is null.</exception>
+    /// <example>
+    /// <code>
+    /// await turbo.Stream(new[] { "user:alice", "user:bob" }, async builder =>
+    /// {
+    ///     await builder.AppendAsync("notifications", Partials.Notification, notification);
+    /// });
+    /// </code>
+    /// </example>
+    Task Stream(IEnumerable<string> streamNames, Func<ITurboStreamBuilder, Task> buildAsync);
+
+    /// <summary>
+    /// Broadcasts Turbo Stream updates to all connected clients regardless of their subscriptions,
+    /// with support for async operations like partial rendering.
+    /// </summary>
+    /// <param name="buildAsync">An async function that configures the stream updates to send.</param>
+    /// <returns>A task that completes when the broadcast has been sent.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when buildAsync is null.</exception>
+    /// <example>
+    /// <code>
+    /// await turbo.Broadcast(async builder =>
+    /// {
+    ///     await builder.UpdateAsync("announcement", Partials.Announcement, announcement);
+    /// });
+    /// </code>
+    /// </example>
+    Task Broadcast(Func<ITurboStreamBuilder, Task> buildAsync);
 }

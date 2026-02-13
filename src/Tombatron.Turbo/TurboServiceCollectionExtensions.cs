@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Tombatron.Turbo.Rendering;
 using Tombatron.Turbo.Streams;
 
 namespace Tombatron.Turbo;
@@ -68,6 +69,9 @@ public static class TurboServiceCollectionExtensions
         // Register Turbo Streams services
         services.TryAddSingleton<ITurboStreamAuthorization, DefaultTurboStreamAuthorization>();
         services.AddSingleton<ITurbo, TurboService>();
+
+        // Register partial rendering service
+        services.AddScoped<IPartialRenderer, PartialRenderer>();
 
         return services;
     }

@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Tombatron.Turbo.Rendering;
 using Tombatron.Turbo.Streams;
 using Xunit;
 
@@ -16,6 +17,7 @@ public class TurboServiceTests
     private readonly Mock<IHubClients> _mockClients;
     private readonly Mock<IClientProxy> _mockClientProxy;
     private readonly Mock<ILogger<TurboService>> _mockLogger;
+    private readonly Mock<IPartialRenderer> _mockPartialRenderer;
     private readonly TurboService _service;
 
     public TurboServiceTests()
@@ -24,12 +26,13 @@ public class TurboServiceTests
         _mockClients = new Mock<IHubClients>();
         _mockClientProxy = new Mock<IClientProxy>();
         _mockLogger = new Mock<ILogger<TurboService>>();
+        _mockPartialRenderer = new Mock<IPartialRenderer>();
 
         _mockHubContext.Setup(h => h.Clients).Returns(_mockClients.Object);
         _mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(_mockClientProxy.Object);
         _mockClients.Setup(c => c.All).Returns(_mockClientProxy.Object);
 
-        _service = new TurboService(_mockHubContext.Object, _mockLogger.Object);
+        _service = new TurboService(_mockHubContext.Object, _mockLogger.Object, _mockPartialRenderer.Object);
     }
 
     [Fact]
@@ -205,14 +208,21 @@ public class TurboServiceTests
     public void Constructor_WithNullHubContext_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new TurboService(null!, _mockLogger.Object));
+        Assert.Throws<ArgumentNullException>(() => new TurboService(null!, _mockLogger.Object, _mockPartialRenderer.Object));
     }
 
     [Fact]
     public void Constructor_WithNullLogger_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new TurboService(_mockHubContext.Object, null!));
+        Assert.Throws<ArgumentNullException>(() => new TurboService(_mockHubContext.Object, null!, _mockPartialRenderer.Object));
+    }
+
+    [Fact]
+    public void Constructor_WithNullPartialRenderer_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new TurboService(_mockHubContext.Object, _mockLogger.Object, null!));
     }
 
     [Fact]
@@ -240,5 +250,138 @@ public class TurboServiceTests
         capturedHtml.Should().Contain("<li>Item 1</li>");
         capturedHtml.Should().Contain("<li>Item 2</li>");
         capturedHtml.Should().Contain("<span>2</span>");
+    }
+
+    // Async overload tests
+
+    [Fact]
+    public async Task StreamAsync_WithValidStreamName_BroadcastsToGroup()
+    {
+        // Arrange
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.Stream("test-stream", async builder =>
+        {
+            await Task.Yield();
+            builder.Append("target", "<div>Content</div>");
+        });
+
+        // Assert
+        _mockClients.Verify(c => c.Group("test-stream"), Times.Once);
+        capturedHtml.Should().Contain("action=\"append\"");
+        capturedHtml.Should().Contain("target=\"target\"");
+        capturedHtml.Should().Contain("<div>Content</div>");
+    }
+
+    [Fact]
+    public async Task StreamAsync_WithNullStreamName_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            _service.Stream((string)null!, async builder =>
+            {
+                await Task.Yield();
+                builder.Append("target", "<div>Content</div>");
+            }));
+    }
+
+    [Fact]
+    public async Task StreamAsync_WithNullBuildAsync_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            _service.Stream("test-stream", (Func<ITurboStreamBuilder, Task>)null!));
+    }
+
+    [Fact]
+    public async Task StreamAsync_WithMultipleStreamNames_BroadcastsToAllGroups()
+    {
+        // Arrange
+        var streamNames = new[] { "stream-1", "stream-2", "stream-3" };
+
+        // Act
+        await _service.Stream(streamNames, async builder =>
+        {
+            await Task.Yield();
+            builder.Append("target", "<div>Content</div>");
+        });
+
+        // Assert
+        foreach (string streamName in streamNames)
+        {
+            _mockClients.Verify(c => c.Group(streamName), Times.Once);
+        }
+    }
+
+    [Fact]
+    public async Task BroadcastAsync_SendsToAllClients()
+    {
+        // Arrange
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.Broadcast(async builder =>
+        {
+            await Task.Yield();
+            builder.Update("announcement", "<p>Hello everyone!</p>");
+        });
+
+        // Assert
+        _mockClients.Verify(c => c.All, Times.Once);
+        capturedHtml.Should().Contain("action=\"update\"");
+        capturedHtml.Should().Contain("<p>Hello everyone!</p>");
+    }
+
+    [Fact]
+    public async Task BroadcastAsync_WithNullBuildAsync_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            _service.Broadcast((Func<ITurboStreamBuilder, Task>)null!));
+    }
+
+    [Fact]
+    public async Task StreamAsync_SetsRendererOnBuilder()
+    {
+        // Arrange
+        _mockPartialRenderer
+            .Setup(r => r.RenderAsync<string>(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync("<div>Rendered</div>");
+
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.Stream("test-stream", async builder =>
+        {
+            // Use the extension method that requires the renderer
+            var template = new PartialTemplate<string>("Pages/Shared/_Test.cshtml", "Test");
+            await builder.AppendAsync("target", template, "model");
+        });
+
+        // Assert
+        _mockPartialRenderer.Verify(r => r.RenderAsync<string>("Pages/Shared/_Test.cshtml", "model"), Times.Once);
+        capturedHtml.Should().Contain("<div>Rendered</div>");
     }
 }
