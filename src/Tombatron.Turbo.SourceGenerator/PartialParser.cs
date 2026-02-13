@@ -75,10 +75,10 @@ public static class PartialParser
     }
 
     /// <summary>
-    /// Gets the view path for a partial relative to Pages or Views folder.
+    /// Gets the application-relative view path for a partial.
     /// </summary>
     /// <param name="filePath">The full file path.</param>
-    /// <returns>The view path (e.g., "Shared/_Message" for "Pages/Shared/_Message.cshtml").</returns>
+    /// <returns>The application-relative view path (e.g., "/Pages/Shared/_Message.cshtml").</returns>
     public static string GetViewPath(string filePath)
     {
         if (string.IsNullOrEmpty(filePath))
@@ -86,30 +86,19 @@ public static class PartialParser
             return string.Empty;
         }
 
-        // Normalize path separators
         string normalizedPath = filePath.Replace('\\', '/');
 
-        // Find Pages or Views folder
-        int pagesIndex = FindFolderIndex(normalizedPath, "/Pages/");
-        int viewsIndex = FindFolderIndex(normalizedPath, "/Views/");
+        int pagesIndex = normalizedPath.IndexOf("/Pages/", StringComparison.OrdinalIgnoreCase);
+        int viewsIndex = normalizedPath.IndexOf("/Views/", StringComparison.OrdinalIgnoreCase);
 
         int startIndex = Math.Max(pagesIndex, viewsIndex);
         if (startIndex == -1)
         {
-            // Fallback: use file name
             return Path.GetFileNameWithoutExtension(filePath);
         }
 
-        // Extract path after Pages/ or Views/
-        string relativePath = normalizedPath.Substring(startIndex);
-
-        // Remove .cshtml extension
-        if (relativePath.EndsWith(".cshtml", StringComparison.OrdinalIgnoreCase))
-        {
-            relativePath = relativePath.Substring(0, relativePath.Length - 7);
-        }
-
-        return relativePath;
+        // Return absolute path from /Pages/ or /Views/ onward (with .cshtml extension)
+        return normalizedPath.Substring(startIndex);
     }
 
     /// <summary>
@@ -155,15 +144,4 @@ public static class PartialParser
         return new PartialInfo(filePath, partialName, viewPath, modelType);
     }
 
-    private static int FindFolderIndex(string path, string folder)
-    {
-        int index = path.IndexOf(folder, StringComparison.OrdinalIgnoreCase);
-        if (index == -1)
-        {
-            return -1;
-        }
-
-        // Return the position after the folder name
-        return index + folder.Length;
-    }
 }

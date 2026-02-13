@@ -84,6 +84,18 @@ public sealed class PartialRenderer : IPartialRenderer
 
     private IView FindView(ActionContext actionContext, string partialName)
     {
+        if (partialName.StartsWith("/") || partialName.StartsWith("~/"))
+        {
+            var absoluteResult = _viewEngine.GetView(executingFilePath: null, viewPath: partialName, isMainPage: false);
+            if (absoluteResult.Success)
+            {
+                return absoluteResult.View;
+            }
+
+            throw new InvalidOperationException(
+                $"Unable to find partial view '{partialName}'. Searched locations: {string.Join(", ", absoluteResult.SearchedLocations)}");
+        }
+
         // Try to find as a partial view first
         var partialResult = _viewEngine.FindView(actionContext, partialName, isMainPage: false);
         if (partialResult.Success)
