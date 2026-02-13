@@ -31,7 +31,6 @@ public sealed class PartialRenderer : IPartialRenderer
         IHttpContextAccessor httpContextAccessor)
     {
         _viewEngine = viewEngine ?? throw new ArgumentNullException(nameof(viewEngine));
-        // _tempDataProvider = tempDataProvider ?? throw new ArgumentNullException(nameof(tempDataProvider));
         _tempDataDictionaryFactory = tempDataDictionaryFactory ?? throw new ArgumentNullException(nameof(tempDataDictionaryFactory));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
     }
