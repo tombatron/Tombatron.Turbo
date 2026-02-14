@@ -1,12 +1,13 @@
 @page "{id}"
-@using Tombatron.Turbo.Generated
+
 @model RoomModel
 @{
     ViewData["Title"] = $"#{Model.Room?.Name ?? "Chat"}";
 }
 
 <!-- Subscribe to room-specific stream -->
-<turbo-stream-source-signalr stream="room:@Model.RoomId" hub-url="/turbo-hub"></turbo-stream-source-signalr>
+<turbo-stream-source-signalr stream="room:@Model.RoomId" hub-url="/turbo-hub" />
+<turbo-stream-source-signalr stream="room-list:@Model.Username" hub-url="/turbo-hub"/>
 
 <div class="app-container">
     <!-- Sidebar with rooms -->
@@ -15,10 +16,10 @@
             Turbo Chat
         </div>
 
-        <div class="room-list">
+        <div id="room-list" class="room-list">
             @foreach (var room in Model.Rooms)
             {
-                <partial name="_RoomEntry" model="@(Model.RoomId, room)" />
+                <partial name="_RoomEntry" model="@(Model.RoomId, Model.Username, room)" />
             }
         </div>
 

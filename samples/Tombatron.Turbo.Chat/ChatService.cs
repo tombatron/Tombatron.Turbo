@@ -106,11 +106,11 @@ public class ChatService
         }
     }
 
-    public string CreateRoom(string name, string description, List<UserProfile>? members = null)
+    public ChatRoom CreateRoom(string name, string description, List<UserProfile>? members = null)
     {
         lock (_lock)
         {
-            var id = name.ToLowerInvariant().Replace(" ", "-");
+            var id = Guid.NewGuid().ToString("N")[..8];
 
             if (_rooms.ContainsKey(id))
             {
@@ -119,7 +119,7 @@ public class ChatService
 
             _rooms[id] = new ChatRoom(id, name, description, members);
 
-            return id;
+            return _rooms[id];
         }
     }
 

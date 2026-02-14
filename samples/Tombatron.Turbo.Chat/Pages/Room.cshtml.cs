@@ -118,19 +118,25 @@ public class RoomModel : PageModel
         return Partial("_Profile", profile);
     }
 
-    public IActionResult OnPostCreatePrivateMessage(string username)
+    public async Task<IActionResult> OnPostCreatePrivateMessage(string username)
     {
-        var currentUser = HttpContext.Session.GetString("Username");
+        var currentUser = _chatService.GetUserProfile(HttpContext.Session.GetString("Username")!);
+        var otherUser = _chatService.GetUserProfile(username);
 
         var members = new[]
         {
-            _chatService.GetUserProfile(currentUser!),
-            _chatService.GetUserProfile(username)
+            currentUser,
+            otherUser
         };
 
-        var roomId = _chatService.CreateRoom($"DM - {username}", $"Private messaging with {username}", members.ToList());
+        var room = _chatService.CreateRoom($"DM - {username}", $"Private messaging with {username}", members.ToList());
 
-        return RedirectToPage("/Room", new { id = roomId });
+        await _turbo.Stream($"room-list:{username}", async builder =>
+        {
+            await builder.AppendAsync("room-list", Partials.RoomEntry, ("", username, room));
+        });
+
+        return RedirectToPage("/Room", new { id = room.Id });
     }
 
     private string RenderTypingIndicator(string roomId)

@@ -1,6 +1,14 @@
-@model (string RoomId, Tombatron.Turbo.Chat.ChatRoom Room)
+@model (string RoomId, string CurrentUser, Tombatron.Turbo.Chat.ChatRoom Room)
 
 <a href="/Room/@Model.Room.Id"
    class="room-item @(Model.RoomId == Model.Room.Id ? "active" : "")">
-    @Model.Room.Name
+    @if (Model.Room.Members?.Count == 2)
+    {
+        var otherUser = Model.Room.Members.First(x => x.Username != @Model.CurrentUser);
+        <text>DM - @otherUser.Username</text>
+    }
+    else
+    {
+        @Model.Room.Name
+    }
 </a>
