@@ -106,17 +106,19 @@ public class ChatService
         }
     }
 
-    public string CreateRoom(string name, string description)
+    public string CreateRoom(string name, string description, List<UserProfile>? members = null)
     {
         lock (_lock)
         {
             var id = name.ToLowerInvariant().Replace(" ", "-");
+
             if (_rooms.ContainsKey(id))
             {
                 throw new InvalidOperationException($"Room '{id}' already exists");
             }
 
-            _rooms[id] = new ChatRoom(id, name, description);
+            _rooms[id] = new ChatRoom(id, name, description, members);
+
             return id;
         }
     }

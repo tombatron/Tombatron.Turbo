@@ -36,7 +36,7 @@ public class RoomModel : PageModel
         Username = username;
         RoomId = id;
         Room = _chatService.GetRoom(id);
-        Rooms = _chatService.GetRooms();
+        Rooms = _chatService.GetRooms(username);
         Messages = _chatService.GetMessages(id);
 
         if (Room == null)
@@ -116,6 +116,21 @@ public class RoomModel : PageModel
     {
         var profile = _chatService.GetUserProfile(username);
         return Partial("_Profile", profile);
+    }
+
+    public IActionResult OnPostCreatePrivateMessage(string username)
+    {
+        var currentUser = HttpContext.Session.GetString("Username");
+
+        var members = new[]
+        {
+            _chatService.GetUserProfile(currentUser!),
+            _chatService.GetUserProfile(username)
+        };
+
+        var roomId = _chatService.CreateRoom($"DM - {username}", $"Private messaging with {username}", members.ToList());
+
+        return RedirectToPage("/Room", new { id = roomId });
     }
 
     private string RenderTypingIndicator(string roomId)

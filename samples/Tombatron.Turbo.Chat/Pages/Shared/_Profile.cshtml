@@ -1,6 +1,7 @@
 @model Tombatron.Turbo.Chat.UserProfile
 
-<turbo-frame id="user-profile" class="profile-card">
+<turbo-frame id="user-profile"
+             class="profile-card">
     <div class="profile-card-banner"></div>
     <div class="profile-card-avatar">@Model.Username[0].ToString()</div>
     <div class="profile-card-body">
@@ -16,6 +17,10 @@
                 <span class="profile-role-badge">Member</span>
             </div>
         </div>
-        <a href="#" class="profile-dm-btn">Direct Message</a>
+
+        <form method="post" asp-page-handler="CreatePrivateMessage" data-turbo-frame="_top">
+            <input type="hidden" name="username" value="@Model.Username" />
+            <button type="submit" class="profile-dm-btn">Direct Message</button>
+        </form>
     </div>
 </turbo-frame>
