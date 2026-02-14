@@ -1,0 +1,6 @@
+@model (string RoomId, Tombatron.Turbo.Chat.ChatRoom Room)
+
+<a href="/Room/@Model.Room.Id"
+   class="room-item @(Model.RoomId == Model.Room.Id ? "active" : "")">
+    @Model.Room.Name
+</a>

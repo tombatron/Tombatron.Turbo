@@ -18,9 +18,10 @@ public static class PartialParser
     };
 
     // Regex to extract @model directive type name
-    // Matches: @model TypeName or @model Namespace.TypeName
+    // Matches everything after @model to end-of-line, supporting simple types,
+    // generics, tuples, nullable types, and fully qualified names.
     private static readonly Regex ModelDirectivePattern = new(
-        @"^\s*@model\s+(?<type>[^\s<>]+(?:<[^>]+>)?)",
+        @"^\s*@model\s+(?<type>.+)$",
         RegexOptions.Compiled | RegexOptions.Multiline);
 
     /// <summary>
@@ -71,7 +72,7 @@ public static class PartialParser
             return null;
         }
 
-        return match.Groups["type"].Value;
+        return match.Groups["type"].Value.Trim();
     }
 
     /// <summary>

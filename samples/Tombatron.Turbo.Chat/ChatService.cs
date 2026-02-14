@@ -6,17 +6,16 @@ namespace Tombatron.Turbo.Chat;
 /// </summary>
 public class ChatService
 {
-    private readonly Dictionary<string, ChatRoom> _rooms = new()
-    {
-        ["general"] = new ChatRoom("general", "General", "General discussion for everyone"),
-        ["random"] = new ChatRoom("random", "Random", "Off-topic conversations"),
-        ["help"] = new ChatRoom("help", "Help", "Get help with questions")
-    };
+    private readonly Dictionary<string, ChatRoom> _rooms = new() { ["general"] = new ChatRoom("general", "General", "General discussion for everyone"), ["random"] = new ChatRoom("random", "Random", "Off-topic conversations"), ["help"] = new ChatRoom("help", "Help", "Get help with questions") };
 
     private readonly Dictionary<string, HashSet<string>> _typingUsers = new();
     private readonly object _lock = new();
 
-    public IEnumerable<ChatRoom> GetRooms() => _rooms.Values;
+    public IEnumerable<ChatRoom> GetRooms(string? username = null)
+    {
+        return username is null ? _rooms.Values.Where(x => x.Members is null).ToList() :
+            _rooms.Values.Where(x => x.Members is null || x.Members.Exists(m => m.Username == username));
+    }
 
     public ChatRoom? GetRoom(string roomId)
     {
@@ -78,6 +77,7 @@ public class ChatService
             {
                 _typingUsers[roomId] = new HashSet<string>();
             }
+
             _typingUsers[roomId].Add(username);
         }
     }
@@ -127,19 +127,13 @@ public class ChatService
     }
 }
 
-public class ChatRoom
+public class ChatRoom(string id, string name, string description, List<UserProfile>? members = null)
 {
-    public string Id { get; }
-    public string Name { get; }
-    public string Description { get; }
+    public string Id { get; } = id;
+    public string Name { get; } = name;
+    public string Description { get; } = description;
     public List<ChatMessage> Messages { get; } = new();
-
-    public ChatRoom(string id, string name, string description)
-    {
-        Id = id;
-        Name = name;
-        Description = description;
-    }
+    public List<UserProfile>? Members { get; } = members;
 }
 
 public class ChatMessage
