@@ -1,0 +1,21 @@
+@model Tombatron.Turbo.Chat.UserProfile
+
+<turbo-frame id="user-profile" class="profile-card">
+    <div class="profile-card-banner"></div>
+    <div class="profile-card-avatar">@Model.Username[0].ToString()</div>
+    <div class="profile-card-body">
+        <h3 class="profile-card-username">@Model.Username</h3>
+        <div class="profile-card-divider"></div>
+        <div class="profile-card-section">
+            <span class="profile-card-label">Member Since</span>
+            <span class="profile-card-value">January 2025</span>
+        </div>
+        <div class="profile-card-section">
+            <span class="profile-card-label">Roles</span>
+            <div class="profile-card-roles">
+                <span class="profile-role-badge">Member</span>
+            </div>
+        </div>
+        <a href="#" class="profile-dm-btn">Direct Message</a>
+    </div>
+</turbo-frame>

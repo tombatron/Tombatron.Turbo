@@ -116,9 +116,38 @@ application.register("typing-indicator", class extends Stimulus.Controller {
 });
 
 application.register("profile-sidebar", class extends Stimulus.Controller {
+    static values = { roomId: String };
+    static targets = ["frame", "loading"];
+
+    connect() {
+        console.log("profile side bar controller connected.");
+
+        this.frameTarget.addEventListener('turbo:before-fetch-request', this.showLoading.bind(this));
+        this.frameTarget.addEventListener('turbo:frame-load', this.hideLoading.bind(this));
+    }
+
     show(username) {
-        console.log("show username!!");
+        // Clear any profile card that might already exist.
+        this.frameTarget.innerHTML = '';
+
+        // Open the sidebar.
         this.element.classList.add("open");
+
+        // Trigger the loading of the profile data.
+        this.frameTarget.src = `/Room/${this.roomIdValue}?handler=UserProfile&username=${username}`;
+    }
+
+    showLoading() {
+        this.loadingTarget.classList.remove('hidden');
+    }
+
+    hideLoading() {
+        this.loadingTarget.classList.add('hidden');
+    }
+
+    hide(event) {
+        event.preventDefault();
+        this.element.classList.remove("open");
     }
 });
 
@@ -129,11 +158,17 @@ application.register("chat-message", class extends Stimulus.Controller {
         username: String
     }
 
+    connect() {
+        console.log("chat message controller loaded.");
+    }
+
     showProfile(event) {
         event.preventDefault();
         console.log("It clicked!");
         if (this.hasProfileSidebarOutlet) {
-            this.profileSidebarOutlet.show(this.username);
+            this.profileSidebarOutlet.show(this.usernameValue);
+        } else {
+            console.log("No outlet found");
         }
     }
 });

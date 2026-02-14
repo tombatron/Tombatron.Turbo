@@ -112,6 +112,12 @@ public class RoomModel : PageModel
         return new NoContentResult();
     }
 
+    public IActionResult OnGetUserProfile(string username)
+    {
+        var profile = _chatService.GetUserProfile(username);
+        return Partial("_Profile", profile);
+    }
+
     private string RenderTypingIndicator(string roomId)
     {
         var typingUsers = _chatService.GetTypingUsers(roomId);

@@ -120,6 +120,11 @@ public class ChatService
             return id;
         }
     }
+
+    public UserProfile GetUserProfile(string username)
+    {
+        return new UserProfile { Username = username };
+    }
 }
 
 public class ChatRoom
@@ -144,4 +149,9 @@ public class ChatMessage
     public string Username { get; set; } = "";
     public string Content { get; set; } = "";
     public DateTime Timestamp { get; set; }
+}
+
+public class UserProfile
+{
+    public required string Username { get; set; }
 }

@@ -86,10 +86,22 @@
     </div>
 
     <!-- Right flyaway sidebar -->
-    <div id="profile-sidebar" class="right-sidebar" data-controller="profile-sidebar">
-        <div class="sidebar-header">Details</div>
+    <div id="profile-sidebar" class="right-sidebar" data-controller="profile-sidebar" data-profile-sidebar-room-id-value="@Model.RoomId">
+        <div class="sidebar-header">
+            <span>Details</span>
+            <button class="sidebar-close-btn" type="button" data-action="click->profile-sidebar#hide">&times;</button>
+        </div>
         <div class="sidebar-content">
-            <!-- Content to be added later -->
+            <turbo-frame id="user-profile" data-profile-sidebar-target="frame">
+            </turbo-frame>
+
+            <div data-profile-sidebar-target="loading" class="profile-loading hidden">
+                <div class="profile-loading-avatar"></div>
+                <div class="profile-loading-line"></div>
+                <div class="profile-loading-line short"></div>
+                <div class="profile-loading-line"></div>
+                <div class="profile-loading-line short"></div>
+            </div>
         </div>
     </div>
 </div>

@@ -2,7 +2,7 @@
 
 <div class="message" id="message-@Model.Id"
      data-controller="chat-message"
-     data-chat-message-user-profile-outlet="#profile-sidebar"
+     data-chat-message-profile-sidebar-outlet="#profile-sidebar"
      data-chat-message-username-value="@Model.Username">
     <div class="message-avatar" data-action="click->chat-message#showProfile">@Model.Username[0].ToString().ToUpper()</div>
     <div class="message-content">
