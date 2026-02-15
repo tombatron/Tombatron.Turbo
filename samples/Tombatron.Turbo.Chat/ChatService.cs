@@ -131,11 +131,11 @@ public class ChatService
 
 public class ChatRoom(string id, string name, string description, List<UserProfile>? members = null)
 {
-    public string Id { get; } = id;
-    public string Name { get; } = name;
-    public string Description { get; } = description;
-    public List<ChatMessage> Messages { get; } = new();
-    public List<UserProfile>? Members { get; } = members;
+    public string Id => id;
+    public string Name => name;
+    public string Description => description;
+    public List<ChatMessage> Messages => new();
+    public List<UserProfile>? Members => members;
 }
 
 public class ChatMessage

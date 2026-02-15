@@ -2,6 +2,7 @@
 
 @model RoomModel
 @{
+    // TODO: Change how this is computed.
     ViewData["Title"] = $"#{Model.Room?.Name ?? "Chat"}";
 }
 
@@ -35,8 +36,20 @@
          data-controller="chat"
          data-chat-room-id-value="@Model.RoomId">
         <div class="chat-header">
-            <h2>@Model.Room?.Name</h2>
-            <span class="chat-description">@Model.Room?.Description</span>
+            @if (Model.Room?.Members is { Count: 2 })
+            {
+                @functions{
+
+                    string OtherUser => Model.Room?.Members?.First(m => !string.Equals(m.Username, Model.Username, StringComparison.InvariantCultureIgnoreCase))!.Username;
+                }
+                <h2>DM - @OtherUser</h2>
+                <span class="chat-description">Private messages with @OtherUser</span>
+            }
+            else
+            {
+                <h2>@Model.Room?.Name</h2>
+                <span class="chat-description">@Model.Room?.Description</span>
+            }
         </div>
 
         <!-- Messages container -->
