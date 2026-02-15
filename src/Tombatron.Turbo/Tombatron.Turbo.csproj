@@ -13,8 +13,8 @@
     <PackageId>Tombatron.Turbo</PackageId>
     <Version>1.0.0</Version>
     <Authors>tombatron</Authors>
-    <Description>Hotwire Turbo for ASP.NET Core with compile-time frame optimization and SignalR-powered real-time streams.</Description>
-    <PackageTags>turbo;hotwire;aspnetcore;signalr;real-time</PackageTags>
+    <Description>Hotwire Turbo for ASP.NET Core. Includes compile-time source generator and Roslyn analyzers, with SignalR-powered real-time streams.</Description>
+    <PackageTags>turbo;hotwire;aspnetcore;signalr;real-time;source-generator;roslyn</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/tombatron/Tombatron.Turbo</PackageProjectUrl>
     <RepositoryUrl>https://github.com/tombatron/Tombatron.Turbo</RepositoryUrl>
@@ -27,6 +27,33 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- Bundle SourceGenerator and Analyzers into this package -->
+  <ItemGroup>
+    <ProjectReference
+      Include="..\Tombatron.Turbo.SourceGenerator\Tombatron.Turbo.SourceGenerator.csproj"
+      ReferenceOutputAssembly="false"
+      OutputItemType="Analyzer"
+      PrivateAssets="all" />
+    <ProjectReference
+      Include="..\Tombatron.Turbo.Analyzers\Tombatron.Turbo.Analyzers.csproj"
+      ReferenceOutputAssembly="false"
+      OutputItemType="Analyzer"
+      PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None
+      Include="$(MSBuildProjectDirectory)\..\Tombatron.Turbo.SourceGenerator\bin\$(Configuration)\netstandard2.0\Tombatron.Turbo.SourceGenerator.dll"
+      Pack="true"
+      PackagePath="analyzers/dotnet/cs"
+      Visible="false" />
+    <None
+      Include="$(MSBuildProjectDirectory)\..\Tombatron.Turbo.Analyzers\bin\$(Configuration)\netstandard2.0\Tombatron.Turbo.Analyzers.dll"
+      Pack="true"
+      PackagePath="analyzers/dotnet/cs"
+      Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
