@@ -2,6 +2,7 @@
 
 [![Build and Test](https://github.com/tombatron/Tombatron.Turbo/actions/workflows/build.yml/badge.svg)](https://github.com/tombatron/Tombatron.Turbo/actions/workflows/build.yml)
 [![NuGet](https://img.shields.io/nuget/v/Tombatron.Turbo.svg)](https://www.nuget.org/packages/Tombatron.Turbo/)
+[![npm](https://img.shields.io/npm/v/@tombatron/turbo-signalr.svg)](https://www.npmjs.com/package/@tombatron/turbo-signalr)
 
 Hotwire Turbo for ASP.NET Core with SignalR-powered real-time streams.
 
@@ -14,8 +15,16 @@ Hotwire Turbo for ASP.NET Core with SignalR-powered real-time streams.
 
 ## Installation
 
+**NuGet (ASP.NET Core server package):**
+
 ```bash
 dotnet add package Tombatron.Turbo
+```
+
+**npm (JavaScript client library):**
+
+```bash
+npm install @tombatron/turbo-signalr
 ```
 
 ## Quick Start
@@ -257,6 +266,21 @@ dotnet run
 - ASP.NET Core
 - Turbo.js 8.x (client-side)
 - SignalR (for Turbo Streams)
+
+## Publishing / Releases
+
+Both the NuGet and npm packages are published automatically when a version tag is pushed:
+
+```bash
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+This triggers the [Release workflow](.github/workflows/release.yml) which builds, tests, and publishes:
+- **Tombatron.Turbo** to [NuGet](https://www.nuget.org/packages/Tombatron.Turbo/)
+- **@tombatron/turbo-signalr** to [npm](https://www.npmjs.com/package/@tombatron/turbo-signalr)
+
+The npm package can also be published independently via the [manual workflow](.github/workflows/npm-publish.yml).
 
 ## License
 

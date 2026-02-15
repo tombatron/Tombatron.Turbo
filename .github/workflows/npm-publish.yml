@@ -60,10 +60,10 @@ jobs:
       if: ${{ inputs.dry_run == true }}
       run: npm publish --access public --dry-run
       env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_SECRET_SECURITY_TOKEN }}
 
     - name: Publish to npm
       if: ${{ inputs.dry_run != true }}
       run: npm publish --access public
       env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_SECRET_SECURITY_TOKEN }}

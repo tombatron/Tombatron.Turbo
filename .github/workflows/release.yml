@@ -45,7 +45,23 @@ jobs:
       run: dotnet pack --configuration Release --output ./artifacts /p:Version=${{ steps.version.outputs.VERSION }}
 
     - name: Push to NuGet
-      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_SECRETY_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+    - name: Setup Node.js for npm publish
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Set npm package version
+      working-directory: src/Tombatron.Turbo/wwwroot
+      run: npm version ${{ steps.version.outputs.VERSION }} --no-git-tag-version
+
+    - name: Publish to npm
+      working-directory: src/Tombatron.Turbo/wwwroot
+      run: npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_SECRET_SECURITY_TOKEN }}
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
