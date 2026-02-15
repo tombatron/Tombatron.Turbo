@@ -136,7 +136,7 @@ const connectionManager = {
      * @returns {Promise<boolean>} True if subscription was successful
      */
     async subscribe(streamName, hubUrl) {
-        if (!streamName || typeof streamName !== 'string') {
+        if (typeof streamName !== 'string') {
             throw new Error('Stream name is required and must be a string');
         }
 
