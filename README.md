@@ -8,8 +8,10 @@ Hotwire Turbo for ASP.NET Core with SignalR-powered real-time streams.
 
 ## Features
 
-- **Turbo Frames**: Partial page updates using manual partials
-- **Turbo Streams**: Real-time updates via SignalR
+- **Turbo Frames**: Partial page updates with automatic `Turbo-Frame` header detection
+- **Turbo Streams**: Real-time updates via SignalR with targeted and broadcast support
+- **Source Generator**: Compile-time strongly-typed partial references
+- **Minimal API Support**: Return partials from Minimal API endpoints with `TurboResults`
 - **Simple Architecture**: Check for `Turbo-Frame` header, return partial or redirect
 - **Zero JavaScript Configuration**: Works out of the box with Turbo.js
 
@@ -19,6 +21,12 @@ Hotwire Turbo for ASP.NET Core with SignalR-powered real-time streams.
 
 ```bash
 dotnet add package Tombatron.Turbo
+```
+
+**NuGet (Source generator for strongly-typed partials, optional):**
+
+```bash
+dotnet add package Tombatron.Turbo.SourceGenerator
 ```
 
 **npm (JavaScript client library):**
@@ -118,7 +126,7 @@ public class CartModel : PageModel
 
 ## Turbo Streams (Real-Time Updates)
 
-### Broadcast Updates from Server
+### Send Updates to a Stream
 
 ```csharp
 public class CartController : Controller
@@ -135,7 +143,7 @@ public class CartController : Controller
     {
         // Add item to cart...
 
-        // Broadcast update to the user's stream
+        // Send update to the user's stream
         await _turbo.Stream($"user:{User.Identity.Name}", builder =>
         {
             builder.Update("cart-total", $"<span>${cart.Total}</span>");
@@ -144,6 +152,36 @@ public class CartController : Controller
         return Ok();
     }
 }
+```
+
+### Broadcast to All Connected Clients
+
+```csharp
+// Send updates to every connected client
+await _turbo.Broadcast(builder =>
+{
+    builder.Update("active-users", $"<span>{count}</span>");
+});
+```
+
+### Render Partials in Streams
+
+Use the async overload to render Razor partials directly in stream updates:
+
+```csharp
+await _turbo.Stream($"room:{roomId}", async builder =>
+{
+    await builder.AppendAsync("messages", "_Message", message);
+});
+```
+
+With the source generator, you get strongly-typed partial references:
+
+```csharp
+await _turbo.Stream($"room:{roomId}", async builder =>
+{
+    await builder.AppendAsync("messages", Partials.Message, message);
+});
 ```
 
 ### Include the Client Script
@@ -183,13 +221,43 @@ await _turbo.Stream("notifications", builder =>
 });
 ```
 
+## Minimal API Support
+
+Use `TurboResults` to return partials from Minimal API endpoints:
+
+```csharp
+app.MapGet("/cart/items", (HttpContext ctx) =>
+{
+    if (ctx.IsTurboFrameRequest())
+    {
+        return TurboResults.Partial("_CartItems", model);
+    }
+    return Results.Redirect("/cart");
+});
+```
+
+## Source Generator
+
+The `Tombatron.Turbo.SourceGenerator` package scans your `_*.cshtml` partial views at compile time and generates a `Partials` static class with strongly-typed references:
+
+```csharp
+// Generated from _Message.cshtml with @model ChatMessage
+public static PartialTemplate<ChatMessage> Message { get; }
+    = new("/Pages/Shared/_Message.cshtml", "Message");
+```
+
+Use them for compile-time safety instead of magic strings:
+
+```csharp
+await builder.AppendAsync("messages", Partials.Message, message);
+```
+
 ## Configuration
 
 ```csharp
 builder.Services.AddTurbo(options =>
 {
     options.HubPath = "/turbo-hub";
-    options.UseSignedStreamNames = true;
     options.AddVaryHeader = true;
 });
 ```
@@ -215,6 +283,9 @@ if (HttpContext.IsTurboFrameRequestWithPrefix("item_"))
 {
     return Partial("_CartItem", Model);
 }
+
+// Get the raw frame ID
+string? frameId = HttpContext.GetTurboFrameId();
 ```
 
 ## How It Works
@@ -245,15 +316,17 @@ This approach is simple, explicit, and gives you full control over what content 
 - [From Blazor Server](docs/migration/from-blazor-server.md)
 - [From HTMX](docs/migration/from-htmx.md)
 
-## Sample Application
+## Sample Applications
 
-The repository includes a sample application demonstrating:
-- Turbo Frames for partial updates
-- Turbo Streams for real-time features
-- Shopping cart with add/remove operations
-- Live notifications and counters
+The repository includes three sample applications:
 
-Run the sample:
+**[Tombatron.Turbo.Sample](samples/Tombatron.Turbo.Sample)** - Turbo Frames for partial page updates and Turbo Streams for real-time notifications, including a shopping cart with add/remove operations.
+
+**[Tombatron.Turbo.Chat](samples/Tombatron.Turbo.Chat)** - Real-time multi-room chat using room-based streams, typing indicators, private messaging, and the source-generated `Partials` class for strongly-typed partial rendering.
+
+**[Tombatron.Turbo.Dashboard](samples/Tombatron.Turbo.Dashboard)** - Live metrics dashboard using `Broadcast()` from a background service to push updates to all connected clients every 2 seconds.
+
+Run any sample:
 
 ```bash
 cd samples/Tombatron.Turbo.Sample
