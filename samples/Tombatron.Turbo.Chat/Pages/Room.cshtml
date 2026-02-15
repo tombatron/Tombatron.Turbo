@@ -40,7 +40,7 @@
             {
                 @functions{
 
-                    string OtherUser => Model.Room?.Members?.First(m => !string.Equals(m.Username, Model.Username, StringComparison.InvariantCultureIgnoreCase))!.Username;
+                    string OtherUser => Model.Room?.Members?.First(m => !string.Equals(m.Username, Model!.Username, StringComparison.InvariantCultureIgnoreCase)).Username ?? string.Empty;
                 }
                 <h2>DM - @OtherUser</h2>
                 <span class="chat-description">Private messages with @OtherUser</span>

@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Remove="wwwroot\src\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -55,6 +56,16 @@
     <Content Remove="wwwroot\dist\turbo-signalr.esm.js" />
     <Content Remove="wwwroot\dist\turbo-signalr.esm.js.map" />
     <Content Include="wwwroot\src\turbo-stream-source-signalr.js" />
+    <Content Remove="wwwroot\src\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="wwwroot\src\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="wwwroot\src\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\src\turbo-stream-source-signalr.js" />
   </ItemGroup>
 
 </Project>
