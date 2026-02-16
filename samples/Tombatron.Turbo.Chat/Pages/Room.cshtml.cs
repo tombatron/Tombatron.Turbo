@@ -44,6 +44,8 @@ public class RoomModel : PageModel
             return RedirectToPage("/Room", new { id = "general" });
         }
 
+        Room.Join(username);
+
         return Page();
     }
 

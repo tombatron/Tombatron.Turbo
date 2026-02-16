@@ -14,7 +14,7 @@ public class ChatService
     public IEnumerable<ChatRoom> GetRooms(string? username = null)
     {
         return username is null ? _rooms.Values.Where(x => x.Members is null).ToList() :
-            _rooms.Values.Where(x => x.Members is null || x.Members.Exists(m => m.Username == username));
+            _rooms.Values.Where(x => x.Members is null || x.Members.Any(m => m.Username == username));
     }
 
     public ChatRoom? GetRoom(string roomId)
@@ -129,13 +129,41 @@ public class ChatService
     }
 }
 
-public class ChatRoom(string id, string name, string description, List<UserProfile>? members = null)
+public class ChatRoom
 {
-    public string Id => id;
-    public string Name => name;
-    public string Description => description;
-    public List<ChatMessage> Messages => new();
-    public List<UserProfile>? Members => members;
+    private readonly string _id;
+    private readonly string _name;
+    private readonly string _description;
+
+    public ChatRoom(string id, string name, string description, List<UserProfile>? members = null)
+    {
+        _id = id;
+        _name = name;
+        _description = description;
+
+        if (members is not null)
+        {
+            Members = new HashSet<UserProfile>(members);
+        }
+    }
+
+    public string Id => _id;
+    public string Name => _name;
+    public string Description => _description;
+    public List<ChatMessage> Messages { get; } = new();
+
+    public HashSet<UserProfile>? Members { get; private set; }
+
+
+    public void Join(string username)
+    {
+        if (Members is null)
+        {
+            Members = new();
+        }
+
+        Members.Add(new UserProfile { Username = username });
+    }
 }
 
 public class ChatMessage
