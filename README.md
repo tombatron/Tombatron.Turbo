@@ -42,6 +42,14 @@ npm install @tombatron/turbo-signalr
 ```csharp
 // Program.cs
 builder.Services.AddTurbo();
+
+// Or with import map configuration:
+builder.Services.AddTurbo(options =>
+{
+    options.ImportMap.Pin("@hotwired/stimulus",
+        "https://unpkg.com/@hotwired/stimulus@3.2.2/dist/stimulus.js", preload: true);
+    options.ImportMap.Pin("controllers/hello", "/js/controllers/hello_controller.js");
+});
 ```
 
 ### 2. Use Turbo Middleware
@@ -184,12 +192,28 @@ await _turbo.Stream($"room:{roomId}", async builder =>
 });
 ```
 
-### Include the Client Script
+### Include the Client Scripts
 
 ```html
-<!-- In your layout: Turbo.js + SignalR adapter -->
-<script type="module" src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.min.js"></script>
-<script src="_content/Tombatron.Turbo/dist/turbo-signalr.bundled.min.js"></script>
+<!-- In your layout: renders Turbo.js + SignalR adapter script tags -->
+<turbo-scripts />
+
+<!-- Or use import maps: -->
+<turbo-scripts mode="Importmap" />
+```
+
+The `<turbo-scripts>` tag helper automatically includes Turbo.js and the SignalR bridge.
+In **Traditional** mode (default), it renders standard `<script>` tags.
+In **Importmap** mode, it renders a `<script type="importmap">` block with module preloads.
+
+Configure additional modules (e.g. Stimulus) via `ImportMap.Pin()` in `Program.cs`:
+
+```csharp
+builder.Services.AddTurbo(options =>
+{
+    options.ImportMap.Pin("@hotwired/stimulus",
+        "https://unpkg.com/@hotwired/stimulus@3.2.2/dist/stimulus.js", preload: true);
+});
 ```
 
 ### Subscribe to Streams in Your View

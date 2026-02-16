@@ -64,6 +64,12 @@ public sealed class TurboOptions
     public int MaxReconnectAttempts { get; set; } = 5;
 
     /// <summary>
+    /// Gets the import map configuration for JavaScript module imports.
+    /// Use <see cref="ImportMapConfiguration.Pin"/> to add module entries.
+    /// </summary>
+    public ImportMapConfiguration ImportMap { get; } = new();
+
+    /// <summary>
     /// Validates the current options configuration.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when the configuration is invalid.</exception>

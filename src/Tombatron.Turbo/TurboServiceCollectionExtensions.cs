@@ -57,6 +57,13 @@ public static class TurboServiceCollectionExtensions
         }
 
         TurboOptions options = new();
+
+        // Default importmap pins (users can override/extend via configure)
+        options.ImportMap.Pin("@hotwired/turbo",
+            "https://unpkg.com/@hotwired/turbo@8.0.4/dist/turbo.es2017-esm.js", preload: true);
+        options.ImportMap.Pin("turbo-signalr",
+            "/_content/Tombatron.Turbo/dist/turbo-signalr.bundled.esm.js", preload: true);
+
         configure(options);
         options.Validate();
 

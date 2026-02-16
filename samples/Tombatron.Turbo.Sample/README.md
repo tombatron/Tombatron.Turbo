@@ -142,11 +142,8 @@ app.MapTurboHub();
 ### Layout (Required Scripts)
 
 ```html
-<!-- Hotwire Turbo.js for frames and navigation -->
-<script type="module" src="https://unpkg.com/@hotwired/turbo@8.0.4/dist/turbo.es2017-esm.js"></script>
-
-<!-- Turbo SignalR adapter (bundled with SignalR client) -->
-<script src="_content/Tombatron.Turbo/dist/turbo-signalr.bundled.min.js"></script>
+<!-- Renders Turbo.js + SignalR adapter script tags -->
+<turbo-scripts />
 ```
 
 ## Try It Out
