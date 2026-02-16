@@ -41,7 +41,7 @@ public static class PartialMetadataGenerator
         sb.AppendLine("/// <summary>");
         sb.AppendLine("/// Auto-generated static class providing compile-time access to partial views.");
         sb.AppendLine("/// </summary>");
-        sb.AppendLine("public static class Partials");
+        sb.AppendLine("internal static class Partials");
         sb.AppendLine("{");
 
         // Group by partial name to handle potential conflicts

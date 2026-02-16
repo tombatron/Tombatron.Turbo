@@ -238,11 +238,11 @@ app.MapGet("/cart/items", (HttpContext ctx) =>
 
 ## Source Generator
 
-The `Tombatron.Turbo.SourceGenerator` package scans your `_*.cshtml` partial views at compile time and generates a `Partials` static class with strongly-typed references:
+The `Tombatron.Turbo.SourceGenerator` package scans your `_*.cshtml` partial views at compile time and generates an `internal Partials` static class with strongly-typed references:
 
 ```csharp
 // Generated from _Message.cshtml with @model ChatMessage
-public static PartialTemplate<ChatMessage> Message { get; }
+internal static PartialTemplate<ChatMessage> Message { get; }
     = new("/Pages/Shared/_Message.cshtml", "Message");
 ```
 
@@ -335,7 +335,7 @@ dotnet run
 
 ## Requirements
 
-- .NET 9.0 or later
+- .NET 10.0 or later
 - ASP.NET Core
 - Turbo.js 8.x (client-side)
 - SignalR (for Turbo Streams)

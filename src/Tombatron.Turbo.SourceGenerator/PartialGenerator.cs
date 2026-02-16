@@ -77,7 +77,7 @@ public class PartialGenerator : IIncrementalGenerator
         sb.AppendLine("/// <remarks>");
         sb.AppendLine("/// No partial views (_*.cshtml files) were found in this project.");
         sb.AppendLine("/// </remarks>");
-        sb.AppendLine("public static class Partials");
+        sb.AppendLine("internal static class Partials");
         sb.AppendLine("{");
         sb.AppendLine("}");
 
