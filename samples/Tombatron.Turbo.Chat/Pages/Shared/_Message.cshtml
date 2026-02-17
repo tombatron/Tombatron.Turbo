@@ -1,9 +1,9 @@
-@model Tombatron.Turbo.Chat.ChatMessage
+@model Tombatron.Turbo.Chat.Data.Message
 
 <div class="message" id="message-@Model.Id"
      data-controller="chat-message"
      data-chat-message-profile-sidebar-outlet="#profile-sidebar"
-     data-chat-message-username-value="@Model.Username">
+     data-chat-message-user-id-value="@Model.UserId">
     <div class="message-avatar" data-action="click->chat-message#showProfile">@Model.Username[0].ToString().ToUpper()</div>
     <div class="message-content">
         <div class="message-header">

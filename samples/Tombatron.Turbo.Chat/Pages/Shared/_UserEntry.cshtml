@@ -1,0 +1,9 @@
+@model Tombatron.Turbo.Chat.Data.User
+
+<form method="post" asp-page-handler="StartDm" data-turbo-frame="_top" class="user-entry" id="user-entry-@Model.Id">
+    <input type="hidden" name="targetUserId" value="@Model.Id" />
+    <button type="submit" class="user-entry-btn">
+        <span class="user-entry-avatar">@Model.Username[0].ToString().ToUpper()</span>
+        <span class="user-entry-name">@Model.Username</span>
+    </button>
+</form>

@@ -400,13 +400,11 @@ This approach is simple, explicit, and gives you full control over what content 
 
 ## Sample Applications
 
-The repository includes three sample applications:
+The repository includes two sample applications:
 
 **[Tombatron.Turbo.Sample](samples/Tombatron.Turbo.Sample)** - Turbo Frames for partial page updates and Turbo Streams for real-time notifications, including a shopping cart with add/remove operations.
 
-**[Tombatron.Turbo.Chat](samples/Tombatron.Turbo.Chat)** - Real-time multi-room chat using room-based streams, typing indicators, private messaging, and the source-generated `Partials` class for strongly-typed partial rendering.
-
-**[Tombatron.Turbo.Dashboard](samples/Tombatron.Turbo.Dashboard)** - Live metrics dashboard using `Broadcast()` from a background service to push updates to all connected clients every 2 seconds.
+**[Tombatron.Turbo.Chat](samples/Tombatron.Turbo.Chat)** - Full-featured real-time chat with cookie authentication, SQLite persistence, public rooms, direct messaging, unread indicators, and the source-generated `Partials` class for strongly-typed partial rendering.
 
 Run any sample:
 

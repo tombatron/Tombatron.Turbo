@@ -1,11 +1,15 @@
+using System.Net;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net;
+using Tombatron.Turbo.Chat.Data;
 using Tombatron.Turbo.Generated;
 using Tombatron.Turbo.Streams;
 
 namespace Tombatron.Turbo.Chat.Pages;
 
+[Authorize]
 [IgnoreAntiforgeryToken]
 public class RoomModel : PageModel
 {
@@ -18,135 +22,148 @@ public class RoomModel : PageModel
         _turbo = turbo;
     }
 
-    public string RoomId { get; set; } = "general";
-    public ChatRoom? Room { get; set; }
-    public IEnumerable<ChatRoom> Rooms { get; set; } = Enumerable.Empty<ChatRoom>();
-    public IReadOnlyList<ChatMessage> Messages { get; set; } = Array.Empty<ChatMessage>();
-    public string Username { get; set; } = "Anonymous";
+    public int RoomId { get; set; }
+    public Room? Room { get; set; }
+    public List<Room> PublicRooms { get; set; } = new();
+    public List<(Room Room, string OtherUsername)> DirectMessageRooms { get; set; } = new();
+    public List<Message> Messages { get; set; } = new();
+    public List<Data.User> AllUsers { get; set; } = new();
+    public Dictionary<int, int> UnreadCounts { get; set; } = new();
+    public string Username => User.Identity!.Name!;
+    public int CurrentUserId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-    public IActionResult OnGet(string id)
+    public async Task<IActionResult> OnGet(int id)
     {
-        // Check if user is logged in
-        var username = HttpContext.Session.GetString("Username");
-        if (string.IsNullOrEmpty(username))
-        {
-            return RedirectToPage("/Index");
-        }
-
-        Username = username;
         RoomId = id;
-        Room = _chatService.GetRoom(id);
-        Rooms = _chatService.GetRooms(username);
-        Messages = _chatService.GetMessages(id);
+        Room = await _chatService.GetRoom(id);
 
-        if (Room == null)
+        if (Room is null)
         {
-            return RedirectToPage("/Room", new { id = "general" });
+            return RedirectToPage("/Room", new { id = 1 });
         }
 
-        Room.Join(username);
+        await _chatService.JoinRoom(id, CurrentUserId);
+        await _chatService.MarkRoomAsRead(CurrentUserId, id);
+
+        Messages = await _chatService.GetMessages(id);
+        PublicRooms = await _chatService.GetPublicRooms();
+        DirectMessageRooms = await _chatService.GetDirectMessageRooms(CurrentUserId);
+        AllUsers = await _chatService.GetAllUsers();
+        UnreadCounts = await _chatService.GetAllUnreadCounts(CurrentUserId);
 
         return Page();
     }
 
-    public async Task<IActionResult> OnPostSendMessage(string roomId, string content)
+    public async Task<IActionResult> OnPostSendMessage(int roomId, string content)
     {
-        var username = HttpContext.Session.GetString("Username");
-        if (string.IsNullOrEmpty(username) || string.IsNullOrWhiteSpace(content))
+        if (string.IsNullOrWhiteSpace(content))
         {
             return new NoContentResult();
         }
 
-        // Add message to chat service
-        var message = _chatService.AddMessage(roomId, username, content);
+        var message = await _chatService.AddMessage(roomId, CurrentUserId, Username, content);
 
-        // Broadcast to all subscribers of this room using the new ergonomic async syntax
+        // Broadcast message to room subscribers
         await _turbo.Stream($"room:{roomId}", async builder =>
         {
-            // Remove empty state message if present
             builder.Remove("empty-messages-placeholder");
-
-            // Append the new message using the PartialTemplate directly
             await builder.AppendAsync("messages", Partials.Message, message);
-
-            // Update typing indicator (user already removed from typing list by AddMessage)
             builder.Update("typing-indicator", RenderTypingIndicator(roomId));
         });
 
+        // Broadcast unread badge updates to other room members
+        var memberIds = await _chatService.GetRoomMemberUserIds(roomId);
+        foreach (var memberId in memberIds)
+        {
+            if (memberId == CurrentUserId) continue;
+
+            var unread = await _chatService.GetUnreadCount(memberId, roomId);
+            await _turbo.Stream($"user:{memberId}", builder =>
+            {
+                builder.Update($"unread-badge-{roomId}",
+                    unread > 0 ? $"<span class=\"unread-badge\">{unread}</span>" : "");
+            });
+        }
+
         return new NoContentResult();
     }
 
-    public async Task<IActionResult> OnPostStartTyping(string id)
+    public async Task<IActionResult> OnPostCreateRoom(string name, string? description)
     {
-        var username = HttpContext.Session.GetString("Username");
-        if (string.IsNullOrEmpty(username))
+        if (string.IsNullOrWhiteSpace(name))
         {
             return new NoContentResult();
         }
 
-        _chatService.StartTyping(id, username);
+        var room = await _chatService.CreatePublicRoom(name.Trim(), description?.Trim());
+        await _chatService.JoinRoom(room.Id, CurrentUserId);
 
-        // Broadcast typing indicator to room (don't exclude anyone - all users should see who's typing)
-        await _turbo.Stream($"room:{id}", builder =>
+        // Broadcast new room to all connected clients
+        await _turbo.Broadcast(async builder =>
         {
-            builder.Update("typing-indicator", RenderTypingIndicator(id));
-        });
-
-        return new NoContentResult();
-    }
-
-    public async Task<IActionResult> OnPostStopTyping(string id)
-    {
-        var username = HttpContext.Session.GetString("Username");
-        if (string.IsNullOrEmpty(username))
-        {
-            return new NoContentResult();
-        }
-
-        _chatService.StopTyping(id, username);
-
-        // Broadcast typing indicator update to room
-        await _turbo.Stream($"room:{id}", builder =>
-        {
-            builder.Update("typing-indicator", RenderTypingIndicator(id));
-        });
-
-        return new NoContentResult();
-    }
-
-    public IActionResult OnGetUserProfile(string username)
-    {
-        var profile = _chatService.GetUserProfile(username);
-        return Partial("_Profile", profile);
-    }
-
-    public async Task<IActionResult> OnPostCreatePrivateMessage(string username)
-    {
-        var currentUser = _chatService.GetUserProfile(HttpContext.Session.GetString("Username")!);
-        var otherUser = _chatService.GetUserProfile(username);
-
-        var members = new[]
-        {
-            currentUser,
-            otherUser
-        };
-
-        var room = _chatService.CreateRoom($"DM - {username}", $"Private messaging with {username}", members.ToList());
-
-        await _turbo.Stream($"room-list:{username}", async builder =>
-        {
-            await builder.AppendAsync("room-list", Partials.RoomEntry, ("", username, room));
+            await builder.AppendAsync("public-room-list", Partials.RoomEntry, (0, room, 0));
         });
 
         return RedirectToPage("/Room", new { id = room.Id });
     }
 
-    private string RenderTypingIndicator(string roomId)
+    public async Task<IActionResult> OnPostStartDm(int targetUserId)
+    {
+        var room = await _chatService.GetOrCreateDirectMessage(CurrentUserId, targetUserId);
+
+        var targetUser = await _chatService.GetUserById(targetUserId);
+        var currentUser = await _chatService.GetUserById(CurrentUserId);
+
+        // Broadcast DM entry to target user
+        if (targetUser is not null && currentUser is not null)
+        {
+            await _turbo.Stream($"user:{targetUserId}", async builder =>
+            {
+                await builder.AppendAsync("dm-room-list", Partials.DmEntry,
+                    (0, currentUser.Username, room, 0));
+            });
+        }
+
+        return RedirectToPage("/Room", new { id = room.Id });
+    }
+
+    public async Task<IActionResult> OnPostStartTyping(int id)
+    {
+        _chatService.StartTyping(id, Username);
+
+        await _turbo.Stream($"room:{id}", builder =>
+        {
+            builder.Update("typing-indicator", RenderTypingIndicator(id));
+        });
+
+        return new NoContentResult();
+    }
+
+    public async Task<IActionResult> OnPostStopTyping(int id)
+    {
+        _chatService.StopTyping(id, Username);
+
+        await _turbo.Stream($"room:{id}", builder =>
+        {
+            builder.Update("typing-indicator", RenderTypingIndicator(id));
+        });
+
+        return new NoContentResult();
+    }
+
+    public async Task<IActionResult> OnGetUserProfile(int userId)
+    {
+        var user = await _chatService.GetUserById(userId);
+        if (user is null) return NotFound();
+
+        return Partial("_Profile", user);
+    }
+
+    private string RenderTypingIndicator(int roomId)
     {
         var typingUsers = _chatService.GetTypingUsers(roomId);
         var usersJson = System.Text.Json.JsonSerializer.Serialize(typingUsers);
 
-        // Send data attributes - client JS will filter and render
         return $@"<span data-typing-users='{WebUtility.HtmlEncode(usersJson)}'></span>";
     }
 }

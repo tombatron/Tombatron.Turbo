@@ -1,77 +1,291 @@
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.EntityFrameworkCore;
+using Tombatron.Turbo.Chat.Data;
+
 namespace Tombatron.Turbo.Chat;
 
-/// <summary>
-/// Simple in-memory chat service for the demo.
-/// In a real application, this would be backed by a database.
-/// </summary>
 public class ChatService
 {
-    private readonly Dictionary<string, ChatRoom> _rooms = new() { ["general"] = new ChatRoom("general", "General", "General discussion for everyone"), ["random"] = new ChatRoom("random", "Random", "Off-topic conversations"), ["help"] = new ChatRoom("help", "Help", "Get help with questions") };
+    private readonly ChatDbContext _db;
 
-    private readonly Dictionary<string, HashSet<string>> _typingUsers = new();
-    private readonly object _lock = new();
+    // Typing is inherently transient — static in-memory is fine
+    private static readonly Dictionary<int, HashSet<string>> _typingUsers = new();
+    private static readonly object _typingLock = new();
 
-    public IEnumerable<ChatRoom> GetRooms(string? username = null)
+    public ChatService(ChatDbContext db)
     {
-        return username is null ? _rooms.Values.Where(x => x.Members is null).ToList() :
-            _rooms.Values.Where(x => x.Members is null || x.Members.Any(m => m.Username == username));
+        _db = db;
     }
 
-    public ChatRoom? GetRoom(string roomId)
+    // ── Auth ──
+
+    public async Task<User> RegisterUser(string username, string password)
     {
-        _rooms.TryGetValue(roomId, out var room);
+        var user = new User
+        {
+            Username = username,
+            PasswordHash = HashPassword(password),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+
+        return user;
+    }
+
+    public async Task<User?> ValidateCredentials(string username, string password)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+        if (user is null)
+        {
+            return null;
+        }
+
+        return VerifyPassword(password, user.PasswordHash) ? user : null;
+    }
+
+    public async Task<User?> GetUserByUsername(string username)
+    {
+        return await _db.Users.FirstOrDefaultAsync(u => u.Username == username);
+    }
+
+    public async Task<User?> GetUserById(int userId)
+    {
+        return await _db.Users.FindAsync(userId);
+    }
+
+    // ── Rooms ──
+
+    public async Task<List<Room>> GetPublicRooms()
+    {
+        return await _db.Rooms.Where(r => !r.IsDirectMessage).OrderBy(r => r.Id).ToListAsync();
+    }
+
+    public async Task<List<(Room Room, string OtherUsername)>> GetDirectMessageRooms(int userId)
+    {
+        var dmRoomIds = await _db.RoomMembers
+            .Where(rm => rm.UserId == userId)
+            .Join(_db.Rooms.Where(r => r.IsDirectMessage), rm => rm.RoomId, r => r.Id, (rm, r) => r.Id)
+            .ToListAsync();
+
+        var results = new List<(Room, string)>();
+
+        foreach (var roomId in dmRoomIds)
+        {
+            var room = await _db.Rooms.FindAsync(roomId);
+
+            if (room is null)
+            {
+                continue;
+            }
+
+            var otherUsername = await _db.RoomMembers
+                .Where(rm => rm.RoomId == roomId && rm.UserId != userId)
+                .Join(_db.Users, rm => rm.UserId, u => u.Id, (rm, u) => u.Username)
+                .FirstOrDefaultAsync() ?? "Unknown";
+
+            results.Add((room, otherUsername));
+        }
+
+        return results;
+    }
+
+    public async Task<Room?> GetRoom(int roomId)
+    {
+        return await _db.Rooms.FindAsync(roomId);
+    }
+
+    public async Task<Room> CreatePublicRoom(string name, string? description)
+    {
+        var room = new Room
+        {
+            Name = name,
+            Description = description,
+            IsDirectMessage = false,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.Rooms.Add(room);
+        await _db.SaveChangesAsync();
+
         return room;
     }
 
-    public ChatMessage AddMessage(string roomId, string username, string content)
+    public async Task<Room> GetOrCreateDirectMessage(int userId1, int userId2)
     {
-        lock (_lock)
-        {
-            if (!_rooms.TryGetValue(roomId, out var room))
-            {
-                throw new ArgumentException($"Room '{roomId}' not found", nameof(roomId));
-            }
+        // Find existing DM room between these two users
+        var existingRoomId = await _db.RoomMembers
+            .Where(rm => rm.UserId == userId1)
+            .Select(rm => rm.RoomId)
+            .Intersect(
+                _db.RoomMembers
+                    .Where(rm => rm.UserId == userId2)
+                    .Select(rm => rm.RoomId)
+            )
+            .Join(_db.Rooms.Where(r => r.IsDirectMessage), id => id, r => r.Id, (id, r) => r.Id)
+            .FirstOrDefaultAsync();
 
-            var message = new ChatMessage
+        if (existingRoomId > 0)
+        {
+            return (await _db.Rooms.FindAsync(existingRoomId))!;
+        }
+
+        var user1 = await _db.Users.FindAsync(userId1);
+        var user2 = await _db.Users.FindAsync(userId2);
+
+        var room = new Room
+        {
+            Name = $"DM: {user1?.Username}, {user2?.Username}",
+            IsDirectMessage = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.Rooms.Add(room);
+        await _db.SaveChangesAsync();
+
+        _db.RoomMembers.AddRange(
+            new RoomMember { RoomId = room.Id, UserId = userId1 },
+            new RoomMember { RoomId = room.Id, UserId = userId2 }
+        );
+        await _db.SaveChangesAsync();
+
+        return room;
+    }
+
+    // ── Messages ──
+
+    public async Task<Message> AddMessage(int roomId, int userId, string username, string content)
+    {
+        var message = new Message
+        {
+            RoomId = roomId,
+            UserId = userId,
+            Username = username,
+            Content = content,
+            Timestamp = DateTime.UtcNow
+        };
+
+        _db.Messages.Add(message);
+        await _db.SaveChangesAsync();
+
+        StopTyping(roomId, username);
+
+        return message;
+    }
+
+    public async Task<List<Message>> GetMessages(int roomId, int count = 50)
+    {
+        return await _db.Messages
+            .Where(m => m.RoomId == roomId)
+            .OrderByDescending(m => m.Id)
+            .Take(count)
+            .OrderBy(m => m.Id)
+            .ToListAsync();
+    }
+
+    // ── Membership ──
+
+    public async Task JoinRoom(int roomId, int userId)
+    {
+        var exists = await _db.RoomMembers
+            .AnyAsync(rm => rm.RoomId == roomId && rm.UserId == userId);
+
+        if (!exists)
+        {
+            _db.RoomMembers.Add(new RoomMember { RoomId = roomId, UserId = userId });
+            await _db.SaveChangesAsync();
+        }
+    }
+
+    public async Task<List<int>> GetRoomMemberUserIds(int roomId)
+    {
+        return await _db.RoomMembers
+            .Where(rm => rm.RoomId == roomId)
+            .Select(rm => rm.UserId)
+            .ToListAsync();
+    }
+
+    // ── Unread ──
+
+    public async Task MarkRoomAsRead(int userId, int roomId)
+    {
+        var lastMessageId = await _db.Messages
+            .Where(m => m.RoomId == roomId)
+            .OrderByDescending(m => m.Id)
+            .Select(m => m.Id)
+            .FirstOrDefaultAsync();
+
+        var state = await _db.UserRoomStates.FindAsync(userId, roomId);
+
+        if (state is null)
+        {
+            _db.UserRoomStates.Add(new UserRoomState
             {
-                Id = Guid.NewGuid().ToString("N")[..8],
+                UserId = userId,
                 RoomId = roomId,
-                Username = username,
-                Content = content,
-                Timestamp = DateTime.UtcNow
-            };
-
-            room.Messages.Add(message);
-
-            // Keep only last 100 messages per room
-            if (room.Messages.Count > 100)
-            {
-                room.Messages.RemoveAt(0);
-            }
-
-            // Clear typing indicator when message is sent
-            StopTyping(roomId, username);
-
-            return message;
+                LastReadMessageId = lastMessageId
+            });
         }
-    }
-
-    public IReadOnlyList<ChatMessage> GetMessages(string roomId, int count = 50)
-    {
-        lock (_lock)
+        else
         {
-            if (!_rooms.TryGetValue(roomId, out var room))
-            {
-                return Array.Empty<ChatMessage>();
-            }
-
-            return room.Messages.TakeLast(count).ToList();
+            state.LastReadMessageId = lastMessageId;
         }
+
+        await _db.SaveChangesAsync();
     }
 
-    public void StartTyping(string roomId, string username)
+    public async Task<int> GetUnreadCount(int userId, int roomId)
     {
-        lock (_lock)
+        var state = await _db.UserRoomStates.FindAsync(userId, roomId);
+        var lastRead = state?.LastReadMessageId ?? 0;
+
+        return await _db.Messages.CountAsync(m => m.RoomId == roomId && m.Id > lastRead);
+    }
+
+    public async Task<Dictionary<int, int>> GetAllUnreadCounts(int userId)
+    {
+        var states = await _db.UserRoomStates
+            .Where(s => s.UserId == userId)
+            .ToDictionaryAsync(s => s.RoomId, s => s.LastReadMessageId);
+
+        var roomIds = await _db.RoomMembers
+            .Where(rm => rm.UserId == userId)
+            .Select(rm => rm.RoomId)
+            .Union(_db.Rooms.Where(r => !r.IsDirectMessage).Select(r => r.Id))
+            .Distinct()
+            .ToListAsync();
+
+        var result = new Dictionary<int, int>();
+
+        foreach (var roomId in roomIds)
+        {
+            var lastRead = states.GetValueOrDefault(roomId, 0);
+            var count = await _db.Messages.CountAsync(m => m.RoomId == roomId && m.Id > lastRead);
+
+            if (count > 0)
+            {
+                result[roomId] = count;
+            }
+        }
+
+        return result;
+    }
+
+    // ── Users ──
+
+    public async Task<List<User>> GetAllUsers()
+    {
+        return await _db.Users.OrderBy(u => u.Username).ToListAsync();
+    }
+
+    // ── Typing (static in-memory) ──
+
+    public void StartTyping(int roomId, string username)
+    {
+        lock (_typingLock)
         {
             if (!_typingUsers.ContainsKey(roomId))
             {
@@ -82,9 +296,9 @@ public class ChatService
         }
     }
 
-    public void StopTyping(string roomId, string username)
+    public void StopTyping(int roomId, string username)
     {
-        lock (_lock)
+        lock (_typingLock)
         {
             if (_typingUsers.TryGetValue(roomId, out var users))
             {
@@ -93,9 +307,9 @@ public class ChatService
         }
     }
 
-    public IReadOnlyList<string> GetTypingUsers(string roomId)
+    public IReadOnlyList<string> GetTypingUsers(int roomId)
     {
-        lock (_lock)
+        lock (_typingLock)
         {
             if (!_typingUsers.TryGetValue(roomId, out var users))
             {
@@ -106,76 +320,29 @@ public class ChatService
         }
     }
 
-    public ChatRoom CreateRoom(string name, string description, List<UserProfile>? members = null)
+    // ── Password Hashing ──
+
+    private static string HashPassword(string password)
     {
-        lock (_lock)
-        {
-            var id = Guid.NewGuid().ToString("N")[..8];
+        var salt = RandomNumberGenerator.GetBytes(16);
+        var hash = KeyDerivation.Pbkdf2(password, salt, KeyDerivationPrf.HMACSHA256, 100_000, 32);
 
-            if (_rooms.ContainsKey(id))
-            {
-                throw new InvalidOperationException($"Room '{id}' already exists");
-            }
-
-            _rooms[id] = new ChatRoom(id, name, description, members);
-
-            return _rooms[id];
-        }
+        return $"{Convert.ToBase64String(salt)}:{Convert.ToBase64String(hash)}";
     }
 
-    public UserProfile GetUserProfile(string username)
+    private static bool VerifyPassword(string password, string storedHash)
     {
-        return new UserProfile { Username = username };
-    }
-}
+        var parts = storedHash.Split(':');
 
-public class ChatRoom
-{
-    private readonly string _id;
-    private readonly string _name;
-    private readonly string _description;
-
-    public ChatRoom(string id, string name, string description, List<UserProfile>? members = null)
-    {
-        _id = id;
-        _name = name;
-        _description = description;
-
-        if (members is not null)
+        if (parts.Length != 2)
         {
-            Members = new HashSet<UserProfile>(members);
-        }
-    }
-
-    public string Id => _id;
-    public string Name => _name;
-    public string Description => _description;
-    public List<ChatMessage> Messages { get; } = new();
-
-    public HashSet<UserProfile>? Members { get; private set; }
-
-
-    public void Join(string username)
-    {
-        if (Members is null)
-        {
-            Members = new();
+            return false;
         }
 
-        Members.Add(new UserProfile { Username = username });
+        var salt = Convert.FromBase64String(parts[0]);
+        var hash = Convert.FromBase64String(parts[1]);
+        var computedHash = KeyDerivation.Pbkdf2(password, salt, KeyDerivationPrf.HMACSHA256, 100_000, 32);
+
+        return CryptographicOperations.FixedTimeEquals(hash, computedHash);
     }
-}
-
-public class ChatMessage
-{
-    public string Id { get; set; } = "";
-    public string RoomId { get; set; } = "";
-    public string Username { get; set; } = "";
-    public string Content { get; set; } = "";
-    public DateTime Timestamp { get; set; }
-}
-
-public class UserProfile
-{
-    public required string Username { get; set; }
 }

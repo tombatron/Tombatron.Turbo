@@ -733,12 +733,6 @@ samples/Tombatron.Turbo.Sample/Pages/
     - [x] Typing indicators
     - [x] Message history
     - [x] README with setup and code snippets
-  - [x] `samples/Tombatron.Turbo.Dashboard/` - Live dashboard:
-    - [x] Real-time metrics (CPU, Memory, Response Time, etc.)
-    - [x] SVG chart updates
-    - [x] Activity feed with broadcasts
-    - [x] Auto-refresh via background service
-    - [x] README with setup and code snippets 
 - [ ] Add XML documentation comments:
   - [ ] All public interfaces
   - [ ] All public classes
@@ -782,9 +776,7 @@ docs/
 samples/
 ├── Tombatron.Turbo.Sample/ (enhanced)
 │   └── README.md
-├── Tombatron.Turbo.Chat/
-│   └── README.md
-└── Tombatron.Turbo.Dashboard/
+└── Tombatron.Turbo.Chat/
     └── README.md
 ```
 

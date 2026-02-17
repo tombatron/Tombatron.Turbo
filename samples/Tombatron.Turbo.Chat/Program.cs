@@ -1,5 +1,8 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using Tombatron.Turbo;
 using Tombatron.Turbo.Chat;
+using Tombatron.Turbo.Chat.Data;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -26,23 +29,33 @@ builder.Services.AddTurbo(options =>
     options.ImportMap.Pin("controllers/typing-indicator", "/js/controllers/typing_indicator_controller.js");
     options.ImportMap.Pin("controllers/profile-sidebar", "/js/controllers/profile_sidebar_controller.js");
     options.ImportMap.Pin("controllers/chat-message", "/js/controllers/chat_message_controller.js");
+    options.ImportMap.Pin("controllers/create-room", "/js/controllers/create_room_controller.js");
 });
 
-// Add session for user identity (in a real app, use proper authentication)
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromHours(2);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
+// EF Core + SQLite
+builder.Services.AddDbContext<ChatDbContext>(opt =>
+    opt.UseSqlite("Data Source=chat.db"));
 
-// Register our chat service
-builder.Services.AddSingleton<ChatService>();
+// Cookie authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Login";
+    });
+
+// Register chat service as scoped (matches DbContext lifetime)
+builder.Services.AddScoped<ChatService>();
 
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
+
+// Ensure database is created
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ChatDbContext>();
+    db.Database.EnsureCreated();
+}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -53,7 +66,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseSession();
+app.UseAuthentication();
 app.UseTurbo();
 app.UseAuthorization();
 

@@ -1,0 +1,13 @@
+@model (int CurrentRoomId, string OtherUsername, Tombatron.Turbo.Chat.Data.Room Room, int UnreadCount)
+
+<a href="/Room/@Model.Room.Id"
+   class="dm-item @(Model.CurrentRoomId == Model.Room.Id ? "active" : "")">
+    <span class="dm-avatar">@Model.OtherUsername[0].ToString().ToUpper()</span>
+    <span class="dm-name">@Model.OtherUsername</span>
+    <span id="unread-badge-@Model.Room.Id">
+        @if (Model.UnreadCount > 0)
+        {
+            <span class="unread-badge">@Model.UnreadCount</span>
+        }
+    </span>
+</a>

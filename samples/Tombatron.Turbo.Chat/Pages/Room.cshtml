@@ -1,27 +1,70 @@
-@page "{id}"
-
+@page "{id:int}"
 @model RoomModel
 @{
-    // TODO: Change how this is computed.
-    ViewData["Title"] = $"#{Model.Room?.Name ?? "Chat"}";
+    ViewData["Title"] = Model.Room?.IsDirectMessage == true
+        ? Model.DirectMessageRooms.FirstOrDefault(dm => dm.Room.Id == Model.RoomId).OtherUsername ?? "DM"
+        : $"#{Model.Room?.Name ?? "Chat"}";
 }
 
 <!-- Subscribe to room-specific stream -->
 <turbo-stream-source-signalr stream="room:@Model.RoomId" hub-url="/turbo-hub" />
-<turbo-stream-source-signalr stream="room-list:@Model.Username" hub-url="/turbo-hub"/>
+<!-- Subscribe to user-specific stream for unread badges and DM notifications -->
+<turbo-stream-source-signalr stream="user:@Model.CurrentUserId" hub-url="/turbo-hub" />
 
 <div class="app-container">
-    <!-- Sidebar with rooms -->
+    <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
             Turbo Chat
+            <a href="/Logout" class="logout-btn">Exit</a>
         </div>
 
-        <div id="room-list" class="room-list">
-            @foreach (var room in Model.Rooms)
-            {
-                <partial name="_RoomEntry" model="@(Model.RoomId, Model.Username, room)" />
-            }
+        <!-- Direct Messages -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-header">Direct Messages</div>
+            <div id="dm-room-list">
+                @foreach (var dm in Model.DirectMessageRooms)
+                {
+                    <partial name="_DmEntry" model="@(Model.RoomId, dm.OtherUsername, dm.Room, Model.UnreadCounts.GetValueOrDefault(dm.Room.Id))" />
+                }
+            </div>
+        </div>
+
+        <!-- Public Rooms -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-header">
+                Rooms
+                <button type="button" class="add-room-btn"
+                        data-controller="create-room"
+                        data-action="click->create-room#toggle">+</button>
+            </div>
+            <div id="create-room-form" class="create-room-form" style="display:none;">
+                <form method="post" asp-page-handler="CreateRoom" data-turbo-frame="_top">
+                    <input type="text" name="name" class="sidebar-input" placeholder="Room name" required maxlength="30" />
+                    <input type="text" name="description" class="sidebar-input" placeholder="Description (optional)" maxlength="100" />
+                    <button type="submit" class="sidebar-submit-btn">Create</button>
+                </form>
+            </div>
+            <div id="public-room-list">
+                @foreach (var room in Model.PublicRooms)
+                {
+                    <partial name="_RoomEntry" model="@(Model.RoomId, room, Model.UnreadCounts.GetValueOrDefault(room.Id))" />
+                }
+            </div>
+        </div>
+
+        <!-- Users -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-header">Users</div>
+            <div id="user-list">
+                @foreach (var user in Model.AllUsers)
+                {
+                    @if (user.Id != Model.CurrentUserId)
+                    {
+                        <partial name="_UserEntry" model="user" />
+                    }
+                }
+            </div>
         </div>
 
         <div class="user-panel">
@@ -36,14 +79,12 @@
          data-controller="chat"
          data-chat-room-id-value="@Model.RoomId">
         <div class="chat-header">
-            @if (Model.Room?.Members is { Count: 2 })
+            @if (Model.Room?.IsDirectMessage == true)
             {
-                @functions{
-
-                    string OtherUser => Model.Room?.Members?.First(m => !string.Equals(m.Username, Model!.Username, StringComparison.InvariantCultureIgnoreCase)).Username ?? string.Empty;
-                }
-                <h2>DM - @OtherUser</h2>
-                <span class="chat-description">Private messages with @OtherUser</span>
+                var otherUsername = Model.DirectMessageRooms
+                    .FirstOrDefault(dm => dm.Room.Id == Model.RoomId).OtherUsername ?? "Unknown";
+                <h2 class="dm-header">@otherUsername</h2>
+                <span class="chat-description">Private messages with @otherUsername</span>
             }
             else
             {
@@ -57,7 +98,7 @@
             <div id="messages" data-chat-target="messages">
                 @if (!Model.Messages.Any())
                 {
-                    <div class="empty-messages">
+                    <div class="empty-messages" id="empty-messages-placeholder">
                         No messages yet. Start the conversation!
                     </div>
                 }
@@ -71,7 +112,7 @@
             </div>
         </div>
 
-        <!-- Typing indicator - Stimulus controller filters out current user -->
+        <!-- Typing indicator -->
         <div id="typing-indicator"
              class="typing-indicator"
              data-controller="typing-indicator"
@@ -87,7 +128,7 @@
                 <input type="text"
                        name="content"
                        class="message-input"
-                       placeholder="Message #@Model.Room?.Name"
+                       placeholder="Message #@(Model.Room?.IsDirectMessage == true ? ViewData["Title"] : Model.Room?.Name)"
                        autocomplete="off"
                        required
                        data-chat-target="input"
@@ -117,4 +158,3 @@
         </div>
     </div>
 </div>
-

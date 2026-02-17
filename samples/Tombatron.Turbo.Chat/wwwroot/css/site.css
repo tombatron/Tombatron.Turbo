@@ -43,18 +43,57 @@ body {
     border-bottom: 1px solid var(--border);
     font-weight: 600;
     font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.room-list {
-    flex: 1;
-    overflow-y: auto;
+/* Sidebar sections */
+.sidebar-section {
     padding: 8px;
+}
+
+.sidebar-section + .sidebar-section {
+    border-top: 1px solid var(--border);
+}
+
+.sidebar-section-header {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+/* Scrollable sidebar content */
+.sidebar > .sidebar-section:nth-child(n+2) {
+    overflow-y: auto;
+}
+
+.sidebar > .sidebar-section:nth-child(2) {
+    flex: 0 0 auto;
+    max-height: 25%;
+}
+
+.sidebar > .sidebar-section:nth-child(3) {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.sidebar > .sidebar-section:nth-child(4) {
+    flex: 0 0 auto;
+    max-height: 25%;
 }
 
 .room-item {
     display: flex;
     align-items: center;
-    padding: 8px 12px;
+    padding: 6px 12px;
     border-radius: 4px;
     color: var(--text-secondary);
     text-decoration: none;
@@ -78,12 +117,202 @@ body {
     color: var(--text-muted);
 }
 
+.room-item .room-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Unread badge */
+.unread-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: var(--danger);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+/* DM entries */
+.dm-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    margin: 2px 0;
+    gap: 8px;
+    transition: background 0.1s, color 0.1s;
+}
+
+.dm-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.dm-item.active {
+    background: var(--bg-hover);
+    color: white;
+}
+
+.dm-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.7rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.dm-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* User entries */
+.user-entry {
+    margin: 2px 0;
+}
+
+.user-entry-btn {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 6px 12px;
+    border-radius: 4px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    gap: 8px;
+    font-size: 0.85rem;
+    transition: background 0.1s, color 0.1s;
+}
+
+.user-entry-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.user-entry-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.7rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.user-entry-name {
+    flex: 1;
+    text-align: left;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Add room button */
+.add-room-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    transition: color 0.1s;
+}
+
+.add-room-btn:hover {
+    color: var(--text-primary);
+}
+
+/* Create room form */
+.create-room-form {
+    padding: 4px 8px 8px;
+}
+
+.create-room-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sidebar-input {
+    padding: 6px 8px;
+    background: var(--bg-input);
+    border: none;
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+
+.sidebar-input:focus {
+    outline: 1px solid var(--accent);
+}
+
+.sidebar-submit-btn {
+    padding: 6px 8px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.sidebar-submit-btn:hover {
+    background: var(--accent-hover);
+}
+
+/* Logout button */
+.logout-btn {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: color 0.1s, background 0.1s;
+}
+
+.logout-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
 .user-panel {
     padding: 12px;
     background: var(--bg-dark);
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-top: auto;
 }
 
 .user-avatar {
@@ -142,6 +371,11 @@ body {
     margin-right: 4px;
 }
 
+.chat-header h2.dm-header::before {
+    content: '';
+    margin-right: 0;
+}
+
 .chat-description {
     color: var(--text-muted);
     font-size: 0.85rem;
@@ -180,6 +414,7 @@ body {
     justify-content: center;
     font-weight: 600;
     flex-shrink: 0;
+    cursor: pointer;
 }
 
 .message-content {
@@ -266,66 +501,6 @@ body {
 .send-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-}
-
-/* Welcome/Login */
-.welcome-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background: var(--bg-dark);
-}
-
-.welcome-card {
-    background: var(--bg-main);
-    padding: 32px;
-    border-radius: 8px;
-    width: 400px;
-    text-align: center;
-}
-
-.welcome-card h1 {
-    margin-bottom: 8px;
-}
-
-.welcome-card p {
-    color: var(--text-secondary);
-    margin-bottom: 24px;
-}
-
-.welcome-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.welcome-input {
-    padding: 12px 16px;
-    background: var(--bg-input);
-    border: none;
-    border-radius: 4px;
-    color: var(--text-primary);
-    font-size: 1rem;
-}
-
-.welcome-input:focus {
-    outline: 2px solid var(--accent);
-}
-
-.welcome-btn {
-    padding: 12px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.welcome-btn:hover {
-    background: var(--accent-hover);
 }
 
 /* Empty state */

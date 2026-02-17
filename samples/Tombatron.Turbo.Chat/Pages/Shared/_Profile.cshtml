@@ -1,4 +1,4 @@
-@model Tombatron.Turbo.Chat.UserProfile
+@model Tombatron.Turbo.Chat.Data.User
 
 <turbo-frame id="user-profile"
              class="profile-card">
@@ -9,7 +9,7 @@
         <div class="profile-card-divider"></div>
         <div class="profile-card-section">
             <span class="profile-card-label">Member Since</span>
-            <span class="profile-card-value">January 2025</span>
+            <span class="profile-card-value">@Model.CreatedAt.ToString("MMMM yyyy")</span>
         </div>
         <div class="profile-card-section">
             <span class="profile-card-label">Roles</span>
@@ -18,8 +18,8 @@
             </div>
         </div>
 
-        <form method="post" asp-page-handler="CreatePrivateMessage" data-turbo-frame="_top">
-            <input type="hidden" name="username" value="@Model.Username" />
+        <form method="post" asp-page-handler="StartDm" data-turbo-frame="_top">
+            <input type="hidden" name="targetUserId" value="@Model.Id" />
             <button type="submit" class="profile-dm-btn">Direct Message</button>
         </form>
     </div>
