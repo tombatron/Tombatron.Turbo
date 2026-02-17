@@ -251,6 +251,27 @@ If you prefer to load the SignalR bridge from a CDN instead of the bundled NuGet
 </script>
 ```
 
+**Via `Program.cs` (recommended when using `<turbo-scripts mode="Importmap" />`):**
+
+The default import map pins `turbo-signalr` to the bundled static file from the NuGet package. Override it to point at CDN URLs instead:
+
+```csharp
+builder.Services.AddTurbo(options =>
+{
+    // Override the default Turbo.js pin (optional — the default already uses unpkg)
+    options.ImportMap.Pin("@hotwired/turbo",
+        "https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.min.js", preload: true);
+
+    // SignalR must be in the import map so the ESM build can resolve it
+    options.ImportMap.Pin("@microsoft/signalr",
+        "https://cdn.jsdelivr.net/npm/@microsoft/signalr@8/dist/browser/signalr.js");
+
+    // Replace the bundled bridge with the CDN ESM build
+    options.ImportMap.Pin("turbo-signalr",
+        "https://cdn.jsdelivr.net/npm/@tombatron/turbo-signalr/dist/turbo-signalr.esm.js", preload: true);
+});
+```
+
 When using CDN imports, the non-bundled ESM build (`turbo-signalr.esm.js`) expects `@microsoft/signalr` as a peer dependency resolved through the import map. The UMD build (`turbo-signalr.js`) expects SignalR to be loaded as a global via a separate `<script>` tag.
 
 ### Subscribe to Streams in Your View
