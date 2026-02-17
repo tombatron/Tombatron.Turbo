@@ -216,6 +216,43 @@ builder.Services.AddTurbo(options =>
 });
 ```
 
+### Loading the SignalR Bridge from a CDN
+
+If you prefer to load the SignalR bridge from a CDN instead of the bundled NuGet static files, you can use the `@tombatron/turbo-signalr` npm package via [jsDelivr](https://www.jsdelivr.com/).
+
+**Traditional script tags:**
+
+```html
+<!-- Turbo.js -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.min.js"></script>
+
+<!-- SignalR (required peer dependency) -->
+<script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8/dist/browser/signalr.min.js"></script>
+
+<!-- Turbo SignalR bridge -->
+<script src="https://cdn.jsdelivr.net/npm/@tombatron/turbo-signalr/dist/turbo-signalr.js"></script>
+```
+
+**Import maps:**
+
+```html
+<script type="importmap">
+{
+  "imports": {
+    "@hotwired/turbo": "https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.min.js",
+    "@microsoft/signalr": "https://cdn.jsdelivr.net/npm/@microsoft/signalr@8/dist/browser/signalr.js",
+    "@tombatron/turbo-signalr": "https://cdn.jsdelivr.net/npm/@tombatron/turbo-signalr/dist/turbo-signalr.esm.js"
+  }
+}
+</script>
+<script type="module">
+  import "@hotwired/turbo";
+  import "@tombatron/turbo-signalr";
+</script>
+```
+
+When using CDN imports, the non-bundled ESM build (`turbo-signalr.esm.js`) expects `@microsoft/signalr` as a peer dependency resolved through the import map. The UMD build (`turbo-signalr.js`) expects SignalR to be loaded as a global via a separate `<script>` tag.
+
 ### Subscribe to Streams in Your View
 
 ```html
