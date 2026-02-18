@@ -11,6 +11,7 @@ Hotwire Turbo for ASP.NET Core with SignalR-powered real-time streams.
 - **Turbo Frames**: Partial page updates with automatic `Turbo-Frame` header detection
 - **Turbo Streams**: Real-time updates via SignalR with targeted and broadcast support
 - **Source Generator**: Compile-time strongly-typed partial references
+- **Form Validation**: HTTP 422 support for inline validation errors within Turbo Frames
 - **Minimal API Support**: Return partials from Minimal API endpoints with `TurboResults`
 - **Simple Architecture**: Check for `Turbo-Frame` header, return partial or redirect
 - **Zero JavaScript Configuration**: Works out of the box with Turbo.js
@@ -318,6 +319,41 @@ app.MapGet("/cart/items", (HttpContext ctx) =>
 });
 ```
 
+## Form Validation
+
+When a form inside a `<turbo-frame>` fails validation, return HTTP 422 and Turbo will replace the frame content in-place with your error markup — no full page reload.
+
+**Minimal API:**
+
+```csharp
+app.MapPost("/contact", (string? name, string? email) =>
+{
+    if (string.IsNullOrWhiteSpace(name))
+    {
+        return TurboResults.ValidationFailure("_ContactForm", new { Errors = "Name is required." });
+    }
+
+    return TurboResults.Partial("_ContactSuccess");
+});
+```
+
+**Razor Pages:**
+
+```csharp
+public IActionResult OnPostSubmit()
+{
+    if (Errors.Count > 0)
+    {
+        Response.StatusCode = 422;
+        return Partial("_ContactForm", this);
+    }
+
+    return Partial("_ContactSuccess", this);
+}
+```
+
+See the [Form Validation Guide](docs/guides/form-validation.md) for lazy-loaded frames, detecting request types, and a complete walkthrough.
+
 ## Source Generator
 
 The `Tombatron.Turbo.SourceGenerator` package scans your `_*.cshtml` partial views at compile time and generates an `internal Partials` static class with strongly-typed references:
@@ -368,6 +404,12 @@ if (HttpContext.IsTurboFrameRequestWithPrefix("item_"))
 
 // Get the raw frame ID
 string? frameId = HttpContext.GetTurboFrameId();
+
+// Check if the request is a Turbo Stream request
+if (HttpContext.IsTurboStreamRequest())
+{
+    return Content(html, "text/vnd.turbo-stream.html");
+}
 ```
 
 ## How It Works
@@ -386,6 +428,7 @@ This approach is simple, explicit, and gives you full control over what content 
 - [Turbo Streams Guide](docs/guides/turbo-streams.md) - Real-time updates
 - [Authorization Guide](docs/guides/authorization.md) - Securing streams
 - [Testing Guide](docs/guides/testing.md) - Testing strategies
+- [Form Validation Guide](docs/guides/form-validation.md) - HTTP 422 and lazy frames
 - [Troubleshooting](docs/guides/troubleshooting.md) - Common issues
 
 ### API Reference
@@ -402,7 +445,7 @@ This approach is simple, explicit, and gives you full control over what content 
 
 The repository includes two sample applications:
 
-**[Tombatron.Turbo.Sample](samples/Tombatron.Turbo.Sample)** - Turbo Frames for partial page updates and Turbo Streams for real-time notifications, including a shopping cart with add/remove operations.
+**[Tombatron.Turbo.Sample](samples/Tombatron.Turbo.Sample)** - Turbo Frames for partial page updates, Turbo Streams for real-time notifications, a shopping cart with add/remove operations, and a form validation demo with HTTP 422 and lazy-loaded frames.
 
 **[Tombatron.Turbo.Chat](samples/Tombatron.Turbo.Chat)** - Full-featured real-time chat with cookie authentication, SQLite persistence, public rooms, direct messaging, unread indicators, and the source-generated `Partials` class for strongly-typed partial rendering.
 
