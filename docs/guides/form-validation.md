@@ -24,9 +24,13 @@ app.MapPost("/contact", async (HttpContext context, string? name, string? email)
     var errors = new Dictionary<string, string>();
 
     if (string.IsNullOrWhiteSpace(name))
+    {
         errors["Name"] = "Name is required.";
+    }
     if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
+    {
         errors["Email"] = "Valid email is required.";
+    }
 
     if (errors.Count > 0)
     {
@@ -70,10 +74,14 @@ public class ContactModel : PageModel
     public IActionResult OnPostSubmit()
     {
         if (string.IsNullOrWhiteSpace(Name))
+        {
             Errors["Name"] = "Name is required.";
+        }
 
         if (string.IsNullOrWhiteSpace(Email))
+        {
             Errors["Email"] = "Email is required.";
+        }
 
         if (Errors.Count > 0)
         {

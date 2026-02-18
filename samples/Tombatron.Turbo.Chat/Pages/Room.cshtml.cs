@@ -75,7 +75,10 @@ public class RoomModel : PageModel
         var memberIds = await _chatService.GetRoomMemberUserIds(roomId);
         foreach (var memberId in memberIds)
         {
-            if (memberId == CurrentUserId) continue;
+            if (memberId == CurrentUserId)
+            {
+                continue;
+            }
 
             var unread = await _chatService.GetUnreadCount(memberId, roomId);
             await _turbo.Stream($"user:{memberId}", builder =>
@@ -154,7 +157,10 @@ public class RoomModel : PageModel
     public async Task<IActionResult> OnGetUserProfile(int userId)
     {
         var user = await _chatService.GetUserById(userId);
-        if (user is null) return NotFound();
+        if (user is null)
+        {
+            return NotFound();
+        }
 
         return Partial("_Profile", user);
     }
