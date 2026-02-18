@@ -89,6 +89,66 @@ public class TurboPartialResultTests
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
+    [Fact]
+    public async Task ExecuteAsync_WithStatusCode422_ShouldSet422StatusCode()
+    {
+        // Arrange
+        var mockRenderer = new Mock<IPartialRenderer>();
+        mockRenderer
+            .Setup(r => r.RenderAsync(It.IsAny<string>(), It.IsAny<object?>()))
+            .ReturnsAsync("<div>Errors</div>");
+
+        var httpContext = CreateHttpContext(mockRenderer.Object);
+        var result = new TurboPartialResult("_TestPartial", statusCode: 422);
+
+        // Act
+        await result.ExecuteAsync(httpContext);
+
+        // Assert
+        httpContext.Response.StatusCode.Should().Be(422);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithStatusCode422_ShouldStillRenderHtml()
+    {
+        // Arrange
+        var expectedHtml = "<div>Validation errors here</div>";
+        var mockRenderer = new Mock<IPartialRenderer>();
+        mockRenderer
+            .Setup(r => r.RenderAsync("_ErrorForm", null))
+            .ReturnsAsync(expectedHtml);
+
+        var httpContext = CreateHttpContext(mockRenderer.Object);
+        var result = new TurboPartialResult("_ErrorForm", statusCode: 422);
+
+        // Act
+        await result.ExecuteAsync(httpContext);
+
+        // Assert
+        httpContext.Response.ContentType.Should().Be("text/html; charset=utf-8");
+        var body = await ReadResponseBody(httpContext);
+        body.Should().Be(expectedHtml);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithDefaultStatusCode_ShouldSet200StatusCode()
+    {
+        // Arrange
+        var mockRenderer = new Mock<IPartialRenderer>();
+        mockRenderer
+            .Setup(r => r.RenderAsync(It.IsAny<string>(), It.IsAny<object?>()))
+            .ReturnsAsync(string.Empty);
+
+        var httpContext = CreateHttpContext(mockRenderer.Object);
+        var result = new TurboPartialResult("_TestPartial");
+
+        // Act
+        await result.ExecuteAsync(httpContext);
+
+        // Assert
+        httpContext.Response.StatusCode.Should().Be(200);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

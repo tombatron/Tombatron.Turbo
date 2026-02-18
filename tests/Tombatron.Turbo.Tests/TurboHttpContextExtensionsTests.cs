@@ -227,4 +227,55 @@ public class TurboHttpContextExtensionsTests
         // Assert
         result.Should().Be(expected);
     }
+
+    [Fact]
+    public void IsTurboStreamRequest_WhenAcceptHeaderContainsTurboStream_ReturnsTrue()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+        context.Request.Headers.Accept = "text/vnd.turbo-stream.html";
+
+        // Act
+        bool result = context.IsTurboStreamRequest();
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsTurboStreamRequest_WhenAcceptHeaderMissing_ReturnsFalse()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+
+        // Act
+        bool result = context.IsTurboStreamRequest();
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsTurboStreamRequest_WithMixedAcceptHeader_ReturnsTrue()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+        context.Request.Headers.Accept = "text/html, application/xhtml+xml, text/vnd.turbo-stream.html";
+
+        // Act
+        bool result = context.IsTurboStreamRequest();
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsTurboStreamRequest_WithNullContext_ThrowsArgumentNullException()
+    {
+        // Arrange
+        HttpContext? context = null;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => context!.IsTurboStreamRequest());
+    }
 }

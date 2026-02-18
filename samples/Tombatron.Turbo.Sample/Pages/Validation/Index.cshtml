@@ -1,0 +1,41 @@
+@page
+@model Tombatron.Turbo.Sample.Pages.Validation.IndexModel
+@{
+    ViewData["Title"] = "Form Validation";
+}
+
+<h1>Form Validation</h1>
+<p>This page demonstrates Turbo's built-in form validation support using HTTP 422 responses and lazy-loaded frames.</p>
+
+<div class="grid">
+    <div>
+        <h2>Contact Form</h2>
+        <p>Submit an empty form to see inline validation errors. Turbo intercepts the 422 response and re-renders the frame in place.</p>
+
+        <turbo-frame id="contact-form">
+            <partial name="_ContactForm" model="Model" />
+        </turbo-frame>
+    </div>
+
+    <div>
+        <h2>Feedback Form (Lazy Loaded)</h2>
+        <p>This form loads on demand via a lazy turbo-frame. It also uses the 422 pattern for validation.</p>
+
+        <turbo-frame id="feedback-form" src="/Validation?handler=FeedbackForm" loading="lazy">
+            <div style="padding: 24px; text-align: center; color: var(--text-muted);">
+                Loading feedback form...
+            </div>
+        </turbo-frame>
+    </div>
+</div>
+
+<div class="info-box">
+    <h3>How It Works</h3>
+    <ul>
+        <li><strong>HTTP 422</strong> &mdash; When validation fails, the server responds with status 422 (Unprocessable Entity). Turbo recognizes this and replaces the frame content with the response HTML.</li>
+        <li><strong>Lazy Frames</strong> &mdash; The feedback form uses <code>loading="lazy"</code> to defer loading until the frame is visible. The initial placeholder is replaced by the server-rendered form.</li>
+        <li><strong>No JavaScript</strong> &mdash; All validation is server-side. Turbo handles the frame updates automatically.</li>
+    </ul>
+</div>
+
+<a href="/" class="back-link">&larr; Back to Home</a>

@@ -11,13 +11,15 @@ public sealed class TurboPartialResult : IResult
 {
     private readonly string _partialName;
     private readonly object? _model;
+    private readonly int _statusCode;
 
-    internal TurboPartialResult(string partialName, object? model = null)
+    internal TurboPartialResult(string partialName, object? model = null, int statusCode = 200)
     {
         ArgumentException.ThrowIfNullOrEmpty(partialName);
 
         _partialName = partialName;
         _model = model;
+        _statusCode = statusCode;
     }
 
     /// <inheritdoc />
@@ -26,6 +28,7 @@ public sealed class TurboPartialResult : IResult
         var renderer = httpContext.RequestServices.GetRequiredService<IPartialRenderer>();
         var html = await renderer.RenderAsync(_partialName, _model);
 
+        httpContext.Response.StatusCode = _statusCode;
         httpContext.Response.ContentType = "text/html; charset=utf-8";
         await httpContext.Response.WriteAsync(html);
     }

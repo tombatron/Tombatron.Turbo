@@ -1,0 +1,40 @@
+@model Tombatron.Turbo.Sample.Pages.Validation.IndexModel
+
+<turbo-frame id="contact-form">
+    @if (Model.ContactSubmitted)
+    {
+        <div style="padding: 20px; background: var(--success-bg); border-radius: 8px; color: var(--success); text-align: center;">
+            <strong>Thank you!</strong> Your message has been sent.
+        </div>
+    }
+    else
+    {
+        <form method="post" asp-page="/Validation/Index" asp-page-handler="SubmitContact">
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-weight: 500; margin-bottom: 4px;">Name</label>
+                <input type="text" name="ContactName" value="@Model.ContactName" placeholder="Your name" style="width: 100%;" />
+                @if (Model.ContactErrors.ContainsKey("ContactName"))
+                {
+                    <span class="field-error">@Model.ContactErrors["ContactName"]</span>
+                }
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-weight: 500; margin-bottom: 4px;">Email</label>
+                <input type="text" name="ContactEmail" value="@Model.ContactEmail" placeholder="you@example.com" style="width: 100%;" />
+                @if (Model.ContactErrors.ContainsKey("ContactEmail"))
+                {
+                    <span class="field-error">@Model.ContactErrors["ContactEmail"]</span>
+                }
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-weight: 500; margin-bottom: 4px;">Message</label>
+                <textarea name="ContactMessage" placeholder="Your message..." rows="3" style="width: 100%;">@Model.ContactMessage</textarea>
+                @if (Model.ContactErrors.ContainsKey("ContactMessage"))
+                {
+                    <span class="field-error">@Model.ContactErrors["ContactMessage"]</span>
+                }
+            </div>
+            <button type="submit" class="btn">Send Message</button>
+        </form>
+    }
+</turbo-frame>

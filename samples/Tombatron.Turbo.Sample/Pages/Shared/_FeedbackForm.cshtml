@@ -1,0 +1,39 @@
+@model Tombatron.Turbo.Sample.Pages.Validation.IndexModel
+
+<turbo-frame id="feedback-form">
+    @if (Model.FeedbackSubmitted)
+    {
+        <div style="padding: 20px; background: var(--success-bg); border-radius: 8px; color: var(--success); text-align: center;">
+            <strong>Thanks for your feedback!</strong> We appreciate your input.
+        </div>
+    }
+    else
+    {
+        <form method="post" asp-page="/Validation/Index" asp-page-handler="SubmitFeedback">
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-weight: 500; margin-bottom: 4px;">Rating</label>
+                <select name="FeedbackRating" style="width: 100%;">
+                    <option value="">-- Select a rating --</option>
+                    <option value="5" selected="@(Model.FeedbackRating == "5")">Excellent</option>
+                    <option value="4" selected="@(Model.FeedbackRating == "4")">Good</option>
+                    <option value="3" selected="@(Model.FeedbackRating == "3")">Average</option>
+                    <option value="2" selected="@(Model.FeedbackRating == "2")">Poor</option>
+                    <option value="1" selected="@(Model.FeedbackRating == "1")">Terrible</option>
+                </select>
+                @if (Model.FeedbackErrors.ContainsKey("FeedbackRating"))
+                {
+                    <span class="field-error">@Model.FeedbackErrors["FeedbackRating"]</span>
+                }
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-weight: 500; margin-bottom: 4px;">Comment</label>
+                <textarea name="FeedbackComment" placeholder="Tell us more..." rows="3" style="width: 100%;">@Model.FeedbackComment</textarea>
+                @if (Model.FeedbackErrors.ContainsKey("FeedbackComment"))
+                {
+                    <span class="field-error">@Model.FeedbackErrors["FeedbackComment"]</span>
+                }
+            </div>
+            <button type="submit" class="btn">Submit Feedback</button>
+        </form>
+    }
+</turbo-frame>

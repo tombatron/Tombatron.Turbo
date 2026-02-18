@@ -31,4 +31,32 @@ public static class TurboResults
     /// </summary>
     public static IResult Partial<TModel>(PartialTemplate<TModel> template, TModel model) =>
         new TurboPartialResult(template.ViewPath, model);
+
+    /// <summary>
+    /// Creates an <see cref="IResult"/> that renders the specified partial view with HTTP 422 status code
+    /// for form validation failures. Turbo will replace the frame content in-place when it receives a 422.
+    /// </summary>
+    public static IResult ValidationFailure(string partialName) =>
+        new TurboPartialResult(partialName, statusCode: 422);
+
+    /// <summary>
+    /// Creates an <see cref="IResult"/> that renders the specified partial view with the given model
+    /// and HTTP 422 status code for form validation failures.
+    /// </summary>
+    public static IResult ValidationFailure(string partialName, object model) =>
+        new TurboPartialResult(partialName, model, statusCode: 422);
+
+    /// <summary>
+    /// Creates an <see cref="IResult"/> that renders the specified <see cref="PartialTemplate"/>
+    /// with HTTP 422 status code for form validation failures.
+    /// </summary>
+    public static IResult ValidationFailure(PartialTemplate template) =>
+        new TurboPartialResult(template.ViewPath, statusCode: 422);
+
+    /// <summary>
+    /// Creates an <see cref="IResult"/> that renders the specified <see cref="PartialTemplate{TModel}"/>
+    /// with the given model and HTTP 422 status code for form validation failures.
+    /// </summary>
+    public static IResult ValidationFailure<TModel>(PartialTemplate<TModel> template, TModel model) =>
+        new TurboPartialResult(template.ViewPath, model, statusCode: 422);
 }

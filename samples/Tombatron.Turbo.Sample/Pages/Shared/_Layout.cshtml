@@ -239,7 +239,9 @@
 
         /* Forms */
         input[type="text"],
-        input[type="number"] {
+        input[type="number"],
+        textarea,
+        select {
             padding: 10px 14px;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -247,13 +249,27 @@
             background: var(--bg-secondary);
             color: var(--text-primary);
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            font-family: inherit;
         }
 
         input[type="text"]:focus,
-        input[type="number"]:focus {
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        .field-error {
+            display: block;
+            color: var(--danger);
+            font-size: 0.8rem;
+            margin-top: 4px;
         }
 
         input::placeholder {
@@ -389,6 +405,7 @@
                 <a href="/">Home</a>
                 <a href="/Cart">Cart</a>
                 <a href="/Streams">Streams</a>
+                <a href="/Validation">Validation</a>
                 <span id="connection-status" class="connection-status disconnected">Offline</span>
             </nav>
         </div>

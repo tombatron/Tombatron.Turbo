@@ -67,6 +67,23 @@ public static class TurboHttpContextExtensions
     }
 
     /// <summary>
+    /// Gets whether the current request is a Turbo Stream request
+    /// (i.e., the Accept header contains <c>text/vnd.turbo-stream.html</c>).
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <returns>True if the request accepts Turbo Stream responses.</returns>
+    public static bool IsTurboStreamRequest(this HttpContext context)
+    {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+
+        return context.Request.Headers.Accept.ToString()
+            .Contains("text/vnd.turbo-stream.html", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
     /// Checks if the current Turbo Frame request matches frames with the specified prefix.
     /// </summary>
     /// <param name="context">The HTTP context.</param>
