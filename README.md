@@ -8,448 +8,527 @@ Hotwire Turbo for ASP.NET Core with SignalR-powered real-time streams.
 
 ## Features
 
-- **Turbo Frames**: Partial page updates with automatic `Turbo-Frame` header detection
-- **Turbo Streams**: Real-time updates via SignalR with targeted and broadcast support
-- **Source Generator**: Compile-time strongly-typed partial references
-- **Form Validation**: HTTP 422 support for inline validation errors within Turbo Frames
-- **Minimal API Support**: Return partials from Minimal API endpoints with `TurboResults`
-- **Simple Architecture**: Check for `Turbo-Frame` header, return partial or redirect
-- **Zero JavaScript Configuration**: Works out of the box with Turbo.js
+- **Turbo Frames** — Partial page updates with automatic `Turbo-Frame` header detection
+- **Turbo Streams** — Real-time updates via SignalR with targeted and broadcast support
+- **Stimulus** — Convention-based controller discovery with import maps and hot reload
+- **Source Generator** — Compile-time strongly-typed partial references
+- **Form Validation** — HTTP 422 support for inline validation errors within Turbo Frames
+- **Minimal API Support** — Return partials from Minimal API endpoints with `TurboResults`
+- **Import Maps** — Pin JavaScript modules with `<turbo-scripts mode="Importmap" />`
+- **Zero Configuration** — Works out of the box with Turbo.js
 
-## Installation
+## Tutorial: Build a Todo List
 
-**NuGet (ASP.NET Core server package):**
+This walkthrough creates a todo list app from scratch using Turbo Frames for partial page updates and Stimulus for client-side behavior. Each step builds on the previous one.
+
+### Step 1 — Create the project and install packages
 
 ```bash
+dotnet new webapp -n TurboTodo
+cd TurboTodo
 dotnet add package Tombatron.Turbo
+dotnet add package Tombatron.Turbo.Stimulus
 ```
 
-**NuGet (Source generator for strongly-typed partials, optional):**
+### Step 2 — Configure services
 
-```bash
-dotnet add package Tombatron.Turbo.SourceGenerator
-```
-
-**npm (JavaScript client library):**
-
-```bash
-npm install @tombatron/turbo-signalr
-```
-
-## Quick Start
-
-### 1. Add Turbo Services
+Replace the contents of `Program.cs`:
 
 ```csharp
-// Program.cs
+using Tombatron.Turbo;
+using Tombatron.Turbo.Stimulus;
+
+var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddTurbo();
+builder.Services.AddStimulus();
+builder.Services.AddRazorPages();
 
-// Or with import map configuration:
-builder.Services.AddTurbo(options =>
-{
-    options.ImportMap.Pin("@hotwired/stimulus",
-        "https://unpkg.com/@hotwired/stimulus@3.2.2/dist/stimulus.js", preload: true);
-    options.ImportMap.Pin("controllers/hello", "/js/controllers/hello_controller.js");
-});
-```
+var app = builder.Build();
 
-### 2. Use Turbo Middleware
-
-```csharp
-// Program.cs
+app.UseStaticFiles();
 app.UseRouting();
 app.UseTurbo();
+
 app.MapRazorPages();
-app.MapTurboHub(); // For Turbo Streams
+app.MapTurboHub();
+
+app.Run();
 ```
 
-### 3. Add Tag Helpers
+`AddTurbo()` registers the Turbo services and tag helpers. `AddStimulus()` sets up automatic controller discovery from `wwwroot/controllers/`. `UseTurbo()` adds middleware that sets the `Vary` header on Turbo Frame responses. `MapTurboHub()` exposes the SignalR hub for Turbo Streams.
+
+### Step 3 — Register tag helpers
+
+Add to `Pages/_ViewImports.cshtml`:
 
 ```razor
-@* _ViewImports.cshtml *@
 @addTagHelper *, Tombatron.Turbo
 ```
 
-### 4. Create a Turbo Frame with a Partial
+### Step 4 — Set up the layout
 
-Create a partial view for your frame content:
-
-```html
-<!-- Pages/Shared/_CartItems.cshtml -->
-<turbo-frame id="cart-items">
-    @foreach (var item in Model.Items)
-    {
-        <div>@item.Name - @item.Price</div>
-    }
-</turbo-frame>
-```
-
-Use the partial in your page:
+Replace `Pages/Shared/_Layout.cshtml`:
 
 ```html
-<!-- Pages/Cart/Index.cshtml -->
-<h1>Shopping Cart</h1>
-<partial name="_CartItems" model="Model" />
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Todo List</title>
+    <turbo-scripts mode="Importmap" />
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+        .todo-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; }
+        .completed { text-decoration: line-through; opacity: 0.6; }
+        .error { color: red; font-size: 0.875rem; }
+        input[type="text"] { flex: 1; padding: 0.5rem; font-size: 1rem; }
+        button { padding: 0.5rem 1rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    @RenderBody()
+</body>
+</html>
 ```
 
-### 5. Handle Frame Requests in Your Page Model
+The `<turbo-scripts mode="Importmap" />` tag helper renders Turbo.js, the SignalR bridge, Stimulus, and any discovered controllers via an import map.
+
+### Step 5 — Create the page model
+
+Replace `Pages/Index.cshtml.cs`:
 
 ```csharp
-public class CartModel : PageModel
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Tombatron.Turbo;
+
+namespace TurboTodo.Pages;
+
+public record TodoItem(int Id, string Title, bool IsComplete);
+
+public class IndexModel : PageModel
 {
-    public List<CartItem> Items { get; set; }
-
-    public void OnGet()
+    private static readonly List<TodoItem> _todos = new()
     {
-        Items = GetCartItems();
-    }
+        new(1, "Learn Turbo Frames", false),
+        new(2, "Add Stimulus controllers", false)
+    };
 
-    public IActionResult OnGetRefresh()
+    private static int _nextId = 3;
+
+    public List<TodoItem> Todos => _todos;
+    public string? Error { get; set; }
+
+    public void OnGet() { }
+
+    public IActionResult OnPostAdd(string? title)
     {
-        Items = GetCartItems();
-
-        // For Turbo-Frame requests, return just the partial
-        if (HttpContext.IsTurboFrameRequest())
+        if (string.IsNullOrWhiteSpace(title))
         {
-            return Partial("_CartItems", this);
+            Error = "Title is required.";
+            Response.StatusCode = 422;
+            return Partial("_TodoList", this);
         }
 
-        // For regular requests, redirect to the full page
+        _todos.Add(new TodoItem(_nextId++, title.Trim(), false));
+
+        if (HttpContext.IsTurboFrameRequest())
+        {
+            return Partial("_TodoList", this);
+        }
+
+        return RedirectToPage();
+    }
+
+    public IActionResult OnPostToggle(int id)
+    {
+        var index = _todos.FindIndex(t => t.Id == id);
+
+        if (index >= 0)
+        {
+            var todo = _todos[index];
+            _todos[index] = todo with { IsComplete = !todo.IsComplete };
+        }
+
+        if (HttpContext.IsTurboFrameRequest())
+        {
+            return Partial("_TodoList", this);
+        }
+
+        return RedirectToPage();
+    }
+
+    public IActionResult OnPostDelete(int id)
+    {
+        _todos.RemoveAll(t => t.Id == id);
+
+        if (HttpContext.IsTurboFrameRequest())
+        {
+            return Partial("_TodoList", this);
+        }
+
         return RedirectToPage();
     }
 }
 ```
 
-### 6. Link to the Handler
+The pattern is straightforward: check `IsTurboFrameRequest()` and return just the partial, or redirect for regular requests. When validation fails, set HTTP 422 so Turbo replaces the frame content in-place.
+
+### Step 6 — Create the page view
+
+Replace `Pages/Index.cshtml`:
 
 ```html
-<turbo-frame id="cart-items" src="/Cart?handler=Refresh">
-    Loading...
-</turbo-frame>
+@page
+@model TurboTodo.Pages.IndexModel
 
-<!-- Or use a button/link -->
-<a href="/Cart?handler=Refresh" data-turbo-frame="cart-items">
-    Refresh Cart
-</a>
+<h1>Todo List</h1>
+
+<partial name="_TodoList" model="Model" />
 ```
 
-## Turbo Streams (Real-Time Updates)
+The page renders the `_TodoList` partial, which wraps everything in a `<turbo-frame id="todo-list">`. When a form inside the frame submits, Turbo sends the request with a `Turbo-Frame: todo-list` header and replaces the frame with the partial response.
 
-### Send Updates to a Stream
+### Step 7 — Create the todo list partial
+
+Create `Pages/Shared/_TodoList.cshtml`:
+
+```html
+@model TurboTodo.Pages.IndexModel
+
+<turbo-frame id="todo-list">
+    <form method="post" asp-page-handler="Add"
+          data-controller="todo-form"
+          data-action="turbo:submit-end->todo-form#reset">
+        <div style="display: flex; gap: 0.5rem;">
+            <input type="text" name="title" placeholder="What needs to be done?"
+                   data-todo-form-target="input" />
+            <button type="submit">Add</button>
+        </div>
+        @if (Model.Error is not null)
+        {
+            <p class="error">@Model.Error</p>
+        }
+    </form>
+
+    @foreach (var todo in Model.Todos)
+    {
+        <div class="todo-item">
+            <form method="post" asp-page-handler="Toggle">
+                <input type="hidden" name="id" value="@todo.Id" />
+                <button type="submit">@(todo.IsComplete ? "✓" : "○")</button>
+            </form>
+            <span class="@(todo.IsComplete ? "completed" : "")">@todo.Title</span>
+            <form method="post" asp-page-handler="Delete">
+                <input type="hidden" name="id" value="@todo.Id" />
+                <button type="submit">×</button>
+            </form>
+        </div>
+    }
+</turbo-frame>
+```
+
+The partial wraps everything in a `<turbo-frame>` with the same `id` as the page. When Turbo receives the response, it matches the frame by ID and swaps the content.
+
+If validation fails (HTTP 422), Turbo replaces the frame content with the error markup instead of navigating away.
+
+### Step 8 — Add a Stimulus controller
+
+Create `wwwroot/controllers/todo_form_controller.js`:
+
+```javascript
+import { Controller } from "@hotwired/stimulus";
+
+export default class extends Controller {
+    static targets = ["input"];
+
+    reset(event) {
+        if (event.detail.success) {
+            this.inputTarget.value = "";
+        }
+    }
+}
+```
+
+This controller clears the input field after a successful submission. The naming convention maps the filename to an identifier: `todo_form_controller.js` becomes `todo-form` (underscores become hyphens, the `_controller.js` suffix is stripped).
+
+The `data-controller="todo-form"` attribute on the form connects it, and `data-action="turbo:submit-end->todo-form#reset"` calls the `reset` method when Turbo finishes the submission.
+
+No manual registration is needed. `AddStimulus()` automatically discovers controllers in `wwwroot/controllers/` and generates the import map entries.
+
+### Step 9 — Run it
+
+```bash
+dotnet run
+```
+
+Open `https://localhost:5001` (or the port shown in the console). You should be able to add, toggle, and delete todos without full page reloads. The form clears automatically on successful submission thanks to the Stimulus controller. If you submit an empty title, the validation error appears inline.
+
+## Real-Time Updates with Turbo Streams
+
+Turbo Streams push updates to connected clients over SignalR. This section extends the todo example to broadcast new items in real-time.
+
+### Inject ITurbo and broadcast
 
 ```csharp
-public class CartController : Controller
+public class IndexModel : PageModel
 {
     private readonly ITurbo _turbo;
 
-    public CartController(ITurbo turbo)
+    public IndexModel(ITurbo turbo)
     {
         _turbo = turbo;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> AddItem(int itemId)
+    public async Task<IActionResult> OnPostAdd(string? title)
     {
-        // Add item to cart...
+        // ... add the todo ...
 
-        // Send update to the user's stream
-        await _turbo.Stream($"user:{User.Identity.Name}", builder =>
+        await _turbo.Broadcast(builder =>
         {
-            builder.Update("cart-total", $"<span>${cart.Total}</span>");
+            builder.Append("todo-items", $"<div class=\"todo-item\">{title}</div>");
         });
 
-        return Ok();
+        return Partial("_TodoList", this);
     }
 }
 ```
 
-### Broadcast to All Connected Clients
-
-```csharp
-// Send updates to every connected client
-await _turbo.Broadcast(builder =>
-{
-    builder.Update("active-users", $"<span>{count}</span>");
-});
-```
-
-### Render Partials in Streams
-
-Use the async overload to render Razor partials directly in stream updates:
-
-```csharp
-await _turbo.Stream($"room:{roomId}", async builder =>
-{
-    await builder.AppendAsync("messages", "_Message", message);
-});
-```
-
-With the source generator, you get strongly-typed partial references:
-
-```csharp
-await _turbo.Stream($"room:{roomId}", async builder =>
-{
-    await builder.AppendAsync("messages", Partials.Message, message);
-});
-```
-
-### Include the Client Scripts
+### Subscribe in the page
 
 ```html
-<!-- In your layout: renders Turbo.js + SignalR adapter script tags -->
-<turbo-scripts />
-
-<!-- Or use import maps: -->
-<turbo-scripts mode="Importmap" />
+<turbo stream="todos"></turbo>
+<div id="todo-items">
+    <!-- items appended here by stream -->
+</div>
 ```
 
-The `<turbo-scripts>` tag helper automatically includes Turbo.js and the SignalR bridge.
-In **Traditional** mode (default), it renders standard `<script>` tags.
-In **Importmap** mode, it renders a `<script type="importmap">` block with module preloads.
+### Render partials in streams
 
-Configure additional modules (e.g. Stimulus) via `ImportMap.Pin()` in `Program.cs`:
+Use the async builder overload to render Razor partials. The overload takes an `IPartialRenderer` (injected into your page or controller):
 
 ```csharp
-builder.Services.AddTurbo(options =>
+await _turbo.Stream("todos", async builder =>
 {
-    options.ImportMap.Pin("@hotwired/stimulus",
-        "https://unpkg.com/@hotwired/stimulus@3.2.2/dist/stimulus.js", preload: true);
+    await builder.AppendAsync("todo-items", _renderer, "_TodoItem", newTodo);
 });
 ```
 
-### Loading the SignalR Bridge from a CDN
-
-If you prefer to load the SignalR bridge from a CDN instead of the bundled NuGet static files, you can use the `@tombatron/turbo-signalr` npm package via [jsDelivr](https://www.jsdelivr.com/).
-
-**Traditional script tags:**
-
-```html
-<!-- Turbo.js -->
-<script type="module" src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.min.js"></script>
-
-<!-- SignalR (required peer dependency) -->
-<script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8/dist/browser/signalr.min.js"></script>
-
-<!-- Turbo SignalR bridge -->
-<script src="https://cdn.jsdelivr.net/npm/@tombatron/turbo-signalr/dist/turbo-signalr.js"></script>
-```
-
-**Import maps:**
-
-```html
-<script type="importmap">
-{
-  "imports": {
-    "@hotwired/turbo": "https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.min.js",
-    "@microsoft/signalr": "https://cdn.jsdelivr.net/npm/@microsoft/signalr@8/dist/browser/signalr.js",
-    "@tombatron/turbo-signalr": "https://cdn.jsdelivr.net/npm/@tombatron/turbo-signalr/dist/turbo-signalr.esm.js"
-  }
-}
-</script>
-<script type="module">
-  import "@hotwired/turbo";
-  import "@tombatron/turbo-signalr";
-</script>
-```
-
-**Via `Program.cs` (recommended when using `<turbo-scripts mode="Importmap" />`):**
-
-The default import map pins `turbo-signalr` to the bundled static file from the NuGet package. Override it to point at CDN URLs instead:
+### Stream actions
 
 ```csharp
-builder.Services.AddTurbo(options =>
-{
-    // Override the default Turbo.js pin (optional — the default already uses unpkg)
-    options.ImportMap.Pin("@hotwired/turbo",
-        "https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.min.js", preload: true);
-
-    // SignalR must be in the import map so the ESM build can resolve it
-    options.ImportMap.Pin("@microsoft/signalr",
-        "https://cdn.jsdelivr.net/npm/@microsoft/signalr@8/dist/browser/signalr.js");
-
-    // Replace the bundled bridge with the CDN ESM build
-    options.ImportMap.Pin("turbo-signalr",
-        "https://cdn.jsdelivr.net/npm/@tombatron/turbo-signalr/dist/turbo-signalr.esm.js", preload: true);
-});
-```
-
-When using CDN imports, the non-bundled ESM build (`turbo-signalr.esm.js`) expects `@microsoft/signalr` as a peer dependency resolved through the import map. The UMD build (`turbo-signalr.js`) expects SignalR to be loaded as a global via a separate `<script>` tag.
-
-### Subscribe to Streams in Your View
-
-```html
-<!-- Using the turbo tag helper -->
-<turbo stream="notifications"></turbo>
-
-<!-- Or directly -->
-<turbo-stream-source-signalr stream="user:@User.Identity.Name" hub-url="/turbo-hub">
-</turbo-stream-source-signalr>
-
-<div id="cart-total">$0.00</div>
-```
-
-## Stream Actions
-
-```csharp
-await _turbo.Stream("notifications", builder =>
+await _turbo.Stream("my-stream", builder =>
 {
     builder
-        .Append("list", "<div>New item</div>")    // Add to end
-        .Prepend("list", "<div>First</div>")      // Add to beginning
-        .Replace("item-1", "<div>Updated</div>")  // Replace element
-        .Update("count", "42")                     // Update inner content
-        .Remove("old-item")                        // Remove element
-        .Before("btn", "<div>Before</div>")       // Insert before
-        .After("btn", "<div>After</div>");        // Insert after
+        .Append("list", "<div>New item</div>")
+        .Prepend("list", "<div>First</div>")
+        .Replace("item-1", "<div>Updated</div>")
+        .Update("count", "42")
+        .Remove("old-item")
+        .Before("btn", "<div>Before</div>")
+        .After("btn", "<div>After</div>");
 });
 ```
 
-## Minimal API Support
-
-Use `TurboResults` to return partials from Minimal API endpoints:
+### Targeted vs. broadcast
 
 ```csharp
-app.MapGet("/cart/items", (HttpContext ctx) =>
-{
-    if (ctx.IsTurboFrameRequest())
-    {
-        return TurboResults.Partial("_CartItems", model);
-    }
-    return Results.Redirect("/cart");
-});
+// Send to a specific stream (e.g., one user)
+await _turbo.Stream($"user:{userId}", builder => { ... });
+
+// Send to multiple streams
+await _turbo.Stream(new[] { "stream-a", "stream-b" }, builder => { ... });
+
+// Send to all connected clients
+await _turbo.Broadcast(builder => { ... });
 ```
 
-## Form Validation
+## Reference
 
-When a form inside a `<turbo-frame>` fails validation, return HTTP 422 and Turbo will replace the frame content in-place with your error markup — no full page reload.
+### Turbo Frames
 
-**Minimal API:**
-
-```csharp
-app.MapPost("/contact", (string? name, string? email) =>
-{
-    if (string.IsNullOrWhiteSpace(name))
-    {
-        return TurboResults.ValidationFailure("_ContactForm", new { Errors = "Name is required." });
-    }
-
-    return TurboResults.Partial("_ContactSuccess");
-});
-```
-
-**Razor Pages:**
-
-```csharp
-public IActionResult OnPostSubmit()
-{
-    if (Errors.Count > 0)
-    {
-        Response.StatusCode = 422;
-        return Partial("_ContactForm", this);
-    }
-
-    return Partial("_ContactSuccess", this);
-}
-```
-
-See the [Form Validation Guide](docs/guides/form-validation.md) for lazy-loaded frames, detecting request types, and a complete walkthrough.
-
-## Source Generator
-
-The `Tombatron.Turbo.SourceGenerator` package scans your `_*.cshtml` partial views at compile time and generates an `internal Partials` static class with strongly-typed references:
-
-```csharp
-// Generated from _Message.cshtml with @model ChatMessage
-internal static PartialTemplate<ChatMessage> Message { get; }
-    = new("/Pages/Shared/_Message.cshtml", "Message");
-```
-
-Use them for compile-time safety instead of magic strings:
-
-```csharp
-await builder.AppendAsync("messages", Partials.Message, message);
-```
-
-## Configuration
-
-```csharp
-builder.Services.AddTurbo(options =>
-{
-    options.HubPath = "/turbo-hub";
-    options.AddVaryHeader = true;
-});
-```
-
-## Helper Extensions
-
-Check if a request is a Turbo Frame request:
+Check for a Turbo Frame request and return a partial:
 
 ```csharp
 if (HttpContext.IsTurboFrameRequest())
 {
     return Partial("_MyPartial", Model);
 }
+```
 
-// Or check for a specific frame
-if (HttpContext.IsTurboFrameRequest("cart-items"))
-{
-    return Partial("_CartItems", Model);
-}
+Lazy-load a frame by setting its `src`:
 
-// Or check for a prefix (dynamic IDs)
-if (HttpContext.IsTurboFrameRequestWithPrefix("item_"))
+```html
+<turbo-frame id="comments" src="/posts/1?handler=Comments" loading="lazy">
+    Loading...
+</turbo-frame>
+```
+
+### Stimulus
+
+`AddStimulus()` discovers controllers from `wwwroot/controllers/` (default) and registers them in the import map. No manual registration required.
+
+**Naming conventions:**
+
+| File | Identifier |
+|---|---|
+| `hello_controller.js` | `hello` |
+| `todo_form_controller.js` | `todo-form` |
+| `admin/users_controller.js` | `admin--users` |
+| `admin/user_settings_controller.js` | `admin--user-settings` |
+
+**Options:**
+
+```csharp
+builder.Services.AddStimulus(options =>
 {
-    return Partial("_CartItem", Model);
+    options.ControllersPath = "js/controllers";        // Default: "controllers"
+    options.StimulusCdnUrl = "https://unpkg.com/...";  // Default: stimulus 3.2.2 from unpkg
+    options.EnableHotReload = true;                     // Default: auto-detect from environment
+});
+```
+
+Hot reload is enabled automatically in Development — save a controller file and the browser picks up the changes.
+
+### Tag Helpers
+
+Register in `_ViewImports.cshtml`:
+
+```razor
+@addTagHelper *, Tombatron.Turbo
+```
+
+**`<turbo-scripts>`** — Renders Turbo.js, SignalR bridge, and Stimulus:
+
+```html
+<turbo-scripts />                       <!-- Traditional <script> tags -->
+<turbo-scripts mode="Importmap" />      <!-- Import map with modulepreload -->
+```
+
+**`<turbo-frame>`** — Turbo Frame element:
+
+```html
+<turbo-frame id="my-frame" src="/load" loading="lazy"></turbo-frame>
+```
+
+**`<turbo>`** — Subscribe to Turbo Streams:
+
+```html
+<turbo stream="notifications"></turbo>
+<turbo stream="user:@User.Identity.Name"></turbo>
+```
+
+### Import Maps
+
+Pin additional modules in `Program.cs`:
+
+```csharp
+builder.Services.AddTurbo(options =>
+{
+    options.ImportMap.Pin("my-lib", "/js/my-lib.js", preload: true);
+    options.ImportMap.Unpin("turbo-signalr"); // Remove a default pin
+});
+```
+
+Default pins (set automatically):
+- `@hotwired/turbo` → Turbo.js 8.x from unpkg (preloaded)
+- `turbo-signalr` → Bundled SignalR bridge from NuGet (preloaded)
+
+When using `AddStimulus()`, the Stimulus library and a generated controller index are also pinned automatically.
+
+### Minimal API
+
+Return partials from Minimal API endpoints:
+
+```csharp
+app.MapGet("/items", (HttpContext ctx) =>
+{
+    if (ctx.IsTurboFrameRequest())
+    {
+        return TurboResults.Partial("_Items", model);
+    }
+    return Results.Redirect("/");
+});
+```
+
+### Form Validation
+
+Return HTTP 422 to replace frame content in-place with validation errors:
+
+**Razor Pages:**
+
+```csharp
+if (!ModelState.IsValid)
+{
+    Response.StatusCode = 422;
+    return Partial("_Form", this);
 }
+```
+
+**Minimal API:**
+
+```csharp
+return TurboResults.ValidationFailure("_Form", new { Errors = "Name is required." });
+```
+
+### Configuration
+
+```csharp
+builder.Services.AddTurbo(options =>
+{
+    options.HubPath = "/turbo-hub";                             // Default: "/turbo-hub"
+    options.AddVaryHeader = true;                               // Default: true
+    options.UseSignedStreamNames = true;                        // Default: true
+    options.SignedStreamNameExpiration = TimeSpan.FromHours(24); // Default: 24 hours
+    options.EnableAutoReconnect = true;                         // Default: true
+    options.MaxReconnectAttempts = 5;                           // Default: 5
+    options.DefaultUserStreamPattern = "user:{0}";              // Default: "user:{0}"
+    options.DefaultSessionStreamPattern = "session:{0}";        // Default: "session:{0}"
+});
+```
+
+### Helper Extensions
+
+```csharp
+// Is this a Turbo Frame request?
+HttpContext.IsTurboFrameRequest()
+
+// Is it for a specific frame?
+HttpContext.IsTurboFrameRequest("cart-items")
+
+// Does the frame ID start with a prefix?
+HttpContext.IsTurboFrameRequestWithPrefix("item_")
 
 // Get the raw frame ID
 string? frameId = HttpContext.GetTurboFrameId();
 
-// Check if the request is a Turbo Stream request
-if (HttpContext.IsTurboStreamRequest())
-{
-    return Content(html, "text/vnd.turbo-stream.html");
-}
+// Is this a Turbo Stream request?
+HttpContext.IsTurboStreamRequest()
 ```
 
-## How It Works
+### Source Generator
 
-1. User clicks a link or submits a form targeting a `<turbo-frame>`
-2. Turbo.js sends a request with the `Turbo-Frame` header
-3. Your page handler checks for the header and returns a partial view
-4. Turbo.js extracts the matching frame from the response and updates the DOM
+The optional `Tombatron.Turbo.SourceGenerator` package generates strongly-typed partial references at compile time:
 
-This approach is simple, explicit, and gives you full control over what content is returned.
+```bash
+dotnet add package Tombatron.Turbo.SourceGenerator
+```
 
-## Documentation
+```csharp
+// Instead of magic strings (requires IPartialRenderer):
+await builder.AppendAsync("messages", renderer, "_Message", message);
 
-### Guides
-- [Turbo Frames Guide](docs/guides/turbo-frames.md) - Partial page updates
-- [Turbo Streams Guide](docs/guides/turbo-streams.md) - Real-time updates
-- [Authorization Guide](docs/guides/authorization.md) - Securing streams
-- [Testing Guide](docs/guides/testing.md) - Testing strategies
-- [Form Validation Guide](docs/guides/form-validation.md) - HTTP 422 and lazy frames
-- [Troubleshooting](docs/guides/troubleshooting.md) - Common issues
-
-### API Reference
-- [ITurbo](docs/api/ITurbo.md) - Main service interface
-- [ITurboStreamBuilder](docs/api/ITurboStreamBuilder.md) - Stream builder
-- [TurboOptions](docs/api/TurboOptions.md) - Configuration
-- [Tag Helpers](docs/api/TagHelpers.md) - Razor tag helpers
-
-### Migration Guides
-- [From Blazor Server](docs/migration/from-blazor-server.md)
-- [From HTMX](docs/migration/from-htmx.md)
+// Use generated references (no renderer needed):
+await builder.AppendAsync("messages", Partials.Message, message);
+```
 
 ## Sample Applications
 
-The repository includes two sample applications:
+**[Tombatron.Turbo.Sample](samples/Tombatron.Turbo.Sample)** — Turbo Frames, Turbo Streams, shopping cart, and form validation demo.
 
-**[Tombatron.Turbo.Sample](samples/Tombatron.Turbo.Sample)** - Turbo Frames for partial page updates, Turbo Streams for real-time notifications, a shopping cart with add/remove operations, and a form validation demo with HTTP 422 and lazy-loaded frames.
-
-**[Tombatron.Turbo.Chat](samples/Tombatron.Turbo.Chat)** - Full-featured real-time chat with cookie authentication, SQLite persistence, public rooms, direct messaging, unread indicators, and the source-generated `Partials` class for strongly-typed partial rendering.
-
-Run any sample:
+**[Tombatron.Turbo.Chat](samples/Tombatron.Turbo.Chat)** — Real-time chat with cookie auth, SQLite, rooms, DMs, unread indicators, and Stimulus controllers.
 
 ```bash
 cd samples/Tombatron.Turbo.Sample
@@ -460,7 +539,7 @@ dotnet run
 
 - .NET 10.0 or later
 - ASP.NET Core
-- Turbo.js 8.x (client-side)
+- Turbo.js 8.x (included via tag helper)
 - SignalR (for Turbo Streams)
 
 ## Publishing / Releases
@@ -472,11 +551,7 @@ git tag v1.2.3
 git push origin v1.2.3
 ```
 
-This triggers the [Release workflow](.github/workflows/release.yml) which builds, tests, and publishes:
-- **Tombatron.Turbo** to [NuGet](https://www.nuget.org/packages/Tombatron.Turbo/)
-- **@tombatron/turbo-signalr** to [npm](https://www.npmjs.com/package/@tombatron/turbo-signalr)
-
-The npm package can also be published independently via the [manual workflow](.github/workflows/npm-publish.yml).
+This triggers the [Release workflow](.github/workflows/release.yml) which publishes **Tombatron.Turbo** to [NuGet](https://www.nuget.org/packages/Tombatron.Turbo/) and **@tombatron/turbo-signalr** to [npm](https://www.npmjs.com/package/@tombatron/turbo-signalr).
 
 ## License
 
