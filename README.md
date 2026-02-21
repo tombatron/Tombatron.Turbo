@@ -291,7 +291,7 @@ The `<turbo stream="todos">` tag helper renders a `<turbo-stream-source-signalr>
 
 ### 2. Broadcast from the server
 
-Now change the approach in the page model. Instead of returning a frame partial to the submitter, broadcast the updated list to *all* clients and redirect. The broadcast renders the `_TodoList` partial and wraps it in a `<turbo-stream action="replace" target="todo-list">` message. Every connected browser — including the submitter — receives it over WebSocket and Turbo replaces the frame automatically:
+Now change the approach in the page model. Instead of returning a frame partial to the submitter, broadcast the updated list to *all* clients and return `204 No Content`. The broadcast renders the `_TodoList` partial and wraps it in a `<turbo-stream action="replace" target="todo-list">` message. Every connected browser — including the submitter — receives it over WebSocket and Turbo replaces the frame automatically. The `204` tells Turbo "nothing to render" so it leaves the frame alone and doesn't double-update the submitter:
 
 ```csharp
 using Tombatron.Turbo;
@@ -317,14 +317,14 @@ public class IndexModel : PageModel
             await builder.ReplaceAsync("todo-list", Partials.TodoList, this);
         });
 
-        // Redirect — the stream already updated the DOM for everyone,
-        // so there's no need to return a frame partial here.
-        return RedirectToPage();
+        // Return 204 No Content — the stream broadcast already updated the
+        // DOM for all clients, so Turbo doesn't need to touch the frame.
+        return new StatusCodeResult(204);
     }
 }
 ```
 
-This replaces the `IsTurboFrameRequest()` / `Partial()` pattern from earlier. With streams, the broadcast handles the DOM update for all clients (including the submitter), so the handler just redirects.
+This replaces the `IsTurboFrameRequest()` / `Partial()` pattern from earlier. With streams, the broadcast handles the DOM update for all clients (including the submitter), so the handler returns `204` to prevent Turbo from also updating the frame via the HTTP response.
 
 ### Stream actions
 
