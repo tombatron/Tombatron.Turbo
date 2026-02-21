@@ -291,26 +291,33 @@ The `<turbo stream="todos">` tag helper renders a `<turbo-stream-source-signalr>
 
 ### 2. Broadcast from the server
 
-Inject `ITurbo` into the page model and broadcast after adding a todo. The stream name `"todos"` matches the `stream` attribute in the view:
+Inject `ITurbo` and `IPartialRenderer` into the page model. After adding a todo, use the async builder to render the same `_TodoList` partial from the tutorial and broadcast a `Replace` to every connected client. The stream name `"todos"` matches the `stream` attribute in the view:
 
 ```csharp
+using Tombatron.Turbo;
+using Tombatron.Turbo.Rendering;
+
 public class IndexModel : PageModel
 {
     private readonly ITurbo _turbo;
+    private readonly IPartialRenderer _renderer;
 
-    public IndexModel(ITurbo turbo)
+    public IndexModel(ITurbo turbo, IPartialRenderer renderer)
     {
         _turbo = turbo;
+        _renderer = renderer;
     }
 
     public async Task<IActionResult> OnPostAdd(string? title)
     {
-        // ... validation and add the todo ...
+        // ... validation and add the todo (same as before) ...
 
-        // Broadcast to all clients listening on "todos"
-        await _turbo.Broadcast(builder =>
+        // Broadcast the updated list to all clients listening on "todos".
+        // ReplaceAsync renders the _TodoList partial to HTML, then wraps it
+        // in a <turbo-stream action="replace" target="todo-list"> message.
+        await _turbo.Broadcast(async builder =>
         {
-            builder.Replace("todo-list", "<turbo-frame id=\"todo-list\">...</turbo-frame>");
+            await builder.ReplaceAsync("todo-list", _renderer, "_TodoList", this);
         });
 
         // The submitting user still gets the partial response via Turbo Frames
@@ -324,24 +331,7 @@ public class IndexModel : PageModel
 }
 ```
 
-The user who submitted the form sees the updated list via the Turbo Frame response (just like before). Every *other* connected client receives the broadcast and updates their DOM automatically.
-
-### 3. Render partials in streams
-
-Instead of building HTML strings, use the async builder overload to render Razor partials. It takes an `IPartialRenderer` (injected into your page or controller):
-
-```csharp
-await _turbo.Stream("todos", async builder =>
-{
-    await builder.AppendAsync("todo-items", _renderer, "_TodoItem", newTodo);
-});
-```
-
-With the source generator, you can skip the renderer parameter:
-
-```csharp
-await builder.AppendAsync("todo-items", Partials.TodoItem, newTodo);
-```
+The user who submitted the form sees the updated list via the Turbo Frame response (just like before). Every *other* connected client receives the broadcast and Turbo replaces the `todo-list` frame automatically.
 
 ### Stream actions
 
