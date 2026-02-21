@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Tombatron.Turbo;
+using Tombatron.Turbo.Stimulus;
 using Tombatron.Turbo.Chat;
 using Tombatron.Turbo.Chat.Data;
 
@@ -11,26 +12,9 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 });
 
 // Add Turbo services
-builder.Services.AddTurbo(options =>
-{
-    options.HubPath = "/turbo-hub";
+builder.Services.AddTurbo();
 
-    // Stimulus
-    options.ImportMap.Pin("@hotwired/stimulus",
-        "https://unpkg.com/@hotwired/stimulus@3.2.2/dist/stimulus.js");
-
-    // Application entry point (preload triggers auto-import)
-    options.ImportMap.Pin("application", "/js/application.js", preload: true);
-
-    // Controller modules
-    options.ImportMap.Pin("controllers", "/js/controllers/index.js");
-    options.ImportMap.Pin("controllers/application", "/js/controllers/application.js");
-    options.ImportMap.Pin("controllers/chat", "/js/controllers/chat_controller.js");
-    options.ImportMap.Pin("controllers/typing-indicator", "/js/controllers/typing_indicator_controller.js");
-    options.ImportMap.Pin("controllers/profile-sidebar", "/js/controllers/profile_sidebar_controller.js");
-    options.ImportMap.Pin("controllers/chat-message", "/js/controllers/chat_message_controller.js");
-    options.ImportMap.Pin("controllers/create-room", "/js/controllers/create_room_controller.js");
-});
+builder.Services.AddStimulus(options => options.ControllersPath = "js/controllers");
 
 // EF Core + SQLite
 builder.Services.AddDbContext<ChatDbContext>(opt =>

@@ -15,7 +15,7 @@ public record ControllerEntry(string StimulusIdentifier, string ImportPath);
 /// <summary>
 /// Maintains an in-memory registry of discovered Stimulus controllers.
 /// </summary>
-public sealed class StimulusControllerRegistry
+public sealed partial class StimulusControllerRegistry
 {
     private IReadOnlyList<ControllerEntry> _controllers = Array.Empty<ControllerEntry>();
     private string _etag = "";
