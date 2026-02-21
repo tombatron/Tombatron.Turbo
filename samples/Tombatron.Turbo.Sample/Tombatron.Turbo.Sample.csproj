@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Tombatron.Turbo\Tombatron.Turbo.csproj" />
+    <ProjectReference Include="..\..\src\Tombatron.Turbo.Stimulus\Tombatron.Turbo.Stimulus.csproj" />
     <ProjectReference Include="..\..\src\Tombatron.Turbo.SourceGenerator\Tombatron.Turbo.SourceGenerator.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />

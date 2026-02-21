@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- Enable Razor class library features for static web assets -->
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>Tombatron.Turbo.Stimulus</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>tombatron</Authors>
+    <Description>Stimulus controller support for Tombatron.Turbo. Runtime controller discovery, dynamic import map generation, and automatic integration with turbo-scripts.</Description>
+    <PackageTags>stimulus;hotwire;aspnetcore;turbo;controllers</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/tombatron/Tombatron.Turbo</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/tombatron/Tombatron.Turbo</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tombatron.Turbo\Tombatron.Turbo.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tombatron.Turbo.Stimulus.Tests" />
+  </ItemGroup>
+
+</Project>

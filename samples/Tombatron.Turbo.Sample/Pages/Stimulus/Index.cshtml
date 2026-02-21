@@ -1,0 +1,32 @@
+@page
+@model Tombatron.Turbo.Sample.Pages.Stimulus.IndexModel
+@{
+    ViewData["Title"] = "Stimulus";
+}
+
+<h1>Stimulus Controllers</h1>
+<p>Stimulus connects JavaScript controllers to HTML elements using <code>data-controller</code> attributes.</p>
+
+<div class="card">
+    <h2>Hello Controller</h2>
+    <p>A simple Stimulus controller that updates a target element when a button is clicked.</p>
+
+    <div data-controller="hello">
+        <div data-hello-target="output" class="info-box" style="margin-bottom: 16px;">
+            Click the button below to say hello!
+        </div>
+        <button class="btn" data-action="click->hello#greet">Greet</button>
+    </div>
+</div>
+
+<div class="info-box">
+    <h3>How It Works</h3>
+    <ul>
+        <li><strong>Controller Discovery</strong> - Stimulus controllers in <code>wwwroot/controllers/</code> are discovered at startup</li>
+        <li><strong>Import Map Integration</strong> - Controller pins are automatically added to <code>&lt;turbo-scripts /&gt;</code></li>
+        <li><strong>No Bundler Required</strong> - Controllers are served as ES modules via import maps</li>
+        <li><strong>Hot Reload</strong> - In development, new controllers are detected automatically</li>
+    </ul>
+</div>
+
+<a href="/" class="back-link">Back to Home</a>

@@ -1,4 +1,5 @@
 using Tombatron.Turbo;
+using Tombatron.Turbo.Stimulus;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -21,6 +22,9 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+// Add Stimulus controller discovery
+builder.Services.AddStimulus();
 
 builder.Services.AddRazorPages();
 
