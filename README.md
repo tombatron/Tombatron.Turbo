@@ -272,15 +272,7 @@ In the tutorial above, Turbo Frames handle the request/response cycle — the us
 
 This section extends the todo example. Imagine two browsers open to the same todo list. When one user adds an item, the other browser should see it appear automatically.
 
-### 1. Install the source generator
-
-The source generator gives us a compile-time `Partials.TodoList` reference we can use to render the `_TodoList` partial inside a stream broadcast (no magic strings, no manual `IPartialRenderer` injection):
-
-```bash
-dotnet add package Tombatron.Turbo.SourceGenerator
-```
-
-### 2. Add a stream subscription to the page
+### 1. Add a stream subscription to the page
 
 Add a `<turbo>` tag to `Pages/Index.cshtml`. The `stream` attribute names the channel this page subscribes to — it must match the name used server-side in the next step. Place it outside the partial, since it's a separate concern from the frame-based form:
 
@@ -297,7 +289,7 @@ Add a `<turbo>` tag to `Pages/Index.cshtml`. The `stream` attribute names the ch
 
 The `<turbo stream="todos">` tag helper renders a `<turbo-stream-source-signalr>` element that connects to the SignalR hub (configured by `MapTurboHub()`) and listens for messages on the `"todos"` stream.
 
-### 3. Broadcast from the server
+### 2. Broadcast from the server
 
 Now change the approach in the page model. Instead of returning a frame partial to the submitter, broadcast the updated list to *all* clients and redirect. The broadcast renders the `_TodoList` partial and wraps it in a `<turbo-stream action="replace" target="todo-list">` message. Every connected browser — including the submitter — receives it over WebSocket and Turbo replaces the frame automatically:
 
@@ -530,11 +522,7 @@ HttpContext.IsTurboStreamRequest()
 
 ### Source Generator
 
-The optional `Tombatron.Turbo.SourceGenerator` package generates strongly-typed partial references at compile time:
-
-```bash
-dotnet add package Tombatron.Turbo.SourceGenerator
-```
+The source generator is bundled with `Tombatron.Turbo` — no extra package needed. It scans `_*.cshtml` partial views at compile time and generates a `Partials` class (in `Tombatron.Turbo.Generated`) with strongly-typed references:
 
 ```csharp
 // Instead of magic strings (requires IPartialRenderer):
