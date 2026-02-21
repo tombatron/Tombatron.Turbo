@@ -296,6 +296,7 @@ Inject `ITurbo` into the page model. After adding a todo, broadcast the updated 
 ```csharp
 using Tombatron.Turbo;
 using Tombatron.Turbo.Generated;
+using Tombatron.Turbo.Streams;
 
 public class IndexModel : PageModel
 {
