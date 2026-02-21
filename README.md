@@ -291,7 +291,7 @@ The `<turbo stream="todos">` tag helper renders a `<turbo-stream-source-signalr>
 
 ### 2. Broadcast from the server
 
-Inject `ITurbo` into the page model. After adding a todo, broadcast the updated list to all clients. Use `IsTurboStreamRequest()` to check whether the submitter has an active stream connection — if so, return `204 No Content` because the broadcast already updated their DOM. If not (JavaScript disabled, no SignalR connection), fall back to the Turbo Frame partial so the app still works:
+Inject `ITurbo` into the page model. After adding a todo, broadcast the updated list to all clients and return the frame partial as before. The submitter technically receives the update twice (once from the broadcast, once from the frame response), but since `Replace` is idempotent this is imperceptible — the element just gets replaced with the same content:
 
 ```csharp
 using Tombatron.Turbo;
@@ -317,15 +317,8 @@ public class IndexModel : PageModel
             await builder.ReplaceAsync("todo-list", Partials.TodoList, this);
         });
 
-        if (HttpContext.IsTurboStreamRequest())
-        {
-            // The client has a stream connection — the broadcast already
-            // updated the DOM, so return 204 to avoid a double update.
-            return new StatusCodeResult(204);
-        }
-
-        // Graceful degradation: no stream connection, fall back to the
-        // Turbo Frame partial response (or redirect for non-Turbo requests).
+        // Return the frame partial as usual — the broadcast handles other
+        // clients, and the frame response handles the submitter.
         if (HttpContext.IsTurboFrameRequest())
         {
             return Partial("_TodoList", this);
@@ -336,7 +329,7 @@ public class IndexModel : PageModel
 }
 ```
 
-`IsTurboStreamRequest()` checks for the `Accept: text/vnd.turbo-stream.html` header, which Turbo sends when the client has an active stream connection. This gives you the best of both worlds: real-time updates when streams are available, and a working fallback when they aren't.
+The broadcast pushes a `Replace` to every connected client over WebSocket. The submitter also gets the frame partial via the HTTP response. Since both replace the same element with the same content, the double-update is harmless. If you were using `Append` instead of `Replace`, you'd need to be more careful to avoid duplicates.
 
 ### Stream actions
 
