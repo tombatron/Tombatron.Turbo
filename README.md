@@ -268,9 +268,30 @@ Open `https://localhost:5001` (or the port shown in the console). You should be 
 
 ## Real-Time Updates with Turbo Streams
 
-Turbo Streams push updates to connected clients over SignalR. This section extends the todo example to broadcast new items in real-time.
+Turbo Frames handle the request/response cycle — the user who submits the form sees the updated partial immediately. But what about *other* users viewing the same page? Turbo Streams push updates over SignalR so every connected client stays in sync.
 
-### Inject ITurbo and broadcast
+This section extends the todo example. Imagine two browsers open to the same todo list. When one user adds an item, the other browser should see it appear automatically.
+
+### 1. Add a stream subscription to the page
+
+Add a `<turbo>` tag to `Pages/Index.cshtml`. The `stream` attribute names the channel this page subscribes to — it must match the name used on the server side in the next step. Place it outside the turbo frame, since it's a separate concern from the frame-based form:
+
+```html
+@page
+@model TurboTodo.Pages.IndexModel
+
+<h1>Todo List</h1>
+
+<turbo stream="todos"></turbo>
+
+<partial name="_TodoList" model="Model" />
+```
+
+The `<turbo stream="todos">` tag helper renders a `<turbo-stream-source-signalr>` element that connects to the SignalR hub (configured by `MapTurboHub()`) and listens for updates on the `"todos"` stream.
+
+### 2. Broadcast from the server
+
+Inject `ITurbo` into the page model and broadcast after adding a todo. The stream name `"todos"` matches the `stream` attribute in the view:
 
 ```csharp
 public class IndexModel : PageModel
@@ -284,30 +305,30 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostAdd(string? title)
     {
-        // ... add the todo ...
+        // ... validation and add the todo ...
 
+        // Broadcast to all clients listening on "todos"
         await _turbo.Broadcast(builder =>
         {
-            builder.Append("todo-items", $"<div class=\"todo-item\">{title}</div>");
+            builder.Replace("todo-list", "<turbo-frame id=\"todo-list\">...</turbo-frame>");
         });
 
-        return Partial("_TodoList", this);
+        // The submitting user still gets the partial response via Turbo Frames
+        if (HttpContext.IsTurboFrameRequest())
+        {
+            return Partial("_TodoList", this);
+        }
+
+        return RedirectToPage();
     }
 }
 ```
 
-### Subscribe in the page
+The user who submitted the form sees the updated list via the Turbo Frame response (just like before). Every *other* connected client receives the broadcast and updates their DOM automatically.
 
-```html
-<turbo stream="todos"></turbo>
-<div id="todo-items">
-    <!-- items appended here by stream -->
-</div>
-```
+### 3. Render partials in streams
 
-### Render partials in streams
-
-Use the async builder overload to render Razor partials. The overload takes an `IPartialRenderer` (injected into your page or controller):
+Instead of building HTML strings, use the async builder overload to render Razor partials. It takes an `IPartialRenderer` (injected into your page or controller):
 
 ```csharp
 await _turbo.Stream("todos", async builder =>
@@ -316,19 +337,27 @@ await _turbo.Stream("todos", async builder =>
 });
 ```
 
+With the source generator, you can skip the renderer parameter:
+
+```csharp
+await builder.AppendAsync("todo-items", Partials.TodoItem, newTodo);
+```
+
 ### Stream actions
+
+All seven Turbo Stream actions are supported:
 
 ```csharp
 await _turbo.Stream("my-stream", builder =>
 {
     builder
-        .Append("list", "<div>New item</div>")
-        .Prepend("list", "<div>First</div>")
-        .Replace("item-1", "<div>Updated</div>")
-        .Update("count", "42")
-        .Remove("old-item")
-        .Before("btn", "<div>Before</div>")
-        .After("btn", "<div>After</div>");
+        .Append("list", "<div>New item</div>")    // Add to end
+        .Prepend("list", "<div>First</div>")       // Add to beginning
+        .Replace("item-1", "<div>Updated</div>")   // Replace entire element
+        .Update("count", "42")                      // Replace inner content
+        .Remove("old-item")                         // Remove element
+        .Before("btn", "<div>Before</div>")         // Insert before element
+        .After("btn", "<div>After</div>");          // Insert after element
 });
 ```
 
