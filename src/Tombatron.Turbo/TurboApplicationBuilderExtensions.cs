@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Tombatron.Turbo.Middleware;
@@ -42,6 +43,7 @@ public static class TurboApplicationBuilderExtensions
     /// This must be called to enable Turbo Streams functionality.
     /// </summary>
     /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the hub to.</param>
+    /// <param name="configureOptions">An optional callback to configure <see cref="HttpConnectionDispatcherOptions"/> for the hub endpoint.</param>
     /// <returns>The hub endpoint convention builder for further configuration.</returns>
     /// <exception cref="ArgumentNullException">Thrown when endpoints is null.</exception>
     /// <example>
@@ -51,14 +53,20 @@ public static class TurboApplicationBuilderExtensions
     /// app.MapTurboHub("/my-turbo-hub");
     /// </code>
     /// </example>
-    public static HubEndpointConventionBuilder MapTurboHub(this IEndpointRouteBuilder endpoints)
+    public static HubEndpointConventionBuilder MapTurboHub(this IEndpointRouteBuilder endpoints, Action<HttpConnectionDispatcherOptions>? configureOptions = null)
     {
         if (endpoints == null)
         {
             throw new ArgumentNullException(nameof(endpoints));
         }
 
-        TurboOptions options = endpoints.ServiceProvider.GetRequiredService<TurboOptions>();
+        var options = endpoints.ServiceProvider.GetRequiredService<TurboOptions>();
+
+        if (configureOptions != null)
+        {
+            return endpoints.MapHub<TurboHub>(options.HubPath, configureOptions);
+        }
+
         return endpoints.MapHub<TurboHub>(options.HubPath);
     }
 
@@ -67,6 +75,7 @@ public static class TurboApplicationBuilderExtensions
     /// </summary>
     /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the hub to.</param>
     /// <param name="path">The path to map the hub to.</param>
+    /// <param name="configureOptions">An optional callback to configure <see cref="HttpConnectionDispatcherOptions"/> for the hub endpoint.</param>
     /// <returns>The hub endpoint convention builder for further configuration.</returns>
     /// <exception cref="ArgumentNullException">Thrown when endpoints or path is null.</exception>
     /// <exception cref="ArgumentException">Thrown when path is empty or whitespace.</exception>
@@ -75,7 +84,7 @@ public static class TurboApplicationBuilderExtensions
     /// app.MapTurboHub("/custom-turbo-hub");
     /// </code>
     /// </example>
-    public static HubEndpointConventionBuilder MapTurboHub(this IEndpointRouteBuilder endpoints, string path)
+    public static HubEndpointConventionBuilder MapTurboHub(this IEndpointRouteBuilder endpoints, string path, Action<HttpConnectionDispatcherOptions>? configureOptions = null)
     {
         if (endpoints == null)
         {
@@ -90,6 +99,11 @@ public static class TurboApplicationBuilderExtensions
         if (string.IsNullOrWhiteSpace(path))
         {
             throw new ArgumentException("Path cannot be empty or whitespace.", nameof(path));
+        }
+
+        if (configureOptions != null)
+        {
+            return endpoints.MapHub<TurboHub>(path, configureOptions);
         }
 
         return endpoints.MapHub<TurboHub>(path);
