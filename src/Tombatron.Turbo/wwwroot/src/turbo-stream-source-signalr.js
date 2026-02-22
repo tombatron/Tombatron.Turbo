@@ -73,6 +73,8 @@ const connectionManager = {
             .configureLogging(signalR.LogLevel.Warning)
             .build();
 
+
+
         // Set up message handler
         this.connection.on('TurboStream', (html) => {
             this.handleTurboStream(html);
@@ -329,6 +331,7 @@ const connectionManager = {
      */
     dispatchConnectionEvent(eventName, detail = {}) {
         if (typeof document !== 'undefined') {
+            detail.connectionId = this.connection.connectionId;
             document.dispatchEvent(new CustomEvent(eventName, { detail }));
         }
     },
@@ -503,3 +506,11 @@ export function getConnectionState() {
 export async function disconnect() {
     await connectionManager.closeConnection();
 }
+
+document.addEventListener('turbo:signalr:connected', (e) => {
+    document.cookie = `signalr-connection-id=${e.detail.connectionId}; path=/; SameSite=Strict`;
+});
+
+document.addEventListener('turbo:signalr:reconnected', (e) => {
+    document.cookie = `signalr-connection-id=${e.detail.connectionId}; path=/; SameSite=Strict`;
+});
