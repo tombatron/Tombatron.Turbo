@@ -39,6 +39,16 @@ public class TurboFrameMiddleware
     /// </summary>
     public const string IsTurboFrameRequestKey = "Turbo.IsTurboFrameRequest";
 
+    /// <summary>
+    /// The HTTP header name used by Turbo to identify the originating request for refresh suppression.
+    /// </summary>
+    public const string TurboRequestIdHeader = "X-Turbo-Request-Id";
+
+    /// <summary>
+    /// The key used to store the Turbo request ID in HttpContext.Items.
+    /// </summary>
+    public const string RequestIdKey = "Turbo.RequestId";
+
     private readonly RequestDelegate _next;
     private readonly TurboOptions _options;
     private readonly ILogger<TurboFrameMiddleware> _logger;
@@ -93,6 +103,20 @@ public class TurboFrameMiddleware
             }
         }
 
+        // Check for X-Turbo-Request-Id header
+        var requestId = GetTurboRequestId(context.Request);
+
+        if (!string.IsNullOrEmpty(requestId))
+        {
+            context.Items[RequestIdKey] = requestId;
+
+            _logger.LogDebug(
+                "Turbo-Request-Id detected: {RequestId} on {Method} {Path}",
+                requestId,
+                context.Request.Method,
+                context.Request.Path);
+        }
+
         await _next(context);
     }
 
@@ -104,6 +128,21 @@ public class TurboFrameMiddleware
     internal static string? GetTurboFrameId(HttpRequest request)
     {
         if (request.Headers.TryGetValue(TurboFrameHeader, out var values))
+        {
+            return values.FirstOrDefault();
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Extracts the X-Turbo-Request-Id header value from the request.
+    /// </summary>
+    /// <param name="request">The HTTP request.</param>
+    /// <returns>The request ID, or null if not present.</returns>
+    internal static string? GetTurboRequestId(HttpRequest request)
+    {
+        if (request.Headers.TryGetValue(TurboRequestIdHeader, out var values))
         {
             return values.FirstOrDefault();
         }

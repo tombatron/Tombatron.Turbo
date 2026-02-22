@@ -79,6 +79,14 @@ public interface ITurboStreamBuilder
     ITurboStreamBuilder After(string target, string html);
 
     /// <summary>
+    /// Tells clients to perform a page refresh. Optionally includes a request ID
+    /// so the originating client can suppress the redundant refresh.
+    /// </summary>
+    /// <param name="requestId">The X-Turbo-Request-Id of the originating request, or null for no suppression.</param>
+    /// <returns>The builder instance for method chaining.</returns>
+    ITurboStreamBuilder Refresh(string? requestId = null);
+
+    /// <summary>
     /// Builds the final Turbo Stream HTML containing all configured actions.
     /// </summary>
     /// <returns>The complete Turbo Stream HTML string.</returns>

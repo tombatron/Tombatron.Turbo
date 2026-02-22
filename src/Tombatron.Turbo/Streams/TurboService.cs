@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Tombatron.Turbo.Rendering;
@@ -12,6 +13,7 @@ public sealed class TurboService : ITurbo
     private readonly IHubContext<TurboHub> _hubContext;
     private readonly ILogger<TurboService> _logger;
     private readonly IPartialRenderer _partialRenderer;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TurboService"/> class.
@@ -19,11 +21,13 @@ public sealed class TurboService : ITurbo
     /// <param name="hubContext">The SignalR hub context for TurboHub.</param>
     /// <param name="logger">The logger instance.</param>
     /// <param name="partialRenderer">The partial renderer for async partial rendering operations.</param>
-    public TurboService(IHubContext<TurboHub> hubContext, ILogger<TurboService> logger, IPartialRenderer partialRenderer)
+    /// <param name="httpContextAccessor">The HTTP context accessor for reading request headers.</param>
+    public TurboService(IHubContext<TurboHub> hubContext, ILogger<TurboService> logger, IPartialRenderer partialRenderer, IHttpContextAccessor httpContextAccessor)
     {
         _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _partialRenderer = partialRenderer ?? throw new ArgumentNullException(nameof(partialRenderer));
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
     }
 
     /// <inheritdoc />
@@ -236,6 +240,27 @@ public sealed class TurboService : ITurbo
             .SendAsync(TurboHub.TurboStreamMethod, html);
 
         _logger.LogDebug("Broadcast Turbo Stream to all clients");
+    }
+
+    /// <inheritdoc />
+    public Task StreamRefresh(string streamName)
+    {
+        var requestId = _httpContextAccessor.HttpContext?.GetTurboRequestId();
+        return Stream(streamName, builder => builder.Refresh(requestId));
+    }
+
+    /// <inheritdoc />
+    public Task StreamRefresh(IEnumerable<string> streamNames)
+    {
+        var requestId = _httpContextAccessor.HttpContext?.GetTurboRequestId();
+        return Stream(streamNames, builder => builder.Refresh(requestId));
+    }
+
+    /// <inheritdoc />
+    public Task BroadcastRefresh()
+    {
+        var requestId = _httpContextAccessor.HttpContext?.GetTurboRequestId();
+        return Broadcast(builder => builder.Refresh(requestId));
     }
 
     /// <summary>

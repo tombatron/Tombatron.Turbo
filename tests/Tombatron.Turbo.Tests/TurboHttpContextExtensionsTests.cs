@@ -228,6 +228,45 @@ public class TurboHttpContextExtensionsTests
         result.Should().Be(expected);
     }
 
+    // GetTurboRequestId tests
+
+    [Fact]
+    public void GetTurboRequestId_WhenSet_ReturnsRequestId()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+        context.Items[TurboFrameMiddleware.RequestIdKey] = "abc-123";
+
+        // Act
+        var result = context.GetTurboRequestId();
+
+        // Assert
+        result.Should().Be("abc-123");
+    }
+
+    [Fact]
+    public void GetTurboRequestId_WhenNotSet_ReturnsNull()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+
+        // Act
+        var result = context.GetTurboRequestId();
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public void GetTurboRequestId_WithNullContext_ThrowsArgumentNullException()
+    {
+        // Arrange
+        HttpContext? context = null;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => context!.GetTurboRequestId());
+    }
+
     [Fact]
     public void IsTurboStreamRequest_WhenAcceptHeaderContainsTurboStream_ReturnsTrue()
     {

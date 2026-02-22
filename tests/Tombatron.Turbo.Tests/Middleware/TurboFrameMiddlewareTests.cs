@@ -266,6 +266,97 @@ public class TurboFrameMiddlewareTests
         context.Items[TurboFrameMiddleware.FrameIdKey].Should().Be(frameId);
     }
 
+    // X-Turbo-Request-Id tests
+
+    [Fact]
+    public async Task InvokeAsync_WithTurboRequestIdHeader_SetsRequestId()
+    {
+        // Arrange
+        var context = CreateHttpContext();
+        context.Request.Headers[TurboFrameMiddleware.TurboRequestIdHeader] = "abc-123";
+        var middleware = CreateMiddleware(context);
+
+        // Act
+        await middleware.InvokeAsync(context);
+
+        // Assert
+        context.Items.Should().ContainKey(TurboFrameMiddleware.RequestIdKey);
+        context.Items[TurboFrameMiddleware.RequestIdKey].Should().Be("abc-123");
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WithoutTurboRequestIdHeader_DoesNotSetRequestId()
+    {
+        // Arrange
+        var context = CreateHttpContext();
+        var middleware = CreateMiddleware(context);
+
+        // Act
+        await middleware.InvokeAsync(context);
+
+        // Assert
+        context.Items.Should().NotContainKey(TurboFrameMiddleware.RequestIdKey);
+    }
+
+    [Theory]
+    [InlineData("abc-123")]
+    [InlineData("550e8400-e29b-41d4-a716-446655440000")]
+    [InlineData("request_42")]
+    public async Task InvokeAsync_WithVariousRequestIds_SetsCorrectValue(string requestId)
+    {
+        // Arrange
+        var context = CreateHttpContext();
+        context.Request.Headers[TurboFrameMiddleware.TurboRequestIdHeader] = requestId;
+        var middleware = CreateMiddleware(context);
+
+        // Act
+        await middleware.InvokeAsync(context);
+
+        // Assert
+        context.Items[TurboFrameMiddleware.RequestIdKey].Should().Be(requestId);
+    }
+
+    [Fact]
+    public void GetTurboRequestId_Static_WithHeader_ReturnsRequestId()
+    {
+        // Arrange
+        var context = CreateHttpContext();
+        context.Request.Headers[TurboFrameMiddleware.TurboRequestIdHeader] = "req-456";
+
+        // Act
+        var result = TurboFrameMiddleware.GetTurboRequestId(context.Request);
+
+        // Assert
+        result.Should().Be("req-456");
+    }
+
+    [Fact]
+    public void GetTurboRequestId_Static_WithoutHeader_ReturnsNull()
+    {
+        // Arrange
+        var context = CreateHttpContext();
+
+        // Act
+        var result = TurboFrameMiddleware.GetTurboRequestId(context.Request);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public void GetTurboRequestId_Static_WithEmptyHeader_ReturnsEmpty()
+    {
+        // Arrange
+        var context = CreateHttpContext();
+        context.Request.Headers[TurboFrameMiddleware.TurboRequestIdHeader] = "";
+
+        // Act
+        var result = TurboFrameMiddleware.GetTurboRequestId(context.Request);
+
+        // Assert
+        result.Should().BeEmpty();
+    }
+
     private static DefaultHttpContext CreateHttpContext()
     {
         return new DefaultHttpContext();

@@ -1,7 +1,9 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Tombatron.Turbo.Middleware;
 using Tombatron.Turbo.Rendering;
 using Tombatron.Turbo.Streams;
 using Xunit;
@@ -18,6 +20,7 @@ public class TurboServiceTests
     private readonly Mock<IClientProxy> _mockClientProxy;
     private readonly Mock<ILogger<TurboService>> _mockLogger;
     private readonly Mock<IPartialRenderer> _mockPartialRenderer;
+    private readonly Mock<IHttpContextAccessor> _mockHttpContextAccessor;
     private readonly TurboService _service;
 
     public TurboServiceTests()
@@ -27,12 +30,13 @@ public class TurboServiceTests
         _mockClientProxy = new Mock<IClientProxy>();
         _mockLogger = new Mock<ILogger<TurboService>>();
         _mockPartialRenderer = new Mock<IPartialRenderer>();
+        _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
 
         _mockHubContext.Setup(h => h.Clients).Returns(_mockClients.Object);
         _mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(_mockClientProxy.Object);
         _mockClients.Setup(c => c.All).Returns(_mockClientProxy.Object);
 
-        _service = new TurboService(_mockHubContext.Object, _mockLogger.Object, _mockPartialRenderer.Object);
+        _service = new TurboService(_mockHubContext.Object, _mockLogger.Object, _mockPartialRenderer.Object, _mockHttpContextAccessor.Object);
     }
 
     [Fact]
@@ -208,21 +212,28 @@ public class TurboServiceTests
     public void Constructor_WithNullHubContext_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new TurboService(null!, _mockLogger.Object, _mockPartialRenderer.Object));
+        Assert.Throws<ArgumentNullException>(() => new TurboService(null!, _mockLogger.Object, _mockPartialRenderer.Object, _mockHttpContextAccessor.Object));
     }
 
     [Fact]
     public void Constructor_WithNullLogger_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new TurboService(_mockHubContext.Object, null!, _mockPartialRenderer.Object));
+        Assert.Throws<ArgumentNullException>(() => new TurboService(_mockHubContext.Object, null!, _mockPartialRenderer.Object, _mockHttpContextAccessor.Object));
     }
 
     [Fact]
     public void Constructor_WithNullPartialRenderer_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new TurboService(_mockHubContext.Object, _mockLogger.Object, null!));
+        Assert.Throws<ArgumentNullException>(() => new TurboService(_mockHubContext.Object, _mockLogger.Object, null!, _mockHttpContextAccessor.Object));
+    }
+
+    [Fact]
+    public void Constructor_WithNullHttpContextAccessor_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new TurboService(_mockHubContext.Object, _mockLogger.Object, _mockPartialRenderer.Object, null!));
     }
 
     [Fact]
@@ -383,5 +394,167 @@ public class TurboServiceTests
         // Assert
         _mockPartialRenderer.Verify(r => r.RenderAsync<string>("Pages/Shared/_Test.cshtml", "model"), Times.Once);
         capturedHtml.Should().Contain("<div>Rendered</div>");
+    }
+
+    // StreamRefresh / BroadcastRefresh tests
+
+    [Fact]
+    public async Task StreamRefresh_WithRequestIdInHttpContext_SendsRefreshWithRequestId()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext();
+        httpContext.Items[TurboFrameMiddleware.RequestIdKey] = "abc-123";
+        _mockHttpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
+
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.StreamRefresh("test-stream");
+
+        // Assert
+        _mockClients.Verify(c => c.Group("test-stream"), Times.Once);
+        capturedHtml.Should().Be("<turbo-stream action=\"refresh\" request-id=\"abc-123\"></turbo-stream>");
+    }
+
+    [Fact]
+    public async Task StreamRefresh_WithoutRequestIdInHttpContext_SendsRefreshWithoutRequestId()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext();
+        _mockHttpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
+
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.StreamRefresh("test-stream");
+
+        // Assert
+        capturedHtml.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
+    }
+
+    [Fact]
+    public async Task StreamRefresh_WithNullHttpContext_SendsRefreshWithoutRequestId()
+    {
+        // Arrange
+        _mockHttpContextAccessor.Setup(a => a.HttpContext).Returns((HttpContext?)null);
+
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.StreamRefresh("test-stream");
+
+        // Assert
+        capturedHtml.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
+    }
+
+    [Fact]
+    public async Task StreamRefresh_MultipleStreams_SendsToAllGroups()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext();
+        httpContext.Items[TurboFrameMiddleware.RequestIdKey] = "req-456";
+        _mockHttpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
+
+        var streamNames = new[] { "stream-1", "stream-2" };
+
+        // Act
+        await _service.StreamRefresh(streamNames);
+
+        // Assert
+        foreach (var streamName in streamNames)
+        {
+            _mockClients.Verify(c => c.Group(streamName), Times.Once);
+        }
+    }
+
+    [Fact]
+    public async Task BroadcastRefresh_WithRequestIdInHttpContext_SendsRefreshWithRequestId()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext();
+        httpContext.Items[TurboFrameMiddleware.RequestIdKey] = "abc-123";
+        _mockHttpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
+
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.BroadcastRefresh();
+
+        // Assert
+        _mockClients.Verify(c => c.All, Times.Once);
+        capturedHtml.Should().Be("<turbo-stream action=\"refresh\" request-id=\"abc-123\"></turbo-stream>");
+    }
+
+    [Fact]
+    public async Task BroadcastRefresh_WithoutRequestIdInHttpContext_SendsRefreshWithoutRequestId()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext();
+        _mockHttpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
+
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.BroadcastRefresh();
+
+        // Assert
+        capturedHtml.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
+    }
+
+    [Fact]
+    public async Task BroadcastRefresh_WithNullHttpContext_SendsRefreshWithoutRequestId()
+    {
+        // Arrange
+        _mockHttpContextAccessor.Setup(a => a.HttpContext).Returns((HttpContext?)null);
+
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.BroadcastRefresh();
+
+        // Assert
+        capturedHtml.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
     }
 }

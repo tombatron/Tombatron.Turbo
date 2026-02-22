@@ -334,7 +334,7 @@ The broadcast pushes a `Replace` to every connected client over WebSocket. The s
 
 ### Stream actions
 
-All seven Turbo Stream actions are supported:
+All eight Turbo Stream actions are supported:
 
 ```csharp
 await _turbo.Stream("my-stream", builder =>
@@ -346,8 +346,26 @@ await _turbo.Stream("my-stream", builder =>
         .Update("count", "42")                      // Replace inner content
         .Remove("old-item")                         // Remove element
         .Before("btn", "<div>Before</div>")         // Insert before element
-        .After("btn", "<div>After</div>");          // Insert after element
+        .After("btn", "<div>After</div>")           // Insert after element
+        .Refresh("request-id");                     // Tell clients to re-fetch the page
 });
+```
+
+### Refresh (Turbo 8)
+
+The `refresh` stream action tells clients to re-fetch their current page instead of receiving rendered HTML. The originator (the client whose request triggered the change) is automatically suppressed via the `X-Turbo-Request-Id` header, preventing a double-update.
+
+```csharp
+// Convenience: auto-extracts request-id from the current request
+await _turbo.BroadcastRefresh();
+await _turbo.StreamRefresh("room:123");
+await _turbo.StreamRefresh(new[] { "room:123", "room:456" });
+
+// Manual: within a builder callback
+await _turbo.Broadcast(builder => builder.Refresh(HttpContext.GetTurboRequestId()));
+
+// No suppression: all clients refresh
+await _turbo.Broadcast(builder => builder.Refresh());
 ```
 
 ### Targeted vs. broadcast

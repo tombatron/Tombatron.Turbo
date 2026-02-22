@@ -100,6 +100,124 @@ public class TurboStreamBuilderTests
         result.Should().Be("<turbo-stream action=\"after\" target=\"message-1\"><template><div>After message 1</div></template></turbo-stream>");
     }
 
+    // Refresh tests
+
+    [Fact]
+    public void Refresh_WithoutRequestId_GeneratesCorrectHtml()
+    {
+        // Arrange
+        var builder = new TurboStreamBuilder();
+
+        // Act
+        var result = builder.Refresh().Build();
+
+        // Assert
+        result.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
+    }
+
+    [Fact]
+    public void Refresh_WithRequestId_GeneratesCorrectHtml()
+    {
+        // Arrange
+        var builder = new TurboStreamBuilder();
+
+        // Act
+        var result = builder.Refresh("abc-123").Build();
+
+        // Assert
+        result.Should().Be("<turbo-stream action=\"refresh\" request-id=\"abc-123\"></turbo-stream>");
+    }
+
+    [Fact]
+    public void Refresh_WithNull_GeneratesHtmlWithoutRequestId()
+    {
+        // Arrange
+        var builder = new TurboStreamBuilder();
+
+        // Act
+        var result = builder.Refresh(null).Build();
+
+        // Assert
+        result.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
+    }
+
+    [Fact]
+    public void Refresh_WithEmpty_GeneratesHtmlWithoutRequestId()
+    {
+        // Arrange
+        var builder = new TurboStreamBuilder();
+
+        // Act
+        var result = builder.Refresh("").Build();
+
+        // Assert
+        result.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
+    }
+
+    [Fact]
+    public void Refresh_WithSpecialCharacters_EscapesRequestId()
+    {
+        // Arrange
+        var builder = new TurboStreamBuilder();
+
+        // Act
+        var result = builder.Refresh("id\"with<special>&chars").Build();
+
+        // Assert
+        result.Should().Be("<turbo-stream action=\"refresh\" request-id=\"id&quot;with&lt;special&gt;&amp;chars\"></turbo-stream>");
+    }
+
+    [Fact]
+    public void Refresh_SupportsMethodChaining()
+    {
+        // Arrange
+        var builder = new TurboStreamBuilder();
+
+        // Act
+        var result = builder.Refresh("abc-123");
+
+        // Assert
+        result.Should().BeSameAs(builder);
+    }
+
+    [Fact]
+    public void Refresh_CombinedWithOtherActions_BuildsAll()
+    {
+        // Arrange
+        var builder = new TurboStreamBuilder();
+
+        // Act
+        var result = builder
+            .Append("list", "<li>Item</li>")
+            .Refresh("abc-123")
+            .Build();
+
+        // Assert
+        result.Should().Contain("action=\"append\"");
+        result.Should().Contain("action=\"refresh\"");
+        result.Should().Contain("request-id=\"abc-123\"");
+    }
+
+    [Fact]
+    public void GenerateRefreshAction_WithoutRequestId_ProducesValidHtml()
+    {
+        // Act
+        var result = TurboStreamBuilder.GenerateRefreshAction(null);
+
+        // Assert
+        result.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
+    }
+
+    [Fact]
+    public void GenerateRefreshAction_WithRequestId_ProducesValidHtml()
+    {
+        // Act
+        var result = TurboStreamBuilder.GenerateRefreshAction("req-789");
+
+        // Assert
+        result.Should().Be("<turbo-stream action=\"refresh\" request-id=\"req-789\"></turbo-stream>");
+    }
+
     [Fact]
     public void Build_WithNoActions_ReturnsEmptyString()
     {

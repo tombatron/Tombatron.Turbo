@@ -61,6 +61,29 @@ public interface ITurbo
     Task Broadcast(Action<ITurboStreamBuilder> build);
 
     /// <summary>
+    /// Sends a Turbo Stream refresh action to all clients subscribed to the specified stream.
+    /// Automatically includes the current request's X-Turbo-Request-Id for originator suppression.
+    /// </summary>
+    /// <param name="streamName">The name of the stream to send the refresh to.</param>
+    /// <returns>A task that completes when the refresh has been sent.</returns>
+    Task StreamRefresh(string streamName);
+
+    /// <summary>
+    /// Sends a Turbo Stream refresh action to all clients subscribed to any of the specified streams.
+    /// Automatically includes the current request's X-Turbo-Request-Id for originator suppression.
+    /// </summary>
+    /// <param name="streamNames">The names of the streams to send the refresh to.</param>
+    /// <returns>A task that completes when all refreshes have been sent.</returns>
+    Task StreamRefresh(IEnumerable<string> streamNames);
+
+    /// <summary>
+    /// Sends a Turbo Stream refresh action to all connected clients.
+    /// Automatically includes the current request's X-Turbo-Request-Id for originator suppression.
+    /// </summary>
+    /// <returns>A task that completes when the refresh has been sent.</returns>
+    Task BroadcastRefresh();
+
+    /// <summary>
     /// Broadcasts Turbo Stream updates to all clients subscribed to the specified stream,
     /// with support for async operations like partial rendering.
     /// </summary>

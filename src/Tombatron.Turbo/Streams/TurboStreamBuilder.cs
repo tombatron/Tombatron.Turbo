@@ -72,6 +72,13 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     }
 
     /// <inheritdoc />
+    public ITurboStreamBuilder Refresh(string? requestId = null)
+    {
+        _actions.Add(GenerateRefreshAction(requestId));
+        return this;
+    }
+
+    /// <inheritdoc />
     public ITurboStreamBuilder Before(string target, string html)
     {
         ValidateTarget(target);
@@ -136,6 +143,21 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     internal static string GenerateRemoveAction(string target)
     {
         return $"<turbo-stream action=\"remove\" target=\"{EscapeAttribute(target)}\"></turbo-stream>";
+    }
+
+    /// <summary>
+    /// Generates a Turbo Stream refresh action element (no target, no content).
+    /// </summary>
+    /// <param name="requestId">The request ID for originator suppression, or null.</param>
+    /// <returns>The Turbo Stream refresh action HTML.</returns>
+    internal static string GenerateRefreshAction(string? requestId)
+    {
+        if (string.IsNullOrEmpty(requestId))
+        {
+            return "<turbo-stream action=\"refresh\"></turbo-stream>";
+        }
+
+        return $"<turbo-stream action=\"refresh\" request-id=\"{EscapeAttribute(requestId)}\"></turbo-stream>";
     }
 
     /// <summary>
