@@ -291,7 +291,7 @@ The `<turbo stream="todos">` tag helper renders a `<turbo-stream-source-signalr>
 
 ### 2. Broadcast from the server
 
-Inject `ITurbo` into the page model. After adding a todo, call `BroadcastRefresh()` to tell every connected client to re-fetch the page. The submitter is automatically suppressed — Turbo captures the `X-Turbo-Request-Id` header from the request so the originating browser skips the redundant refresh (it already received the frame partial via the HTTP response):
+Inject `ITurbo` into the page model. After adding a todo, call `BroadcastRefresh()` to tell every connected client to re-fetch the page. Pass `HttpContext.GetSignalRConnectionId()` to exclude the submitter's SignalR connection from the broadcast — they already received the frame partial via the HTTP response, so the refresh would be redundant:
 
 ```csharp
 using Tombatron.Turbo;
@@ -309,9 +309,10 @@ public class IndexModel : PageModel
     {
         // ... validation and add the todo (same as before) ...
 
-        // Tell every connected client to refresh. The submitter is
-        // automatically suppressed via X-Turbo-Request-Id.
-        await _turbo.BroadcastRefresh();
+        // Tell every other connected client to refresh.
+        // The submitter is excluded by connection ID.
+        var connectionId = HttpContext.GetSignalRConnectionId();
+        await _turbo.BroadcastRefresh(connectionId);
 
         // Return the frame partial as usual — the refresh handles other
         // clients, and the frame response handles the submitter.
@@ -325,18 +326,19 @@ public class IndexModel : PageModel
 }
 ```
 
-`BroadcastRefresh()` sends `<turbo-stream action="refresh">` to all clients over SignalR. Other browsers re-fetch the page and see the new todo. The submitter already has the update from the frame response, so the refresh is suppressed for them — no double-update, no duplicate items, regardless of which stream action you use.
+`BroadcastRefresh()` sends `<turbo-stream action="refresh">` to all clients over SignalR. The `excludedConnectionId` parameter prevents the submitter from receiving the broadcast — they already have the update from the frame response, so there's no double-update or duplicate items. The connection ID comes from a cookie that the JS adapter sets automatically when the SignalR connection is established. If the cookie isn't set yet (e.g., initial page load), `GetSignalRConnectionId()` returns `null` and no exclusion is applied.
 
 ### 3. Update the remaining handlers
 
-Apply the same pattern to `OnPostToggle` and `OnPostDelete`. Each handler mutates the data, broadcasts a refresh, then returns the frame partial for the submitter:
+Apply the same pattern to `OnPostToggle` and `OnPostDelete`. Each handler mutates the data, broadcasts a refresh (excluding the submitter), then returns the frame partial:
 
 ```csharp
 public async Task<IActionResult> OnPostToggle(int id)
 {
     // ... toggle the todo's completed state ...
 
-    await _turbo.BroadcastRefresh();
+    var connectionId = HttpContext.GetSignalRConnectionId();
+    await _turbo.BroadcastRefresh(connectionId);
 
     if (HttpContext.IsTurboFrameRequest())
     {
@@ -350,7 +352,8 @@ public async Task<IActionResult> OnPostDelete(int id)
 {
     // ... remove the todo ...
 
-    await _turbo.BroadcastRefresh();
+    var connectionId = HttpContext.GetSignalRConnectionId();
+    await _turbo.BroadcastRefresh(connectionId);
 
     if (HttpContext.IsTurboFrameRequest())
     {
@@ -361,7 +364,7 @@ public async Task<IActionResult> OnPostDelete(int id)
 }
 ```
 
-The pattern is always the same: make the change, broadcast, return the partial. Every handler that mutates shared state should call `BroadcastRefresh()` so that all connected clients stay in sync.
+The pattern is always the same: make the change, broadcast (excluding the submitter), return the partial. Every handler that mutates shared state should call `BroadcastRefresh()` so that all connected clients stay in sync.
 
 ### 4. Try it out
 
@@ -373,7 +376,7 @@ dotnet run
 
 Open `https://localhost:5001` (or your configured URL) in two separate browser tabs or windows. Now add, toggle, or delete a todo in one window — the other window updates automatically. The submitter sees the instant frame response, while every other connected browser receives a refresh over SignalR and re-fetches the page to pick up the change.
 
-This is the core of Turbo Streams: the user who made the change gets an immediate response via Turbo Frames, and everyone else gets a real-time push via SignalR — all with a single `BroadcastRefresh()` call.
+This is the core of Turbo Streams: the user who made the change gets an immediate response via Turbo Frames, and everyone else gets a real-time push via SignalR. The `excludedConnectionId` parameter ensures the submitter doesn't receive a redundant broadcast.
 
 ### Stream actions
 
