@@ -411,6 +411,28 @@ await _turbo.Broadcast(builder => builder.Refresh(HttpContext.GetTurboRequestId(
 await _turbo.Broadcast(builder => builder.Refresh());
 ```
 
+### Exclude Originator by Connection ID
+
+When a user submits a form that triggers a Turbo Stream broadcast, they receive both the HTTP response *and* the SignalR broadcast — a duplicate. To prevent this, pass the originator's SignalR connection ID to exclude them from the broadcast:
+
+```csharp
+var connectionId = HttpContext.GetSignalRConnectionId();
+
+await _turbo.Stream("room:1", builder =>
+{
+    builder.Append("messages", "<div>New message</div>");
+}, connectionId);
+
+// Also works with Broadcast and Refresh variants
+await _turbo.Broadcast(builder => { ... }, connectionId);
+await _turbo.StreamRefresh("room:1", connectionId);
+await _turbo.BroadcastRefresh(connectionId);
+```
+
+The connection ID is automatically set by the JS adapter as a cookie on connect/reconnect. The parameter is `string?` — passing `null` (e.g., on the initial page load before the cookie is set) simply sends to all subscribers with no exclusion.
+
+> **Note:** This is distinct from the `X-Turbo-Request-Id` mechanism used by `refresh` actions. Connection-ID exclusion prevents the SignalR message from being sent at all via `GroupExcept`/`AllExcept`, while request-ID suppression happens client-side.
+
 ### Targeted vs. broadcast
 
 ```csharp
@@ -585,6 +607,9 @@ string? frameId = HttpContext.GetTurboFrameId();
 
 // Is this a Turbo Stream request?
 HttpContext.IsTurboStreamRequest()
+
+// Get the SignalR connection ID (for originator exclusion)
+string? connectionId = HttpContext.GetSignalRConnectionId();
 ```
 
 ### Source Generator

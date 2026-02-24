@@ -180,6 +180,50 @@ await _turbo.Stream(new[] {
 await _turbo.Broadcast(...)
 ```
 
+## Excluding the Originator
+
+When a user submits a form that triggers a Turbo Stream broadcast, they receive both the HTTP response and the SignalR broadcast — a duplicate update. To prevent this, you can exclude the originator's SignalR connection from the broadcast.
+
+### How It Works
+
+1. The JavaScript adapter automatically sets a `signalr-connection-id` cookie when the SignalR connection is established (and on reconnect)
+2. The `TurboFrameMiddleware` reads this cookie and stores it in `HttpContext.Items`
+3. You read it with `HttpContext.GetSignalRConnectionId()` and pass it to the broadcast method
+4. SignalR uses `GroupExcept` / `AllExcept` to skip that connection
+
+### Usage
+
+```csharp
+public async Task<IActionResult> OnPostSendMessage(int roomId, string content)
+{
+    var message = SaveMessage(roomId, content);
+
+    var connectionId = HttpContext.GetSignalRConnectionId();
+    await _turbo.Stream($"room:{roomId}", builder =>
+    {
+        builder.Append("messages", $"<div>{message.Text}</div>");
+    }, connectionId);
+
+    return new NoContentResult();
+}
+```
+
+The `excludedConnectionId` parameter is `string?`. Passing `null` (e.g., on the initial page load before the cookie is set) simply broadcasts to all subscribers with no exclusion.
+
+### Difference vs. X-Turbo-Request-Id
+
+| Mechanism | Scope | How it works |
+|-----------|-------|-------------|
+| `excludedConnectionId` | Any stream action | Server-side: SignalR never sends the message to that connection |
+| `X-Turbo-Request-Id` | `refresh` action only | Client-side: Turbo.js ignores the refresh if the request ID matches |
+
+Both can be used together. The refresh overloads (`StreamRefresh`, `BroadcastRefresh`) automatically include the request ID and accept an optional `excludedConnectionId`:
+
+```csharp
+var connectionId = HttpContext.GetSignalRConnectionId();
+await _turbo.StreamRefresh("room:1", connectionId);
+```
+
 ## Common Patterns
 
 ### Real-Time Notifications

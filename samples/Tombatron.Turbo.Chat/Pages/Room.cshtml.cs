@@ -63,13 +63,14 @@ public class RoomModel : PageModel
 
         var message = await _chatService.AddMessage(roomId, CurrentUserId, Username, content);
 
-        // Broadcast message to room subscribers
+        // Broadcast message to room subscribers, excluding the sender's connection
+        var connectionId = HttpContext.GetSignalRConnectionId();
         await _turbo.Stream($"room:{roomId}", async builder =>
         {
             builder.Remove("empty-messages-placeholder");
             await builder.AppendAsync("messages", Partials.Message, message);
             builder.Update("typing-indicator", RenderTypingIndicator(roomId));
-        });
+        }, connectionId);
 
         // Broadcast unread badge updates to other room members
         var memberIds = await _chatService.GetRoomMemberUserIds(roomId);

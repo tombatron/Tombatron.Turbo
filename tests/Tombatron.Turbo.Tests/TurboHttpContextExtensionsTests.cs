@@ -267,6 +267,45 @@ public class TurboHttpContextExtensionsTests
         Assert.Throws<ArgumentNullException>(() => context!.GetTurboRequestId());
     }
 
+    // GetSignalRConnectionId tests
+
+    [Fact]
+    public void GetSignalRConnectionId_WhenSet_ReturnsConnectionId()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+        context.Items[TurboFrameMiddleware.ConnectionIdKey] = "conn-abc-123";
+
+        // Act
+        var result = context.GetSignalRConnectionId();
+
+        // Assert
+        result.Should().Be("conn-abc-123");
+    }
+
+    [Fact]
+    public void GetSignalRConnectionId_WhenNotSet_ReturnsNull()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+
+        // Act
+        var result = context.GetSignalRConnectionId();
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public void GetSignalRConnectionId_WithNullContext_ThrowsArgumentNullException()
+    {
+        // Arrange
+        HttpContext? context = null;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => context!.GetSignalRConnectionId());
+    }
+
     [Fact]
     public void IsTurboStreamRequest_WhenAcceptHeaderContainsTurboStream_ReturnsTrue()
     {

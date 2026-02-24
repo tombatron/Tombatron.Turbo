@@ -94,6 +94,91 @@ await _turbo.Broadcast(builder =>
 });
 ```
 
+### Stream(string streamName, Action\<ITurboStreamBuilder\> build, string? excludedConnectionId)
+
+Broadcasts Turbo Stream updates to all clients subscribed to the specified stream, excluding a specific connection.
+
+**Parameters:**
+- `streamName` - The name of the stream to broadcast to
+- `build` - An action that configures the stream updates to send
+- `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
+
+**Example:**
+
+```csharp
+var connectionId = HttpContext.GetSignalRConnectionId();
+await _turbo.Stream("room:1", builder =>
+{
+    builder.Append("messages", "<div>New message</div>");
+}, connectionId);
+```
+
+### Stream(IEnumerable\<string\> streamNames, Action\<ITurboStreamBuilder\> build, string? excludedConnectionId)
+
+Broadcasts Turbo Stream updates to multiple streams, excluding a specific connection.
+
+**Parameters:**
+- `streamNames` - The names of the streams to broadcast to
+- `build` - An action that configures the stream updates to send
+- `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
+
+### Broadcast(Action\<ITurboStreamBuilder\> build, string? excludedConnectionId)
+
+Broadcasts Turbo Stream updates to all connected clients, excluding a specific connection.
+
+**Parameters:**
+- `build` - An action that configures the stream updates to send
+- `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
+
+### Stream(string streamName, Func\<ITurboStreamBuilder, Task\> buildAsync, string? excludedConnectionId)
+
+Async version of Stream with connection exclusion.
+
+**Parameters:**
+- `streamName` - The name of the stream to broadcast to
+- `buildAsync` - An async function that configures the stream updates to send
+- `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
+
+### Stream(IEnumerable\<string\> streamNames, Func\<ITurboStreamBuilder, Task\> buildAsync, string? excludedConnectionId)
+
+Async version of multi-stream broadcast with connection exclusion.
+
+**Parameters:**
+- `streamNames` - The names of the streams to broadcast to
+- `buildAsync` - An async function that configures the stream updates to send
+- `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
+
+### Broadcast(Func\<ITurboStreamBuilder, Task\> buildAsync, string? excludedConnectionId)
+
+Async version of Broadcast with connection exclusion.
+
+**Parameters:**
+- `buildAsync` - An async function that configures the stream updates to send
+- `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
+
+### StreamRefresh(string streamName, string? excludedConnectionId)
+
+Sends a Turbo Stream refresh action to a stream, excluding a specific connection.
+
+**Parameters:**
+- `streamName` - The name of the stream to send the refresh to
+- `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
+
+### StreamRefresh(IEnumerable\<string\> streamNames, string? excludedConnectionId)
+
+Sends a Turbo Stream refresh action to multiple streams, excluding a specific connection.
+
+**Parameters:**
+- `streamNames` - The names of the streams to send the refresh to
+- `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
+
+### BroadcastRefresh(string? excludedConnectionId)
+
+Sends a Turbo Stream refresh action to all connected clients, excluding a specific connection.
+
+**Parameters:**
+- `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
+
 ## Common Patterns
 
 ### User-Specific Updates

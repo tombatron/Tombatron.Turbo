@@ -136,4 +136,88 @@ public interface ITurbo
     /// </code>
     /// </example>
     Task Broadcast(Func<ITurboStreamBuilder, Task> buildAsync);
+
+    /// <summary>
+    /// Broadcasts Turbo Stream updates to all clients subscribed to the specified stream,
+    /// optionally excluding a specific connection.
+    /// </summary>
+    /// <param name="streamName">The name of the stream to broadcast to.</param>
+    /// <param name="build">An action that configures the stream updates to send.</param>
+    /// <param name="excludedConnectionId">The SignalR connection ID to exclude, or null for no exclusion.</param>
+    /// <returns>A task that completes when the broadcast has been sent.</returns>
+    Task Stream(string streamName, Action<ITurboStreamBuilder> build, string? excludedConnectionId);
+
+    /// <summary>
+    /// Broadcasts Turbo Stream updates to all clients subscribed to any of the specified streams,
+    /// optionally excluding a specific connection.
+    /// </summary>
+    /// <param name="streamNames">The names of the streams to broadcast to.</param>
+    /// <param name="build">An action that configures the stream updates to send.</param>
+    /// <param name="excludedConnectionId">The SignalR connection ID to exclude, or null for no exclusion.</param>
+    /// <returns>A task that completes when all broadcasts have been sent.</returns>
+    Task Stream(IEnumerable<string> streamNames, Action<ITurboStreamBuilder> build, string? excludedConnectionId);
+
+    /// <summary>
+    /// Broadcasts Turbo Stream updates to all connected clients,
+    /// optionally excluding a specific connection.
+    /// </summary>
+    /// <param name="build">An action that configures the stream updates to send.</param>
+    /// <param name="excludedConnectionId">The SignalR connection ID to exclude, or null for no exclusion.</param>
+    /// <returns>A task that completes when the broadcast has been sent.</returns>
+    Task Broadcast(Action<ITurboStreamBuilder> build, string? excludedConnectionId);
+
+    /// <summary>
+    /// Broadcasts Turbo Stream updates to all clients subscribed to the specified stream,
+    /// with support for async operations and optional connection exclusion.
+    /// </summary>
+    /// <param name="streamName">The name of the stream to broadcast to.</param>
+    /// <param name="buildAsync">An async function that configures the stream updates to send.</param>
+    /// <param name="excludedConnectionId">The SignalR connection ID to exclude, or null for no exclusion.</param>
+    /// <returns>A task that completes when the broadcast has been sent.</returns>
+    Task Stream(string streamName, Func<ITurboStreamBuilder, Task> buildAsync, string? excludedConnectionId);
+
+    /// <summary>
+    /// Broadcasts Turbo Stream updates to all clients subscribed to any of the specified streams,
+    /// with support for async operations and optional connection exclusion.
+    /// </summary>
+    /// <param name="streamNames">The names of the streams to broadcast to.</param>
+    /// <param name="buildAsync">An async function that configures the stream updates to send.</param>
+    /// <param name="excludedConnectionId">The SignalR connection ID to exclude, or null for no exclusion.</param>
+    /// <returns>A task that completes when all broadcasts have been sent.</returns>
+    Task Stream(IEnumerable<string> streamNames, Func<ITurboStreamBuilder, Task> buildAsync, string? excludedConnectionId);
+
+    /// <summary>
+    /// Broadcasts Turbo Stream updates to all connected clients,
+    /// with support for async operations and optional connection exclusion.
+    /// </summary>
+    /// <param name="buildAsync">An async function that configures the stream updates to send.</param>
+    /// <param name="excludedConnectionId">The SignalR connection ID to exclude, or null for no exclusion.</param>
+    /// <returns>A task that completes when the broadcast has been sent.</returns>
+    Task Broadcast(Func<ITurboStreamBuilder, Task> buildAsync, string? excludedConnectionId);
+
+    /// <summary>
+    /// Sends a Turbo Stream refresh action to all clients subscribed to the specified stream,
+    /// optionally excluding a specific connection.
+    /// </summary>
+    /// <param name="streamName">The name of the stream to send the refresh to.</param>
+    /// <param name="excludedConnectionId">The SignalR connection ID to exclude, or null for no exclusion.</param>
+    /// <returns>A task that completes when the refresh has been sent.</returns>
+    Task StreamRefresh(string streamName, string? excludedConnectionId);
+
+    /// <summary>
+    /// Sends a Turbo Stream refresh action to all clients subscribed to any of the specified streams,
+    /// optionally excluding a specific connection.
+    /// </summary>
+    /// <param name="streamNames">The names of the streams to send the refresh to.</param>
+    /// <param name="excludedConnectionId">The SignalR connection ID to exclude, or null for no exclusion.</param>
+    /// <returns>A task that completes when all refreshes have been sent.</returns>
+    Task StreamRefresh(IEnumerable<string> streamNames, string? excludedConnectionId);
+
+    /// <summary>
+    /// Sends a Turbo Stream refresh action to all connected clients,
+    /// optionally excluding a specific connection.
+    /// </summary>
+    /// <param name="excludedConnectionId">The SignalR connection ID to exclude, or null for no exclusion.</param>
+    /// <returns>A task that completes when the refresh has been sent.</returns>
+    Task BroadcastRefresh(string? excludedConnectionId);
 }

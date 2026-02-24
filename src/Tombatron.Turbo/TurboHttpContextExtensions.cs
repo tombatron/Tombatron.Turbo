@@ -87,6 +87,26 @@ public static class TurboHttpContextExtensions
     }
 
     /// <summary>
+    /// Gets the SignalR connection ID from the current request, used for originator exclusion.
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <returns>The connection ID, or null if not present.</returns>
+    public static string? GetSignalRConnectionId(this HttpContext context)
+    {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+
+        if (context.Items.TryGetValue(TurboFrameMiddleware.ConnectionIdKey, out var value))
+        {
+            return value as string;
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Gets whether the current request is a Turbo Stream request
     /// (i.e., the Accept header contains <c>text/vnd.turbo-stream.html</c>).
     /// </summary>

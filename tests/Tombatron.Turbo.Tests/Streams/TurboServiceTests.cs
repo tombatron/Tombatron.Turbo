@@ -35,6 +35,8 @@ public class TurboServiceTests
         _mockHubContext.Setup(h => h.Clients).Returns(_mockClients.Object);
         _mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(_mockClientProxy.Object);
         _mockClients.Setup(c => c.All).Returns(_mockClientProxy.Object);
+        _mockClients.Setup(c => c.GroupExcept(It.IsAny<string>(), It.IsAny<IReadOnlyList<string>>())).Returns(_mockClientProxy.Object);
+        _mockClients.Setup(c => c.AllExcept(It.IsAny<IReadOnlyList<string>>())).Returns(_mockClientProxy.Object);
 
         _service = new TurboService(_mockHubContext.Object, _mockLogger.Object, _mockPartialRenderer.Object, _mockHttpContextAccessor.Object);
     }
@@ -556,5 +558,212 @@ public class TurboServiceTests
 
         // Assert
         capturedHtml.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
+    }
+
+    // Excluded connection ID tests - Stream (sync, single)
+
+    [Fact]
+    public async Task Stream_WithExcludedConnectionId_UsesGroupExcept()
+    {
+        // Act
+        await _service.Stream("test-stream", builder => builder.Append("target", "<div>Content</div>"), "conn-123");
+
+        // Assert
+        _mockClients.Verify(c => c.GroupExcept("test-stream", It.Is<IReadOnlyList<string>>(l => l.Contains("conn-123"))), Times.Once);
+    }
+
+    [Fact]
+    public async Task Stream_WithNullExcludedConnectionId_DelegatesToExisting()
+    {
+        // Act
+        await _service.Stream("test-stream", builder => builder.Append("target", "<div>Content</div>"), (string?)null);
+
+        // Assert
+        _mockClients.Verify(c => c.Group("test-stream"), Times.Once);
+        _mockClients.Verify(c => c.GroupExcept(It.IsAny<string>(), It.IsAny<IReadOnlyList<string>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Stream_WithExcludedConnectionId_AndNoActions_DoesNotBroadcast()
+    {
+        // Act
+        await _service.Stream("test-stream", _ => { }, "conn-123");
+
+        // Assert
+        _mockClientProxy.Verify(
+            c => c.SendCoreAsync(It.IsAny<string>(), It.IsAny<object?[]>(), default),
+            Times.Never);
+    }
+
+    // Excluded connection ID tests - Stream (sync, multi)
+
+    [Fact]
+    public async Task StreamMulti_WithExcludedConnectionId_UsesGroupExcept()
+    {
+        // Arrange
+        var streamNames = new[] { "stream-1", "stream-2" };
+
+        // Act
+        await _service.Stream(streamNames, builder => builder.Append("target", "<div>Content</div>"), "conn-123");
+
+        // Assert
+        foreach (var streamName in streamNames)
+        {
+            _mockClients.Verify(c => c.GroupExcept(streamName, It.Is<IReadOnlyList<string>>(l => l.Contains("conn-123"))), Times.Once);
+        }
+    }
+
+    // Excluded connection ID tests - Broadcast (sync)
+
+    [Fact]
+    public async Task Broadcast_WithExcludedConnectionId_UsesAllExcept()
+    {
+        // Act
+        await _service.Broadcast(builder => builder.Append("target", "<div>Content</div>"), "conn-123");
+
+        // Assert
+        _mockClients.Verify(c => c.AllExcept(It.Is<IReadOnlyList<string>>(l => l.Contains("conn-123"))), Times.Once);
+    }
+
+    [Fact]
+    public async Task Broadcast_WithNullExcludedConnectionId_DelegatesToExisting()
+    {
+        // Act
+        await _service.Broadcast(builder => builder.Append("target", "<div>Content</div>"), (string?)null);
+
+        // Assert
+        _mockClients.Verify(c => c.All, Times.Once);
+        _mockClients.Verify(c => c.AllExcept(It.IsAny<IReadOnlyList<string>>()), Times.Never);
+    }
+
+    // Excluded connection ID tests - Stream (async, single)
+
+    [Fact]
+    public async Task StreamAsync_WithExcludedConnectionId_UsesGroupExcept()
+    {
+        // Act
+        await _service.Stream("test-stream", async builder =>
+        {
+            await Task.Yield();
+            builder.Append("target", "<div>Content</div>");
+        }, "conn-123");
+
+        // Assert
+        _mockClients.Verify(c => c.GroupExcept("test-stream", It.Is<IReadOnlyList<string>>(l => l.Contains("conn-123"))), Times.Once);
+    }
+
+    // Excluded connection ID tests - Stream (async, multi)
+
+    [Fact]
+    public async Task StreamAsyncMulti_WithExcludedConnectionId_UsesGroupExcept()
+    {
+        // Arrange
+        var streamNames = new[] { "stream-1", "stream-2" };
+
+        // Act
+        await _service.Stream(streamNames, async builder =>
+        {
+            await Task.Yield();
+            builder.Append("target", "<div>Content</div>");
+        }, "conn-123");
+
+        // Assert
+        foreach (var streamName in streamNames)
+        {
+            _mockClients.Verify(c => c.GroupExcept(streamName, It.Is<IReadOnlyList<string>>(l => l.Contains("conn-123"))), Times.Once);
+        }
+    }
+
+    // Excluded connection ID tests - Broadcast (async)
+
+    [Fact]
+    public async Task BroadcastAsync_WithExcludedConnectionId_UsesAllExcept()
+    {
+        // Act
+        await _service.Broadcast(async builder =>
+        {
+            await Task.Yield();
+            builder.Append("target", "<div>Content</div>");
+        }, "conn-123");
+
+        // Assert
+        _mockClients.Verify(c => c.AllExcept(It.Is<IReadOnlyList<string>>(l => l.Contains("conn-123"))), Times.Once);
+    }
+
+    // Excluded connection ID tests - StreamRefresh
+
+    [Fact]
+    public async Task StreamRefresh_WithExcludedConnectionId_UsesGroupExcept()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext();
+        _mockHttpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
+
+        // Act
+        await _service.StreamRefresh("test-stream", "conn-123");
+
+        // Assert
+        _mockClients.Verify(c => c.GroupExcept("test-stream", It.Is<IReadOnlyList<string>>(l => l.Contains("conn-123"))), Times.Once);
+    }
+
+    [Fact]
+    public async Task StreamRefresh_IncludesRequestIdAndExclusion()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext();
+        httpContext.Items[TurboFrameMiddleware.RequestIdKey] = "req-456";
+        _mockHttpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
+
+        string? capturedHtml = null;
+        _mockClientProxy
+            .Setup(c => c.SendCoreAsync(TurboHub.TurboStreamMethod, It.IsAny<object?[]>(), default))
+            .Callback<string, object?[], CancellationToken>((method, args, _) =>
+            {
+                capturedHtml = args[0] as string;
+            })
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _service.StreamRefresh("test-stream", "conn-123");
+
+        // Assert
+        _mockClients.Verify(c => c.GroupExcept("test-stream", It.Is<IReadOnlyList<string>>(l => l.Contains("conn-123"))), Times.Once);
+        capturedHtml.Should().Be("<turbo-stream action=\"refresh\" request-id=\"req-456\"></turbo-stream>");
+    }
+
+    // Excluded connection ID tests - StreamRefresh (multi)
+
+    [Fact]
+    public async Task StreamRefreshMulti_WithExcludedConnectionId_UsesGroupExcept()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext();
+        _mockHttpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
+        var streamNames = new[] { "stream-1", "stream-2" };
+
+        // Act
+        await _service.StreamRefresh(streamNames, "conn-123");
+
+        // Assert
+        foreach (var streamName in streamNames)
+        {
+            _mockClients.Verify(c => c.GroupExcept(streamName, It.Is<IReadOnlyList<string>>(l => l.Contains("conn-123"))), Times.Once);
+        }
+    }
+
+    // Excluded connection ID tests - BroadcastRefresh
+
+    [Fact]
+    public async Task BroadcastRefresh_WithExcludedConnectionId_UsesAllExcept()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext();
+        _mockHttpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
+
+        // Act
+        await _service.BroadcastRefresh("conn-123");
+
+        // Assert
+        _mockClients.Verify(c => c.AllExcept(It.Is<IReadOnlyList<string>>(l => l.Contains("conn-123"))), Times.Once);
     }
 }

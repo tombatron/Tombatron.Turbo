@@ -357,6 +357,65 @@ public class TurboFrameMiddlewareTests
         result.Should().BeEmpty();
     }
 
+    // Connection ID cookie tests
+
+    [Fact]
+    public async Task InvokeAsync_WithConnectionIdCookie_SetsConnectionId()
+    {
+        // Arrange
+        var context = CreateHttpContext();
+        context.Request.Headers["Cookie"] = $"{TurboFrameMiddleware.ConnectionIdCookieName}=conn-xyz-789";
+        var middleware = CreateMiddleware(context);
+
+        // Act
+        await middleware.InvokeAsync(context);
+
+        // Assert
+        context.Items.Should().ContainKey(TurboFrameMiddleware.ConnectionIdKey);
+        context.Items[TurboFrameMiddleware.ConnectionIdKey].Should().Be("conn-xyz-789");
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WithoutConnectionIdCookie_DoesNotSetConnectionId()
+    {
+        // Arrange
+        var context = CreateHttpContext();
+        var middleware = CreateMiddleware(context);
+
+        // Act
+        await middleware.InvokeAsync(context);
+
+        // Assert
+        context.Items.Should().NotContainKey(TurboFrameMiddleware.ConnectionIdKey);
+    }
+
+    [Fact]
+    public void GetConnectionId_Static_WithCookie_ReturnsConnectionId()
+    {
+        // Arrange
+        var context = CreateHttpContext();
+        context.Request.Headers["Cookie"] = $"{TurboFrameMiddleware.ConnectionIdCookieName}=conn-abc-123";
+
+        // Act
+        var result = TurboFrameMiddleware.GetConnectionId(context.Request);
+
+        // Assert
+        result.Should().Be("conn-abc-123");
+    }
+
+    [Fact]
+    public void GetConnectionId_Static_WithoutCookie_ReturnsNull()
+    {
+        // Arrange
+        var context = CreateHttpContext();
+
+        // Act
+        var result = TurboFrameMiddleware.GetConnectionId(context.Request);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
     private static DefaultHttpContext CreateHttpContext()
     {
         return new DefaultHttpContext();
