@@ -3674,7 +3674,7 @@
          */
         dispatchConnectionEvent(eventName, detail = {}) {
             if (typeof document !== 'undefined') {
-                detail.connectionId = this.connection.connectionId;
+                detail.connectionId = this.connection?.connectionId ?? null;
                 document.dispatchEvent(new CustomEvent(eventName, { detail }));
             }
         },

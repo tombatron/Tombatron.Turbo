@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Mock SignalR before importing the module
 const mockConnection = {
+    connectionId: 'mock-connection-id',
     start: vi.fn().mockResolvedValue(undefined),
     stop: vi.fn().mockResolvedValue(undefined),
     invoke: vi.fn().mockResolvedValue(true),
@@ -445,7 +446,21 @@ describe('connectionManager', () => {
             connectionManager.dispatchConnectionEvent('turbo:signalr:test', { data: 'test' });
 
             expect(handler).toHaveBeenCalled();
-            expect(handler.mock.calls[0][0].detail).toEqual({ data: 'test' });
+            expect(handler.mock.calls[0][0].detail).toEqual({ data: 'test', connectionId: null });
+
+            document.removeEventListener('turbo:signalr:test', handler);
+        });
+
+        it('should include connectionId when connection exists', async () => {
+            await connectionManager.subscribe('stream-1', '/test-hub');
+
+            const handler = vi.fn();
+            document.addEventListener('turbo:signalr:test', handler);
+
+            connectionManager.dispatchConnectionEvent('turbo:signalr:test', { data: 'test' });
+
+            expect(handler).toHaveBeenCalled();
+            expect(handler.mock.calls[0][0].detail.connectionId).toBe('mock-connection-id');
 
             document.removeEventListener('turbo:signalr:test', handler);
         });
