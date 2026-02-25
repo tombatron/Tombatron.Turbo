@@ -2,7 +2,6 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using Tombatron.Turbo.Middleware;
 using Xunit;
 
@@ -13,14 +12,8 @@ namespace Tombatron.Turbo.Tests.Middleware;
 /// </summary>
 public class TurboFrameMiddlewareTests
 {
-    private readonly TurboOptions _options;
-    private readonly ILogger<TurboFrameMiddleware> _logger;
-
-    public TurboFrameMiddlewareTests()
-    {
-        _options = new TurboOptions();
-        _logger = NullLogger<TurboFrameMiddleware>.Instance;
-    }
+    private readonly TurboOptions _options = new();
+    private readonly ILogger<TurboFrameMiddleware> _logger = NullLogger<TurboFrameMiddleware>.Instance;
 
     [Fact]
     public async Task InvokeAsync_WithoutTurboFrameHeader_DoesNotSetFrameItems()
@@ -125,17 +118,18 @@ public class TurboFrameMiddlewareTests
     }
 
     [Fact]
-    public void GetTurboFrameId_Static_WithHeader_ReturnsFrameId()
+    public void HasTurboFrameId_Static_WithHeader_ReturnsFrameId()
     {
         // Arrange
         var context = CreateHttpContext();
         context.Request.Headers[TurboFrameMiddleware.TurboFrameHeader] = "my-frame";
 
         // Act
-        string? result = TurboFrameMiddleware.GetTurboFrameId(context.Request);
+        var result = TurboFrameMiddleware.HasTurboFrameId(context.Request, out var id);
 
         // Assert
-        result.Should().Be("my-frame");
+        result.Should().BeTrue();
+        id.Should().Be("my-frame");
     }
 
     [Fact]
@@ -145,10 +139,11 @@ public class TurboFrameMiddlewareTests
         var context = CreateHttpContext();
 
         // Act
-        string? result = TurboFrameMiddleware.GetTurboFrameId(context.Request);
+        var result = TurboFrameMiddleware.HasTurboFrameId(context.Request, out var id);
 
         // Assert
-        result.Should().BeNull();
+        result.Should().BeFalse();
+        id.Should().BeNull();
     }
 
     [Fact]
@@ -159,10 +154,11 @@ public class TurboFrameMiddlewareTests
         context.Request.Headers[TurboFrameMiddleware.TurboFrameHeader] = "";
 
         // Act
-        string? result = TurboFrameMiddleware.GetTurboFrameId(context.Request);
+        var result = TurboFrameMiddleware.HasTurboFrameId(context.Request, out var id);
 
         // Assert
-        result.Should().BeEmpty();
+        result.Should().BeFalse();
+        id.Should().BeEmpty();
     }
 
     [Fact]
@@ -317,44 +313,47 @@ public class TurboFrameMiddlewareTests
     }
 
     [Fact]
-    public void GetTurboRequestId_Static_WithHeader_ReturnsRequestId()
+    public void HasTurboRequestId_Static_WithHeader_ReturnsRequestId()
     {
         // Arrange
         var context = CreateHttpContext();
         context.Request.Headers[TurboFrameMiddleware.TurboRequestIdHeader] = "req-456";
 
         // Act
-        var result = TurboFrameMiddleware.GetTurboRequestId(context.Request);
+        var result = TurboFrameMiddleware.HasTurboRequestId(context.Request, out var requestId);
 
         // Assert
-        result.Should().Be("req-456");
+        result.Should().BeTrue();
+        requestId.Should().Be("req-456");
     }
 
     [Fact]
-    public void GetTurboRequestId_Static_WithoutHeader_ReturnsNull()
+    public void HasTurboRequestId_Static_WithoutHeader_ReturnsNull()
     {
         // Arrange
         var context = CreateHttpContext();
 
         // Act
-        var result = TurboFrameMiddleware.GetTurboRequestId(context.Request);
+        var result = TurboFrameMiddleware.HasTurboRequestId(context.Request, out var requestId);
 
         // Assert
-        result.Should().BeNull();
+        result.Should().BeFalse();
+        requestId.Should().BeNull();
     }
 
     [Fact]
-    public void GetTurboRequestId_Static_WithEmptyHeader_ReturnsEmpty()
+    public void HasTurboRequestId_Static_WithEmptyHeader_ReturnsEmpty()
     {
         // Arrange
         var context = CreateHttpContext();
         context.Request.Headers[TurboFrameMiddleware.TurboRequestIdHeader] = "";
 
         // Act
-        var result = TurboFrameMiddleware.GetTurboRequestId(context.Request);
+        var result = TurboFrameMiddleware.HasTurboRequestId(context.Request, out var requestId);
 
         // Assert
-        result.Should().BeEmpty();
+        result.Should().BeFalse();
+        requestId.Should().BeEmpty();
     }
 
     // Connection ID header tests
@@ -390,39 +389,36 @@ public class TurboFrameMiddlewareTests
     }
 
     [Fact]
-    public void GetConnectionId_Static_WithHeader_ReturnsConnectionId()
+    public void HasConnectionId_Static_WithHeader_ReturnsConnectionId()
     {
         // Arrange
         var context = CreateHttpContext();
         context.Request.Headers[TurboFrameMiddleware.ConnectionIdHeader] = "conn-abc-123";
 
         // Act
-        var result = TurboFrameMiddleware.GetConnectionId(context.Request);
+        var result = TurboFrameMiddleware.HasConnectionId(context.Request, out var connectionId);
 
         // Assert
-        result.Should().Be("conn-abc-123");
+        result.Should().BeTrue();
+        connectionId.Should().Be("conn-abc-123");
     }
 
     [Fact]
-    public void GetConnectionId_Static_WithoutHeader_ReturnsNull()
+    public void HasConnectionId_Static_WithoutHeader_ReturnsNull()
     {
         // Arrange
         var context = CreateHttpContext();
 
         // Act
-        var result = TurboFrameMiddleware.GetConnectionId(context.Request);
+        var result = TurboFrameMiddleware.HasConnectionId(context.Request, out var connectionId);
 
         // Assert
-        result.Should().BeNull();
+        result.Should().BeFalse();
+        connectionId.Should().BeNull();
     }
 
-    private static DefaultHttpContext CreateHttpContext()
-    {
-        return new DefaultHttpContext();
-    }
+    private static DefaultHttpContext CreateHttpContext() => new();
 
-    private TurboFrameMiddleware CreateMiddleware(HttpContext context, TurboOptions? options = null)
-    {
-        return new TurboFrameMiddleware(_ => Task.CompletedTask, options ?? _options, _logger);
-    }
+    private TurboFrameMiddleware CreateMiddleware(HttpContext context, TurboOptions? options = null) =>
+        new(_ => Task.CompletedTask, options ?? _options, _logger);
 }

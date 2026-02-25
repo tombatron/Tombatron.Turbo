@@ -82,15 +82,10 @@ public class TurboFrameMiddleware
     /// <param name="context">The HTTP context.</param>
     public async Task InvokeAsync(HttpContext context)
     {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
+        ArgumentNullException.ThrowIfNull(context);
 
         // Check for Turbo-Frame header
-        string? frameId = GetTurboFrameId(context.Request);
-
-        if (!string.IsNullOrEmpty(frameId))
+        if (HasTurboFrameId(context.Request, out var frameId))
         {
             // Mark this as a turbo-frame request and store the frame ID
             context.Items[IsTurboFrameRequestKey] = true;
@@ -114,9 +109,7 @@ public class TurboFrameMiddleware
         }
 
         // Check for X-Turbo-Request-Id header
-        var requestId = GetTurboRequestId(context.Request);
-
-        if (!string.IsNullOrEmpty(requestId))
+        if (HasTurboRequestId(context.Request, out var requestId))
         {
             context.Items[RequestIdKey] = requestId;
 
@@ -128,9 +121,7 @@ public class TurboFrameMiddleware
         }
 
         // Check for the X-SignalR-Connection-Id header
-        var connectionId = GetConnectionId(context.Request);
-
-        if (connectionId is not null)
+        if (HasConnectionId(context.Request, out var connectionId))
         {
             context.Items[ConnectionIdKey] = connectionId;
 
@@ -145,42 +136,50 @@ public class TurboFrameMiddleware
     }
 
     /// <summary>
-    /// Extracts the Turbo-Frame header value from the request.
+    /// Extracts the Turbo-Frame header value from the request while also giving a signal of its
+    /// existence.
     /// </summary>
     /// <param name="request">The HTTP request.</param>
-    /// <returns>The frame ID, or null if not present.</returns>
-    internal static string? GetTurboFrameId(HttpRequest request)
+    /// <param name="frameId">The frame ID, or null if not present.</param>
+    /// <returns>A boolean indicating the presence of the header.</returns>
+    internal static bool HasTurboFrameId(HttpRequest request, out string? frameId)
     {
-        if (request.Headers.TryGetValue(TurboFrameHeader, out var values))
-        {
-            return values.FirstOrDefault();
-        }
+        var hasTurboFrameId = request.Headers.TryGetValue(TurboFrameHeader, out var values);
 
-        return null;
+        frameId = values.FirstOrDefault();
+
+        return hasTurboFrameId && !string.IsNullOrEmpty(frameId);
     }
 
     /// <summary>
     /// Extracts the X-Turbo-Request-Id header value from the request.
     /// </summary>
     /// <param name="request">The HTTP request.</param>
-    /// <returns>The request ID, or null if not present.</returns>
-    internal static string? GetTurboRequestId(HttpRequest request)
+    /// <param name="requestId">The request ID, or null if not present.</param>
+    /// <returns>A boolean indicating the presence of the header.</returns>
+    internal static bool HasTurboRequestId(HttpRequest request, out string? requestId)
     {
-        if (request.Headers.TryGetValue(TurboRequestIdHeader, out var values))
-        {
-            return values.FirstOrDefault();
-        }
+        var hasTurboRequestId = request.Headers.TryGetValue(TurboRequestIdHeader, out var values);
 
-        return null;
+        requestId = values.FirstOrDefault();
+
+        return hasTurboRequestId && !string.IsNullOrEmpty(requestId);
     }
 
     /// <summary>
     /// Extracts the X-SignalR-Connection-Id header value from the request.
     /// </summary>
     /// <param name="request">The HTTP request.</param>
+    /// <param name="connectionId">The connection ID, or null if not present</param>
     /// <returns>The connection ID, or null if not present.</returns>
-    internal static string? GetConnectionId(HttpRequest request) =>
-        request.Headers.TryGetValue(ConnectionIdHeader, out var values) ? values.FirstOrDefault() : null;
+    internal static bool HasConnectionId(HttpRequest request, out string? connectionId)
+    {
+        var hasConnectionId = request.Headers.TryGetValue(ConnectionIdHeader, out var values);
+
+        connectionId = values.FirstOrDefault();
+
+        return hasConnectionId && !string.IsNullOrEmpty(connectionId);
+    }
 
     /// <summary>
     /// Adds the Vary: Turbo-Frame header to the response.
