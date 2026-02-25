@@ -528,12 +528,11 @@
         await connectionManager.closeConnection();
     }
 
-    document.addEventListener('turbo:signalr:connected', (e) => {
-        document.cookie = `signalr-connection-id=${e.detail.connectionId}; path=/; SameSite=Strict`;
-    });
-
-    document.addEventListener('turbo:signalr:reconnected', (e) => {
-        document.cookie = `signalr-connection-id=${e.detail.connectionId}; path=/; SameSite=Strict`;
+    document.addEventListener('turbo:before-fetch-request', (e) => {
+        const connectionId = connectionManager.connection?.connectionId;
+        if (connectionId) {
+            e.detail.fetchOptions.headers['X-SignalR-Connection-Id'] = connectionId;
+        }
     });
 
     exports.TurboStreamSourceSignalR = TurboStreamSourceSignalR;

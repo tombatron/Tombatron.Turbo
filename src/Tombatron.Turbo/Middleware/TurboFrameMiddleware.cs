@@ -45,9 +45,9 @@ public class TurboFrameMiddleware
     public const string TurboRequestIdHeader = "X-Turbo-Request-Id";
 
     /// <summary>
-    /// The cookie name used by Tombatron.Turbo to track the connection id of the current user.
+    /// The HTTP header name used to track the SignalR connection ID of the current user.
     /// </summary>
-    public const string ConnectionIdCookieName = "signalr-connection-id";
+    public const string ConnectionIdHeader = "X-SignalR-Connection-Id";
 
     /// <summary>
     /// The key used to store the Turbo request ID in HttpContext.Items.
@@ -127,7 +127,7 @@ public class TurboFrameMiddleware
                 context.Request.Path);
         }
 
-        // Check for the Turbo/SignalR connection Id cookie
+        // Check for the X-SignalR-Connection-Id header
         var connectionId = GetConnectionId(context.Request);
 
         if (connectionId is not null)
@@ -175,12 +175,12 @@ public class TurboFrameMiddleware
     }
 
     /// <summary>
-    /// Extracts the `signalr-connection-id` cookie value from the request
+    /// Extracts the X-SignalR-Connection-Id header value from the request.
     /// </summary>
-    /// <param name="request">The HTTP request</param>
+    /// <param name="request">The HTTP request.</param>
     /// <returns>The connection ID, or null if not present.</returns>
     internal static string? GetConnectionId(HttpRequest request) =>
-        request.Cookies.TryGetValue(ConnectionIdCookieName, out var values) ? values : null;
+        request.Headers.TryGetValue(ConnectionIdHeader, out var values) ? values.FirstOrDefault() : null;
 
     /// <summary>
     /// Adds the Vary: Turbo-Frame header to the response.

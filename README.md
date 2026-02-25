@@ -326,7 +326,7 @@ public class IndexModel : PageModel
 }
 ```
 
-`BroadcastRefresh()` sends `<turbo-stream action="refresh">` to all clients over SignalR. The `excludedConnectionId` parameter prevents the submitter from receiving the broadcast — they already have the update from the frame response, so there's no double-update or duplicate items. The connection ID comes from a cookie that the JS adapter sets automatically when the SignalR connection is established. If the cookie isn't set yet (e.g., initial page load), `GetSignalRConnectionId()` returns `null` and no exclusion is applied.
+`BroadcastRefresh()` sends `<turbo-stream action="refresh">` to all clients over SignalR. The `excludedConnectionId` parameter prevents the submitter from receiving the broadcast — they already have the update from the frame response, so there's no double-update or duplicate items. The connection ID is sent automatically by the JS adapter as an `X-SignalR-Connection-Id` header on every Turbo fetch request (via the `turbo:before-fetch-request` event). Because each tab holds its own connection ID in memory, this works correctly with multiple browser tabs. If the header isn't present yet (e.g., initial page load before the SignalR connection is established), `GetSignalRConnectionId()` returns `null` and no exclusion is applied.
 
 ### 3. Update the remaining handlers
 
@@ -432,7 +432,7 @@ await _turbo.StreamRefresh("room:1", connectionId);
 await _turbo.BroadcastRefresh(connectionId);
 ```
 
-The connection ID is automatically set by the JS adapter as a cookie on connect/reconnect. The parameter is `string?` — passing `null` (e.g., on the initial page load before the cookie is set) simply sends to all subscribers with no exclusion.
+The connection ID is automatically sent by the JS adapter as an `X-SignalR-Connection-Id` header on every Turbo fetch request. Each browser tab maintains its own connection ID in memory, so this works correctly across multiple tabs. The parameter is `string?` — passing `null` (e.g., on the initial page load before the SignalR connection is established) simply sends to all subscribers with no exclusion.
 
 > **Note:** This is distinct from the `X-Turbo-Request-Id` mechanism used by `refresh` actions. Connection-ID exclusion prevents the SignalR message from being sent at all via `GroupExcept`/`AllExcept`, while request-ID suppression happens client-side.
 

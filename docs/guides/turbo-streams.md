@@ -186,8 +186,8 @@ When a user submits a form that triggers a Turbo Stream broadcast, they receive 
 
 ### How It Works
 
-1. The JavaScript adapter automatically sets a `signalr-connection-id` cookie when the SignalR connection is established (and on reconnect)
-2. The `TurboFrameMiddleware` reads this cookie and stores it in `HttpContext.Items`
+1. The JavaScript adapter automatically sends an `X-SignalR-Connection-Id` header on every Turbo fetch request (via the `turbo:before-fetch-request` event). Each browser tab holds its own connection ID in memory, so this works correctly with multiple tabs open.
+2. The `TurboFrameMiddleware` reads this header and stores it in `HttpContext.Items`
 3. You read it with `HttpContext.GetSignalRConnectionId()` and pass it to the broadcast method
 4. SignalR uses `GroupExcept` / `AllExcept` to skip that connection
 
@@ -208,7 +208,7 @@ public async Task<IActionResult> OnPostSendMessage(int roomId, string content)
 }
 ```
 
-The `excludedConnectionId` parameter is `string?`. Passing `null` (e.g., on the initial page load before the cookie is set) simply broadcasts to all subscribers with no exclusion.
+The `excludedConnectionId` parameter is `string?`. Passing `null` (e.g., on the initial page load before the SignalR connection is established) simply broadcasts to all subscribers with no exclusion.
 
 ### Difference vs. X-Turbo-Request-Id
 

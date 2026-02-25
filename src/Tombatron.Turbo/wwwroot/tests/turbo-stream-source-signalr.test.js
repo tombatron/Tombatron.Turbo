@@ -501,6 +501,46 @@ describe('Exported Functions', () => {
     });
 });
 
+describe('turbo:before-fetch-request header injection', () => {
+    beforeEach(() => {
+        connectionManager.connection = null;
+        connectionManager.streamRefs.clear();
+        connectionManager.subscribedStreams.clear();
+        connectionManager.hubUrl = null;
+        connectionManager.isConnected = false;
+        connectionManager.isConnecting = false;
+        vi.clearAllMocks();
+        mockConnection.start.mockResolvedValue(undefined);
+        mockConnection.invoke.mockResolvedValue(true);
+    });
+
+    afterEach(async () => {
+        await disconnect();
+    });
+
+    it('should set X-SignalR-Connection-Id header when connection exists', async () => {
+        await connectionManager.getConnection('/test-hub');
+
+        const fetchOptions = { headers: {} };
+        const event = new CustomEvent('turbo:before-fetch-request', {
+            detail: { fetchOptions }
+        });
+        document.dispatchEvent(event);
+
+        expect(fetchOptions.headers['X-SignalR-Connection-Id']).toBe('mock-connection-id');
+    });
+
+    it('should not set header when no connection exists', () => {
+        const fetchOptions = { headers: {} };
+        const event = new CustomEvent('turbo:before-fetch-request', {
+            detail: { fetchOptions }
+        });
+        document.dispatchEvent(event);
+
+        expect(fetchOptions.headers['X-SignalR-Connection-Id']).toBeUndefined();
+    });
+});
+
 describe('Reference Counting', () => {
     beforeEach(() => {
         connectionManager.connection = null;

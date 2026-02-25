@@ -357,14 +357,14 @@ public class TurboFrameMiddlewareTests
         result.Should().BeEmpty();
     }
 
-    // Connection ID cookie tests
+    // Connection ID header tests
 
     [Fact]
-    public async Task InvokeAsync_WithConnectionIdCookie_SetsConnectionId()
+    public async Task InvokeAsync_WithConnectionIdHeader_SetsConnectionId()
     {
         // Arrange
         var context = CreateHttpContext();
-        context.Request.Headers["Cookie"] = $"{TurboFrameMiddleware.ConnectionIdCookieName}=conn-xyz-789";
+        context.Request.Headers[TurboFrameMiddleware.ConnectionIdHeader] = "conn-xyz-789";
         var middleware = CreateMiddleware(context);
 
         // Act
@@ -376,7 +376,7 @@ public class TurboFrameMiddlewareTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WithoutConnectionIdCookie_DoesNotSetConnectionId()
+    public async Task InvokeAsync_WithoutConnectionIdHeader_DoesNotSetConnectionId()
     {
         // Arrange
         var context = CreateHttpContext();
@@ -390,11 +390,11 @@ public class TurboFrameMiddlewareTests
     }
 
     [Fact]
-    public void GetConnectionId_Static_WithCookie_ReturnsConnectionId()
+    public void GetConnectionId_Static_WithHeader_ReturnsConnectionId()
     {
         // Arrange
         var context = CreateHttpContext();
-        context.Request.Headers["Cookie"] = $"{TurboFrameMiddleware.ConnectionIdCookieName}=conn-abc-123";
+        context.Request.Headers[TurboFrameMiddleware.ConnectionIdHeader] = "conn-abc-123";
 
         // Act
         var result = TurboFrameMiddleware.GetConnectionId(context.Request);
@@ -404,7 +404,7 @@ public class TurboFrameMiddlewareTests
     }
 
     [Fact]
-    public void GetConnectionId_Static_WithoutCookie_ReturnsNull()
+    public void GetConnectionId_Static_WithoutHeader_ReturnsNull()
     {
         // Arrange
         var context = CreateHttpContext();
