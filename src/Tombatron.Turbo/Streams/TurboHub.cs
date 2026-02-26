@@ -86,17 +86,17 @@ public class TurboHub : Hub
     /// <summary>
     /// Called when a new connection is established.
     /// </summary>
-    public override Task OnConnectedAsync()
+    public override async Task OnConnectedAsync()
     {
         _logger.LogDebug("Connection {ConnectionId} connected to TurboHub", Context.ConnectionId);
-        return base.OnConnectedAsync();
+        await base.OnConnectedAsync();
     }
 
     /// <summary>
     /// Called when a connection is terminated.
     /// </summary>
     /// <param name="exception">The exception that caused the disconnection, if any.</param>
-    public override Task OnDisconnectedAsync(Exception? exception)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
         if (exception != null)
         {
@@ -112,7 +112,7 @@ public class TurboHub : Hub
                 Context.ConnectionId);
         }
 
-        return base.OnDisconnectedAsync(exception);
+        await base.OnDisconnectedAsync(exception);
     }
 
     /// <summary>
