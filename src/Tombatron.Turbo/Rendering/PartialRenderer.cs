@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -11,22 +10,22 @@ using Microsoft.AspNetCore.Routing;
 namespace Tombatron.Turbo.Rendering;
 
 /// <summary>
-/// Implementation of <see cref="IPartialRenderer"/> that uses Razor view engine to render partials.
+/// Implementation of <see cref="IPartialRenderer"/> that uses the composite view engine to render partials.
 /// </summary>
 public sealed class PartialRenderer : IPartialRenderer
 {
-    private readonly IRazorViewEngine _viewEngine;
+    private readonly ICompositeViewEngine _viewEngine;
     private readonly ITempDataDictionaryFactory _tempDataDictionaryFactory;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PartialRenderer"/> class.
     /// </summary>
-    /// <param name="viewEngine">The Razor view engine.</param>
+    /// <param name="viewEngine">The composite view engine.</param>
     /// <param name="tempDataDictionaryFactory">The temp data provider.</param>
     /// <param name="httpContextAccessor">The HTTP context accessor.</param>
     public PartialRenderer(
-        IRazorViewEngine viewEngine,
+        ICompositeViewEngine viewEngine,
         ITempDataDictionaryFactory tempDataDictionaryFactory,
         IHttpContextAccessor httpContextAccessor)
     {
