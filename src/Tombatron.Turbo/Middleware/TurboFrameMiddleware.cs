@@ -4,17 +4,31 @@ using Microsoft.Extensions.Logging;
 namespace Tombatron.Turbo.Middleware;
 
 /// <summary>
-/// Middleware that detects Turbo Frame requests and makes the frame ID available
-/// via HttpContext.Items for use in page handlers and views.
+/// Middleware that detects Turbo and SignalR headers and makes their values available
+/// via <see cref="HttpContext.Items"/> for use in page handlers and views.
 /// </summary>
 /// <remarks>
-/// This middleware detects the Turbo-Frame header and stores the requested frame ID
-/// in HttpContext.Items. Page handlers can then check for this and return appropriate
-/// partial views:
+/// <para>
+/// This middleware inspects three incoming headers and stores their values in
+/// <see cref="HttpContext.Items"/>:
+/// </para>
+/// <list type="bullet">
+///   <item><c>Turbo-Frame</c> — the requested frame ID (keys: <see cref="IsTurboFrameRequestKey"/>, <see cref="FrameIdKey"/>).</item>
+///   <item><c>X-Turbo-Request-Id</c> — used for morph/refresh originator suppression (key: <see cref="RequestIdKey"/>).</item>
+///   <item><c>X-SignalR-Connection-Id</c> — used for broadcast originator exclusion (key: <see cref="ConnectionIdKey"/>).</item>
+/// </list>
+/// <para>
+/// When a <c>Turbo-Frame</c> header is present and <see cref="TurboOptions.AddVaryHeader"/> is enabled,
+/// the middleware registers a callback that appends <c>Vary: Turbo-Frame</c> to the response.
+/// </para>
+/// <para>
+/// Page handlers can use the extension methods in <see cref="TurboHttpContextExtensions"/>
+/// to query these values:
+/// </para>
 /// <code>
 /// public IActionResult OnGetItems()
 /// {
-///     if (HttpContext.Items.ContainsKey(TurboFrameMiddleware.IsTurboFrameRequestKey))
+///     if (HttpContext.IsTurboFrameRequest())
 ///     {
 ///         return Partial("_Items", Model);
 ///     }
@@ -77,7 +91,9 @@ public class TurboFrameMiddleware
     }
 
     /// <summary>
-    /// Processes the HTTP request.
+    /// Detects the <c>Turbo-Frame</c>, <c>X-Turbo-Request-Id</c>, and <c>X-SignalR-Connection-Id</c>
+    /// headers, stores their values in <see cref="HttpContext.Items"/>, and conditionally registers
+    /// a <c>Vary: Turbo-Frame</c> response header callback.
     /// </summary>
     /// <param name="context">The HTTP context.</param>
     public async Task InvokeAsync(HttpContext context)
@@ -171,7 +187,7 @@ public class TurboFrameMiddleware
     /// </summary>
     /// <param name="request">The HTTP request.</param>
     /// <param name="connectionId">The connection ID, or null if not present</param>
-    /// <returns>The connection ID, or null if not present.</returns>
+    /// <returns>A boolean indicating the presence of the header.</returns>
     internal static bool HasConnectionId(HttpRequest request, out string? connectionId)
     {
         var hasConnectionId = request.Headers.TryGetValue(ConnectionIdHeader, out var values);

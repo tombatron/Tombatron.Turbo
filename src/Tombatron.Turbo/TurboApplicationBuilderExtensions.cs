@@ -16,6 +16,14 @@ public static class TurboApplicationBuilderExtensions
     /// Adds the Turbo middleware to the application pipeline.
     /// This must be called after <c>UseRouting()</c> and before <c>UseEndpoints()</c>.
     /// </summary>
+    /// <remarks>
+    /// The middleware detects the <c>Turbo-Frame</c>, <c>X-Turbo-Request-Id</c>, and
+    /// <c>X-SignalR-Connection-Id</c> headers and stores their values in
+    /// <c>HttpContext.Items</c> so downstream handlers can query them via the
+    /// extension methods in <see cref="TurboHttpContextExtensions"/>.
+    /// When a <c>Turbo-Frame</c> header is present and <see cref="TurboOptions.AddVaryHeader"/>
+    /// is enabled, a <c>Vary: Turbo-Frame</c> response header is appended automatically.
+    /// </remarks>
     /// <param name="app">The <see cref="IApplicationBuilder"/> to add the middleware to.</param>
     /// <returns>The <see cref="IApplicationBuilder"/> so that additional calls can be chained.</returns>
     /// <exception cref="ArgumentNullException">Thrown when app is null.</exception>
