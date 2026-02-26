@@ -36,23 +36,16 @@ public sealed class PartialRenderer : IPartialRenderer
     }
 
     /// <inheritdoc />
-    public Task<string> RenderAsync(string partialName, object? model = null)
-    {
-        return RenderPartialAsync(partialName, model);
-    }
+    public async Task<string> RenderAsync(string partialName, object? model = null) =>
+        await RenderPartialAsync(partialName, model);
 
     /// <inheritdoc />
-    public Task<string> RenderAsync<TModel>(string partialName, TModel model)
-    {
-        return RenderPartialAsync(partialName, model);
-    }
+    public async Task<string> RenderAsync<TModel>(string partialName, TModel model) =>
+        await RenderPartialAsync(partialName, model);
 
     private async Task<string> RenderPartialAsync(string partialName, object? model)
     {
-        if (string.IsNullOrEmpty(partialName))
-        {
-            throw new ArgumentException("Partial name cannot be null or empty.", nameof(partialName));
-        }
+        ArgumentException.ThrowIfNullOrEmpty(partialName);
 
         var httpContext = _httpContextAccessor.HttpContext
             ?? throw new InvalidOperationException("HttpContext is not available. Ensure this is called within an HTTP request.");
@@ -84,7 +77,7 @@ public sealed class PartialRenderer : IPartialRenderer
 
     private IView FindView(ActionContext actionContext, string partialName)
     {
-        if (partialName.StartsWith("/") || partialName.StartsWith("~/"))
+        if (partialName.StartsWith('/') || partialName.StartsWith("~/"))
         {
             var absoluteResult = _viewEngine.GetView(executingFilePath: null, viewPath: partialName, isMainPage: false);
             if (absoluteResult.Success)
