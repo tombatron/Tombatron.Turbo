@@ -14,7 +14,6 @@ namespace Tombatron.Turbo.Tests.Streams;
 public class TurboHubTests
 {
     private readonly Mock<ITurboStreamAuthorization> _mockAuthorization;
-    private readonly TurboOptions _options;
     private readonly Mock<ILogger<TurboHub>> _mockLogger;
     private readonly Mock<IGroupManager> _mockGroups;
     private readonly Mock<HubCallerContext> _mockContext;
@@ -22,7 +21,6 @@ public class TurboHubTests
     public TurboHubTests()
     {
         _mockAuthorization = new Mock<ITurboStreamAuthorization>();
-        _options = new TurboOptions();
         _mockLogger = new Mock<ILogger<TurboHub>>();
         _mockGroups = new Mock<IGroupManager>();
         _mockContext = new Mock<HubCallerContext>();
@@ -33,7 +31,7 @@ public class TurboHubTests
 
     private TurboHub CreateHub()
     {
-        var hub = new TurboHub(_mockAuthorization.Object, _options, _mockLogger.Object);
+        var hub = new TurboHub(_mockAuthorization.Object, _mockLogger.Object);
 
         // Use reflection to set the protected properties
         var contextProperty = typeof(Hub).GetProperty("Context");
@@ -185,21 +183,14 @@ public class TurboHubTests
     public void Constructor_WithNullAuthorization_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new TurboHub(null!, _options, _mockLogger.Object));
-    }
-
-    [Fact]
-    public void Constructor_WithNullOptions_ThrowsArgumentNullException()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new TurboHub(_mockAuthorization.Object, null!, _mockLogger.Object));
+        Assert.Throws<ArgumentNullException>(() => new TurboHub(null!, _mockLogger.Object));
     }
 
     [Fact]
     public void Constructor_WithNullLogger_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new TurboHub(_mockAuthorization.Object, _options, null!));
+        Assert.Throws<ArgumentNullException>(() => new TurboHub(_mockAuthorization.Object, null!));
     }
 
     [Fact]

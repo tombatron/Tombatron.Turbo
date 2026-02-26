@@ -18,22 +18,18 @@ public class TurboHub : Hub
     public const string TurboStreamMethod = "TurboStream";
 
     private readonly ITurboStreamAuthorization _authorization;
-    private readonly TurboOptions _options;
     private readonly ILogger<TurboHub> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TurboHub"/> class.
     /// </summary>
     /// <param name="authorization">The authorization service for stream subscriptions.</param>
-    /// <param name="options">The Turbo configuration options.</param>
     /// <param name="logger">The logger instance.</param>
     public TurboHub(
         ITurboStreamAuthorization authorization,
-        TurboOptions options,
         ILogger<TurboHub> logger)
     {
         _authorization = authorization ?? throw new ArgumentNullException(nameof(authorization));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
