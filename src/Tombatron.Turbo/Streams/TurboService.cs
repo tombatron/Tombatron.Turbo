@@ -33,22 +33,14 @@ public sealed class TurboService : ITurbo
     /// <inheritdoc />
     public async Task Stream(string streamName, Action<ITurboStreamBuilder> build)
     {
-        if (streamName == null)
-        {
-            throw new ArgumentNullException(nameof(streamName));
-        }
-
-        if (string.IsNullOrWhiteSpace(streamName))
-        {
-            throw new ArgumentException("Stream name cannot be empty or whitespace.", nameof(streamName));
-        }
+        ArgumentNullException.ThrowIfNull(streamName);
 
         if (build == null)
         {
             throw new ArgumentNullException(nameof(build));
         }
 
-        string html = BuildStreamHtml(build);
+        var html = BuildStreamHtml(build);
 
         if (string.IsNullOrEmpty(html))
         {
@@ -85,7 +77,7 @@ public sealed class TurboService : ITurbo
         }
 
         // Collect stream names and validate
-        List<string> streams = new();
+        var streams = new List<string>();
         foreach (string streamName in streamNames)
         {
             if (string.IsNullOrWhiteSpace(streamName))
@@ -121,7 +113,7 @@ public sealed class TurboService : ITurbo
             throw new ArgumentNullException(nameof(build));
         }
 
-        string html = BuildStreamHtml(build);
+        var html = BuildStreamHtml(build);
 
         if (string.IsNullOrEmpty(html))
         {
@@ -154,7 +146,7 @@ public sealed class TurboService : ITurbo
             throw new ArgumentNullException(nameof(buildAsync));
         }
 
-        string html = await BuildStreamHtmlAsync(buildAsync);
+        var html = await BuildStreamHtmlAsync(buildAsync);
 
         if (string.IsNullOrEmpty(html))
         {
@@ -182,7 +174,7 @@ public sealed class TurboService : ITurbo
             throw new ArgumentNullException(nameof(buildAsync));
         }
 
-        string html = await BuildStreamHtmlAsync(buildAsync);
+        var html = await BuildStreamHtmlAsync(buildAsync);
 
         if (string.IsNullOrEmpty(html))
         {
@@ -191,7 +183,7 @@ public sealed class TurboService : ITurbo
         }
 
         // Collect stream names and validate
-        List<string> streams = new();
+        var streams = new List<string>();
         foreach (string streamName in streamNames)
         {
             if (string.IsNullOrWhiteSpace(streamName))
@@ -227,7 +219,7 @@ public sealed class TurboService : ITurbo
             throw new ArgumentNullException(nameof(buildAsync));
         }
 
-        string html = await BuildStreamHtmlAsync(buildAsync);
+        var html = await BuildStreamHtmlAsync(buildAsync);
 
         if (string.IsNullOrEmpty(html))
         {
