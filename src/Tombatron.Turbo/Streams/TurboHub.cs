@@ -119,6 +119,7 @@ public class TurboHub : Hub
     /// Validates a stream name.
     /// </summary>
     /// <param name="streamName">The stream name to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown when streamName is null.</exception>
     /// <exception cref="ArgumentException">Thrown when streamName is empty or whitespace.</exception>
     internal static void ValidateStreamName(string streamName) => ArgumentException.ThrowIfNullOrWhiteSpace(streamName);
 }
