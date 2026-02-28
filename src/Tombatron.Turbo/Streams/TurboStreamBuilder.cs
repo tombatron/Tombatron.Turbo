@@ -1,4 +1,4 @@
-using System.Text;
+using System.Text.Encodings.Web;
 using Tombatron.Turbo.Rendering;
 
 namespace Tombatron.Turbo.Streams;
@@ -8,11 +8,10 @@ namespace Tombatron.Turbo.Streams;
 /// </summary>
 /// <remarks>
 /// This class generates valid Turbo Stream HTML that can be processed by Hotwire Turbo.js.
-/// All generation methods are pure functions with no side effects.
 /// </remarks>
 public sealed class TurboStreamBuilder : ITurboStreamBuilder
 {
-    private readonly List<string> _actions = new();
+    private readonly StringWriter _outputActions = new();
 
     /// <summary>
     /// Gets or sets the partial renderer for async partial rendering operations.
@@ -20,7 +19,7 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     /// <remarks>
     /// This property is set internally by TurboService when using async Stream overloads.
     /// </remarks>
-    internal IPartialRenderer? Renderer { get; set; }
+    internal IPartialRenderer? Renderer { get; set; } // ???
 
     /// <inheritdoc />
     public ITurboStreamBuilder Append(string target, string html)
@@ -28,7 +27,8 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         ValidateTarget(target);
         ValidateHtml(html);
 
-        _actions.Add(GenerateAction("append", target, html));
+        GenerateAction("append", target, html, _outputActions);
+
         return this;
     }
 
@@ -38,7 +38,8 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         ValidateTarget(target);
         ValidateHtml(html);
 
-        _actions.Add(GenerateAction("prepend", target, html));
+        GenerateAction("prepend", target, html, _outputActions);
+
         return this;
     }
 
@@ -48,7 +49,8 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         ValidateTarget(target);
         ValidateHtml(html);
 
-        _actions.Add(GenerateAction("replace", target, html));
+        GenerateAction("replace", target, html, _outputActions);
+
         return this;
     }
 
@@ -58,7 +60,8 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         ValidateTarget(target);
         ValidateHtml(html);
 
-        _actions.Add(GenerateAction("update", target, html));
+        GenerateAction("update", target, html,  _outputActions);
+
         return this;
     }
 
@@ -67,14 +70,16 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     {
         ValidateTarget(target);
 
-        _actions.Add(GenerateRemoveAction(target));
+        GenerateRemoveAction(target, _outputActions);
+
         return this;
     }
 
     /// <inheritdoc />
     public ITurboStreamBuilder Refresh(string? requestId = null)
     {
-        _actions.Add(GenerateRefreshAction(requestId));
+        GenerateRefreshAction(requestId, _outputActions);
+
         return this;
     }
 
@@ -84,7 +89,8 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         ValidateTarget(target);
         ValidateHtml(html);
 
-        _actions.Add(GenerateAction("before", target, html));
+        GenerateAction("before", target, html, _outputActions);
+
         return this;
     }
 
@@ -94,70 +100,61 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         ValidateTarget(target);
         ValidateHtml(html);
 
-        _actions.Add(GenerateAction("after", target, html));
+        GenerateAction("after", target, html, _outputActions);
+
         return this;
     }
 
     /// <inheritdoc />
-    public string Build()
-    {
-        if (_actions.Count == 0)
-        {
-            return string.Empty;
-        }
-
-        if (_actions.Count == 1)
-        {
-            return _actions[0];
-        }
-
-        var sb = new StringBuilder();
-        foreach (string action in _actions)
-        {
-            sb.Append(action);
-        }
-
-        return sb.ToString();
-    }
+    public string Build() => _outputActions.ToString();
 
     /// <summary>
-    /// Generates a Turbo Stream action element with content.
+    /// Appends a Turbo Stream action element to the provided string writer.
     /// </summary>
-    /// <param name="action">The action type (append, prepend, replace, update, before, after).</param>
+    /// <param name="action">The action type (append, prepend, replace, update, before after).</param>
     /// <param name="target">The DOM ID of the target element.</param>
     /// <param name="html">The HTML content.</param>
-    /// <returns>The Turbo Stream action HTML.</returns>
-    internal static string GenerateAction(string action, string target, string html)
+    /// <param name="outputWriter">The string writer used to produce the payload for the stream.</param>
+    internal static void GenerateAction(string action, string target, string html, StringWriter outputWriter)
     {
-        // Note: We don't HTML-escape the target ID because it should be a valid DOM ID
-        // The html content is wrapped in a template element and is not escaped
-        // (it's the caller's responsibility to ensure safe HTML)
-        return $"<turbo-stream action=\"{action}\" target=\"{EscapeAttribute(target)}\"><template>{html}</template></turbo-stream>";
+        outputWriter.Write("<turbo-stream action=\"");
+        outputWriter.Write(action);
+        outputWriter.Write("\" target=\"");
+        outputWriter.Write(EscapeAttribute(target));
+        outputWriter.Write("\"><template>");
+        outputWriter.Write(html);
+        outputWriter.Write("</template></turbo-stream>");
     }
 
     /// <summary>
-    /// Generates a Turbo Stream remove action element (no content needed).
+    /// Appends a Turbo Stream remove action element to the provided string writer.
     /// </summary>
-    /// <param name="target">The DOM ID of the target element to remove.</param>
-    /// <returns>The Turbo Stream remove action HTML.</returns>
-    internal static string GenerateRemoveAction(string target)
+    /// <param name="target"></param>
+    /// <param name="outputWriter"></param>
+    internal static void GenerateRemoveAction(string target, StringWriter outputWriter)
     {
-        return $"<turbo-stream action=\"remove\" target=\"{EscapeAttribute(target)}\"></turbo-stream>";
+        outputWriter.Write("<turbo-stream action=\"remove\" target=\"");
+        outputWriter.Write(EscapeAttribute(target));
+        outputWriter.Write("></turbo-stream>");
     }
 
     /// <summary>
-    /// Generates a Turbo Stream refresh action element (no target, no content).
+    /// Appends a Turbo Stream refresh action element to the provided string writer.
     /// </summary>
-    /// <param name="requestId">The request ID for originator suppression, or null.</param>
-    /// <returns>The Turbo Stream refresh action HTML.</returns>
-    internal static string GenerateRefreshAction(string? requestId)
+    /// <param name="requestId"></param>
+    /// <param name="outputWriter"></param>
+    internal static void GenerateRefreshAction(string? requestId, StringWriter outputWriter)
     {
         if (string.IsNullOrEmpty(requestId))
         {
-            return "<turbo-stream action=\"refresh\"></turbo-stream>";
+            outputWriter.Write("<turbo-stream action=\"refresh\"></turbo-stream>");
         }
-
-        return $"<turbo-stream action=\"refresh\" request-id=\"{EscapeAttribute(requestId)}\"></turbo-stream>";
+        else
+        {
+            outputWriter.Write("<turbo-stream action=\"refresh\" request-id=\"");
+            outputWriter.Write("EscapeAttribute(requestId)");
+            outputWriter.Write("></turbo-stream>");
+        }
     }
 
     /// <summary>
@@ -165,39 +162,9 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     /// </summary>
     /// <param name="value">The value to escape.</param>
     /// <returns>The escaped value.</returns>
-    internal static string EscapeAttribute(string value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return value;
-        }
+    internal static string EscapeAttribute(string value) => HtmlEncoder.Default.Encode(value);
 
-        return value
-            .Replace("&", "&amp;")
-            .Replace("\"", "&quot;")
-            .Replace("'", "&#39;")
-            .Replace("<", "&lt;")
-            .Replace(">", "&gt;");
-    }
+    private static void ValidateTarget(string target) => ArgumentException.ThrowIfNullOrEmpty(target);
 
-    private static void ValidateTarget(string target)
-    {
-        if (target == null)
-        {
-            throw new ArgumentNullException(nameof(target));
-        }
-
-        if (string.IsNullOrWhiteSpace(target))
-        {
-            throw new ArgumentException("Target cannot be empty or whitespace.", nameof(target));
-        }
-    }
-
-    private static void ValidateHtml(string html)
-    {
-        if (html == null)
-        {
-            throw new ArgumentNullException(nameof(html));
-        }
-    }
+    private static void ValidateHtml(string html) => ArgumentNullException.ThrowIfNull(html);
 }
