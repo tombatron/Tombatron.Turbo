@@ -628,8 +628,6 @@ await builder.AppendAsync("messages", Partials.Message, message);
 
 **[Tombatron.Turbo.Sample](samples/Tombatron.Turbo.Sample)** — Turbo Frames, Turbo Streams, shopping cart, and form validation demo.
 
-**[Tombatron.Turbo.Chat](samples/Tombatron.Turbo.Chat)** — Real-time chat with cookie auth, SQLite, rooms, DMs, unread indicators, and Stimulus controllers.
-
 ```bash
 cd samples/Tombatron.Turbo.Sample
 dotnet run
