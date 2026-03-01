@@ -1,3 +1,4 @@
+using System.Text;
 using FluentAssertions;
 using Tombatron.Turbo.Streams;
 using Xunit;
@@ -159,11 +160,11 @@ public class TurboStreamBuilderTests
     [Fact]
     public void GenerateRefreshAction_WithoutRequestId_ProducesValidHtml()
     {
-        var writer = new StringWriter();
+        var builder = new StringBuilder();
 
-        TurboStreamBuilder.GenerateRefreshAction(null, writer);
+        TurboStreamBuilder.GenerateRefreshAction(null, builder);
 
-        var result = writer.ToString();
+        var result = builder.ToString();
 
         result.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
     }
@@ -171,11 +172,11 @@ public class TurboStreamBuilderTests
     [Fact]
     public void GenerateRefreshAction_WithRequestId_ProducesValidHtml()
     {
-        var writer = new StringWriter();
+        var builder = new StringBuilder();
 
-        TurboStreamBuilder.GenerateRefreshAction("req-789", writer);
+        TurboStreamBuilder.GenerateRefreshAction("req-789", builder);
 
-        var result = writer.ToString();
+        var result = builder.ToString();
 
         result.Should().Be("<turbo-stream action=\"refresh\" request-id=\"req-789\"></turbo-stream>");
     }
@@ -295,11 +296,11 @@ public class TurboStreamBuilderTests
     [Fact]
     public void GenerateAction_ProducesValidHtml()
     {
-        var writer = new StringWriter();
+        var builder = new StringBuilder();
 
-        TurboStreamBuilder.GenerateAction("replace", "my-element", "<p>Content</p>", writer);
+        TurboStreamBuilder.GenerateAction("replace", "my-element", "<p>Content</p>", builder);
 
-        var result = writer.ToString();
+        var result = builder.ToString();
 
         result.Should().Be("<turbo-stream action=\"replace\" target=\"my-element\"><template><p>Content</p></template></turbo-stream>");
     }
@@ -307,11 +308,11 @@ public class TurboStreamBuilderTests
     [Fact]
     public void GenerateRemoveAction_ProducesValidHtml()
     {
-        var writer = new StringWriter();
+        var builder = new StringBuilder();
 
-        TurboStreamBuilder.GenerateRemoveAction("my-element", writer);
+        TurboStreamBuilder.GenerateRemoveAction("my-element", builder);
 
-        var result = writer.ToString();
+        var result = builder.ToString();
 
         result.Should().Be("<turbo-stream action=\"remove\" target=\"my-element\"></turbo-stream>");
     }

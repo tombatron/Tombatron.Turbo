@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Encodings.Web;
 using Tombatron.Turbo.Rendering;
 
@@ -11,7 +12,7 @@ namespace Tombatron.Turbo.Streams;
 /// </remarks>
 public sealed class TurboStreamBuilder : ITurboStreamBuilder
 {
-    private readonly StringWriter _outputActions = new();
+    private readonly StringBuilder _outputBuilder = new();
 
     /// <summary>
     /// Gets or sets the partial renderer for async partial rendering operations.
@@ -27,7 +28,7 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         ValidateTarget(target);
         ValidateHtml(html);
 
-        GenerateAction("append", target, html, _outputActions);
+        GenerateAction("append", target, html, _outputBuilder);
 
         return this;
     }
@@ -38,7 +39,7 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         ValidateTarget(target);
         ValidateHtml(html);
 
-        GenerateAction("prepend", target, html, _outputActions);
+        GenerateAction("prepend", target, html, _outputBuilder);
 
         return this;
     }
@@ -49,7 +50,7 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         ValidateTarget(target);
         ValidateHtml(html);
 
-        GenerateAction("replace", target, html, _outputActions);
+        GenerateAction("replace", target, html, _outputBuilder);
 
         return this;
     }
@@ -60,7 +61,7 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         ValidateTarget(target);
         ValidateHtml(html);
 
-        GenerateAction("update", target, html,  _outputActions);
+        GenerateAction("update", target, html,  _outputBuilder);
 
         return this;
     }
@@ -70,7 +71,7 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     {
         ValidateTarget(target);
 
-        GenerateRemoveAction(target, _outputActions);
+        GenerateRemoveAction(target, _outputBuilder);
 
         return this;
     }
@@ -78,7 +79,7 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     /// <inheritdoc />
     public ITurboStreamBuilder Refresh(string? requestId = null)
     {
-        GenerateRefreshAction(requestId, _outputActions);
+        GenerateRefreshAction(requestId, _outputBuilder);
 
         return this;
     }
@@ -89,7 +90,7 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         ValidateTarget(target);
         ValidateHtml(html);
 
-        GenerateAction("before", target, html, _outputActions);
+        GenerateAction("before", target, html, _outputBuilder);
 
         return this;
     }
@@ -100,13 +101,13 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         ValidateTarget(target);
         ValidateHtml(html);
 
-        GenerateAction("after", target, html, _outputActions);
+        GenerateAction("after", target, html, _outputBuilder);
 
         return this;
     }
 
     /// <inheritdoc />
-    public string Build() => _outputActions.ToString();
+    public string Build() => _outputBuilder.ToString();
 
     /// <summary>
     /// Appends a Turbo Stream action element to the provided string writer.
@@ -114,46 +115,46 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     /// <param name="action">The action type (append, prepend, replace, update, before after).</param>
     /// <param name="target">The DOM ID of the target element.</param>
     /// <param name="html">The HTML content.</param>
-    /// <param name="outputWriter">The string writer used to produce the payload for the stream.</param>
-    internal static void GenerateAction(string action, string target, string html, StringWriter outputWriter)
+    /// <param name="outputBuilder">The string builder used to produce the payload for the stream.</param>
+    internal static void GenerateAction(string action, string target, string html, StringBuilder outputBuilder)
     {
-        outputWriter.Write("<turbo-stream action=\"");
-        outputWriter.Write(action);
-        outputWriter.Write("\" target=\"");
-        outputWriter.Write(EscapeAttribute(target));
-        outputWriter.Write("\"><template>");
-        outputWriter.Write(html);
-        outputWriter.Write("</template></turbo-stream>");
+        outputBuilder.Append("<turbo-stream action=\"");
+        outputBuilder.Append(action);
+        outputBuilder.Append("\" target=\"");
+        outputBuilder.Append(EscapeAttribute(target));
+        outputBuilder.Append("\"><template>");
+        outputBuilder.Append(html);
+        outputBuilder.Append("</template></turbo-stream>");
     }
 
     /// <summary>
     /// Appends a Turbo Stream remove action element to the provided string writer.
     /// </summary>
     /// <param name="target"></param>
-    /// <param name="outputWriter"></param>
-    internal static void GenerateRemoveAction(string target, StringWriter outputWriter)
+    /// <param name="outputBuilder"></param>
+    internal static void GenerateRemoveAction(string target, StringBuilder outputBuilder)
     {
-        outputWriter.Write("<turbo-stream action=\"remove\" target=\"");
-        outputWriter.Write(EscapeAttribute(target));
-        outputWriter.Write("\"></turbo-stream>");
+        outputBuilder.Append("<turbo-stream action=\"remove\" target=\"");
+        outputBuilder.Append(EscapeAttribute(target));
+        outputBuilder.Append("\"></turbo-stream>");
     }
 
     /// <summary>
     /// Appends a Turbo Stream refresh action element to the provided string writer.
     /// </summary>
     /// <param name="requestId"></param>
-    /// <param name="outputWriter"></param>
-    internal static void GenerateRefreshAction(string? requestId, StringWriter outputWriter)
+    /// <param name="outputBuilder"></param>
+    internal static void GenerateRefreshAction(string? requestId, StringBuilder outputBuilder)
     {
         if (string.IsNullOrEmpty(requestId))
         {
-            outputWriter.Write("<turbo-stream action=\"refresh\"></turbo-stream>");
+            outputBuilder.Append("<turbo-stream action=\"refresh\"></turbo-stream>");
         }
         else
         {
-            outputWriter.Write("<turbo-stream action=\"refresh\" request-id=\"");
-            outputWriter.Write(EscapeAttribute(requestId));
-            outputWriter.Write("\"></turbo-stream>");
+            outputBuilder.Append("<turbo-stream action=\"refresh\" request-id=\"");
+            outputBuilder.Append(EscapeAttribute(requestId));
+            outputBuilder.Append("\"></turbo-stream>");
         }
     }
 
@@ -162,9 +163,12 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     /// </summary>
     /// <param name="value">The value to escape.</param>
     /// <returns>The escaped value.</returns>
-    internal static string? EscapeAttribute(string? value) => value is null ? value : HtmlEncoder.Default.Encode(value);
+    internal static string? EscapeAttribute(string? value) =>
+        value is null ? value : HtmlEncoder.Default.Encode(value);
 
-    private static void ValidateTarget(string target) => ArgumentException.ThrowIfNullOrWhiteSpace(target);
+    private static void ValidateTarget(string target) =>
+        ArgumentException.ThrowIfNullOrWhiteSpace(target);
 
-    private static void ValidateHtml(string html) => ArgumentNullException.ThrowIfNull(html);
+    private static void ValidateHtml(string html) =>
+        ArgumentNullException.ThrowIfNull(html);
 }
