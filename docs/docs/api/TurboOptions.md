@@ -1,4 +1,9 @@
-# TurboOptions Class
+---
+title: TurboOptions Class
+sidebar_label: TurboOptions
+sidebar_position: 4
+description: Configuration options for Tombatron.Turbo services.
+---
 
 Configuration options for Tombatron.Turbo.
 

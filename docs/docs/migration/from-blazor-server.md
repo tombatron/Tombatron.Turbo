@@ -1,4 +1,9 @@
-# Migrating from Blazor Server
+---
+title: "Migrating from Blazor Server"
+sidebar_label: "From Blazor Server"
+sidebar_position: 1
+description: "Guide to migrating from Blazor Server to Tombatron.Turbo."
+---
 
 This guide helps you migrate from Blazor Server to Tombatron.Turbo while preserving real-time interactivity.
 

@@ -1,4 +1,9 @@
-# Browser Compatibility
+---
+title: "Browser Compatibility"
+sidebar_label: "Browser Compatibility"
+sidebar_position: 3
+description: "Browser support and compatibility considerations for Tombatron.Turbo."
+---
 
 This document covers browser support and compatibility considerations for Tombatron.Turbo.
 

@@ -1,4 +1,9 @@
-# Authorization Guide
+---
+title: "Authorization Guide"
+sidebar_label: "Authorization"
+sidebar_position: 4
+description: "Securing stream subscriptions with signed names and custom authorization."
+---
 
 Tombatron.Turbo provides multiple mechanisms for securing stream subscriptions. This guide covers the built-in security features and how to implement custom authorization.
 

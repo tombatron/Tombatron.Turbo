@@ -1,4 +1,9 @@
-# Turbo Frames Guide
+---
+title: "Turbo Frames Guide"
+sidebar_label: "Turbo Frames"
+sidebar_position: 1
+description: "Partial page updates with turbo-frame elements and server-side handling."
+---
 
 Turbo Frames enable partial page updates by wrapping sections of your page in `<turbo-frame>` elements. When a link or form within a frame is activated, only that frame's content is updated.
 

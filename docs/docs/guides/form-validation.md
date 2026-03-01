@@ -1,4 +1,9 @@
-# Form Validation with Turbo Frames
+---
+title: "Form Validation"
+sidebar_label: "Form Validation"
+sidebar_position: 3
+description: "Server-side form validation with HTTP 422 and Turbo Frames."
+---
 
 ## Overview
 

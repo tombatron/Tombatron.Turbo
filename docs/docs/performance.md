@@ -1,4 +1,9 @@
-# Performance Guide
+---
+title: "Performance Guide"
+sidebar_label: "Performance"
+sidebar_position: 1
+description: "Performance characteristics and optimization strategies for Tombatron.Turbo."
+---
 
 This document covers performance characteristics and optimization strategies for Tombatron.Turbo.
 

@@ -1,4 +1,9 @@
-# ITurbo Interface
+---
+title: ITurbo Interface
+sidebar_label: ITurbo
+sidebar_position: 1
+description: The main service interface for broadcasting Turbo Stream updates to connected clients via SignalR.
+---
 
 The main service interface for broadcasting Turbo Stream updates to connected clients via SignalR.
 

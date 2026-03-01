@@ -1,4 +1,9 @@
-# Migrating from HTMX
+---
+title: "Migrating from HTMX"
+sidebar_label: "From HTMX"
+sidebar_position: 2
+description: "Guide to migrating from HTMX to Tombatron.Turbo."
+---
 
 This guide helps you migrate from HTMX to Tombatron.Turbo. Both libraries share similar philosophies, making migration straightforward.
 

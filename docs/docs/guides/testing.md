@@ -1,4 +1,9 @@
-# Testing Guide
+---
+title: "Testing Guide"
+sidebar_label: "Testing"
+sidebar_position: 5
+description: "Strategies for testing Turbo Frames, Turbo Streams, and authorization."
+---
 
 This guide covers strategies for testing applications that use Tombatron.Turbo.
 

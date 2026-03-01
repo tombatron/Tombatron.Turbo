@@ -1,4 +1,9 @@
-# ITurboStreamBuilder Interface
+---
+title: ITurboStreamBuilder Interface
+sidebar_label: ITurboStreamBuilder
+sidebar_position: 2
+description: Builder interface for constructing Turbo Stream actions with a fluent API for building DOM updates.
+---
 
 Builder interface for constructing Turbo Stream actions. Provides a fluent API for building DOM updates that are sent to clients.
 

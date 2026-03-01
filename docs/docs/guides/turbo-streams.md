@@ -1,4 +1,9 @@
-# Turbo Streams Guide
+---
+title: "Turbo Streams Guide"
+sidebar_label: "Turbo Streams"
+sidebar_position: 2
+description: "Real-time updates by pushing DOM changes from the server to connected clients via SignalR."
+---
 
 Turbo Streams enable real-time updates by pushing DOM changes from the server to connected clients via SignalR. Unlike Turbo Frames (which require user interaction), Streams can update any element at any time.
 

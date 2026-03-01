@@ -171,3 +171,8 @@ Desktop.ini
 *.bak
 *.swp
 *.orig
+
+# Docusaurus
+docs/build/
+docs/.docusaurus/
+docs/.cache-loader/

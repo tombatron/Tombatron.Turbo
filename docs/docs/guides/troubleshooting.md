@@ -1,4 +1,9 @@
-# Troubleshooting Guide
+---
+title: "Troubleshooting Guide"
+sidebar_label: "Troubleshooting"
+sidebar_position: 6
+description: "Common issues and solutions when working with Tombatron.Turbo."
+---
 
 Common issues and solutions when working with Tombatron.Turbo.
 

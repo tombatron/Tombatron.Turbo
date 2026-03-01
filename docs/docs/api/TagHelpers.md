@@ -1,4 +1,9 @@
-# Tag Helpers
+---
+title: Tag Helpers
+sidebar_label: Tag Helpers
+sidebar_position: 3
+description: Tag helpers for rendering Turbo elements in Razor views.
+---
 
 Tombatron.Turbo provides tag helpers for rendering Turbo elements in Razor views.
 

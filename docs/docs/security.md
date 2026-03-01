@@ -1,4 +1,9 @@
-# Security Guide
+---
+title: "Security Guide"
+sidebar_label: "Security"
+sidebar_position: 2
+description: "Security considerations when using Tombatron.Turbo."
+---
 
 This document covers security considerations when using Tombatron.Turbo.
 
