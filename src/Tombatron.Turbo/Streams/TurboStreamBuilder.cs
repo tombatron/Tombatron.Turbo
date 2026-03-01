@@ -135,7 +135,7 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     {
         outputWriter.Write("<turbo-stream action=\"remove\" target=\"");
         outputWriter.Write(EscapeAttribute(target));
-        outputWriter.Write("></turbo-stream>");
+        outputWriter.Write("\"></turbo-stream>");
     }
 
     /// <summary>
@@ -152,8 +152,8 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
         else
         {
             outputWriter.Write("<turbo-stream action=\"refresh\" request-id=\"");
-            outputWriter.Write("EscapeAttribute(requestId)");
-            outputWriter.Write("></turbo-stream>");
+            outputWriter.Write(EscapeAttribute(requestId));
+            outputWriter.Write("\"></turbo-stream>");
         }
     }
 
@@ -162,9 +162,9 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     /// </summary>
     /// <param name="value">The value to escape.</param>
     /// <returns>The escaped value.</returns>
-    internal static string EscapeAttribute(string value) => HtmlEncoder.Default.Encode(value);
+    internal static string? EscapeAttribute(string? value) => value is null ? value : HtmlEncoder.Default.Encode(value);
 
-    private static void ValidateTarget(string target) => ArgumentException.ThrowIfNullOrEmpty(target);
+    private static void ValidateTarget(string target) => ArgumentException.ThrowIfNullOrWhiteSpace(target);
 
     private static void ValidateHtml(string html) => ArgumentNullException.ThrowIfNull(html);
 }

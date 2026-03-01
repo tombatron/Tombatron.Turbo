@@ -48,7 +48,7 @@ public class XssTests
 
         // The target should be used as-is (it's a DOM ID, not a URL)
         // But special characters should still be escaped
-        result.Should().Contain("target=\"javascript:alert(&#39;xss&#39;)\"");
+        result.Should().Contain("target=\"javascript:alert(&#x27;xss&#x27;)\"");
     }
 
     [Fact]

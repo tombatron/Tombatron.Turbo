@@ -49,7 +49,7 @@ public class SpecialCharactersTests
         var input = "<script>\"'&";
         var escaped = TurboStreamBuilder.EscapeAttribute(input);
 
-        escaped.Should().Be("&lt;script&gt;&quot;&#39;&amp;");
+        escaped.Should().Be("&lt;script&gt;&quot;&#x27;&amp;");
     }
 
     [Theory]
@@ -79,7 +79,8 @@ public class SpecialCharactersTests
 
         action.Should().NotThrow();
         var result = builder.Build();
-        result.Should().Contain(targetId);
+        var expectedTarget = TurboStreamBuilder.EscapeAttribute(targetId);
+        result.Should().Contain($"target=\"{expectedTarget}\"");
     }
 
     [Fact]

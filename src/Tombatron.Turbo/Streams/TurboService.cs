@@ -33,7 +33,7 @@ public sealed class TurboService : ITurbo
     /// <inheritdoc />
     public async Task Stream(string streamName, Action<ITurboStreamBuilder> build)
     {
-        ArgumentNullException.ThrowIfNull(streamName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(streamName);
 
         if (build == null)
         {
@@ -131,15 +131,7 @@ public sealed class TurboService : ITurbo
     /// <inheritdoc />
     public async Task Stream(string streamName, Func<ITurboStreamBuilder, Task> buildAsync)
     {
-        if (streamName == null)
-        {
-            throw new ArgumentNullException(nameof(streamName));
-        }
-
-        if (string.IsNullOrWhiteSpace(streamName))
-        {
-            throw new ArgumentException("Stream name cannot be empty or whitespace.", nameof(streamName));
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(streamName);
 
         if (buildAsync == null)
         {
@@ -264,15 +256,7 @@ public sealed class TurboService : ITurbo
             return;
         }
 
-        if (streamName == null)
-        {
-            throw new ArgumentNullException(nameof(streamName));
-        }
-
-        if (string.IsNullOrWhiteSpace(streamName))
-        {
-            throw new ArgumentException("Stream name cannot be empty or whitespace.", nameof(streamName));
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(streamName);
 
         if (build == null)
         {
@@ -386,15 +370,7 @@ public sealed class TurboService : ITurbo
             return;
         }
 
-        if (streamName == null)
-        {
-            throw new ArgumentNullException(nameof(streamName));
-        }
-
-        if (string.IsNullOrWhiteSpace(streamName))
-        {
-            throw new ArgumentException("Stream name cannot be empty or whitespace.", nameof(streamName));
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(streamName);
 
         if (buildAsync == null)
         {

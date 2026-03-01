@@ -12,91 +12,70 @@ public class TurboStreamBuilderTests
     [Fact]
     public void Append_GeneratesCorrectHtml()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
-        string result = builder.Append("messages", "<div>Hello</div>").Build();
+        var result = builder.Append("messages", "<div>Hello</div>").Build();
 
-        // Assert
         result.Should().Be("<turbo-stream action=\"append\" target=\"messages\"><template><div>Hello</div></template></turbo-stream>");
     }
 
     [Fact]
     public void Prepend_GeneratesCorrectHtml()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
-        string result = builder.Prepend("messages", "<div>Hello</div>").Build();
+        var result = builder.Prepend("messages", "<div>Hello</div>").Build();
 
-        // Assert
         result.Should().Be("<turbo-stream action=\"prepend\" target=\"messages\"><template><div>Hello</div></template></turbo-stream>");
     }
 
     [Fact]
     public void Replace_GeneratesCorrectHtml()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
-        string result = builder.Replace("message-1", "<div id=\"message-1\">Updated</div>").Build();
+        var result = builder.Replace("message-1", "<div id=\"message-1\">Updated</div>").Build();
 
-        // Assert
         result.Should().Be("<turbo-stream action=\"replace\" target=\"message-1\"><template><div id=\"message-1\">Updated</div></template></turbo-stream>");
     }
 
     [Fact]
     public void Update_GeneratesCorrectHtml()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
-        string result = builder.Update("content", "<p>New content</p>").Build();
+        var result = builder.Update("content", "<p>New content</p>").Build();
 
-        // Assert
         result.Should().Be("<turbo-stream action=\"update\" target=\"content\"><template><p>New content</p></template></turbo-stream>");
     }
 
     [Fact]
     public void Remove_GeneratesCorrectHtml()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
-        string result = builder.Remove("message-1").Build();
+        var result = builder.Remove("message-1").Build();
 
-        // Assert
         result.Should().Be("<turbo-stream action=\"remove\" target=\"message-1\"></turbo-stream>");
     }
 
     [Fact]
     public void Before_GeneratesCorrectHtml()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
-        string result = builder.Before("message-2", "<div>Before message 2</div>").Build();
+        var result = builder.Before("message-2", "<div>Before message 2</div>").Build();
 
-        // Assert
         result.Should().Be("<turbo-stream action=\"before\" target=\"message-2\"><template><div>Before message 2</div></template></turbo-stream>");
     }
 
     [Fact]
     public void After_GeneratesCorrectHtml()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
-        string result = builder.After("message-1", "<div>After message 1</div>").Build();
+        var result = builder.After("message-1", "<div>After message 1</div>").Build();
 
-        // Assert
         result.Should().Be("<turbo-stream action=\"after\" target=\"message-1\"><template><div>After message 1</div></template></turbo-stream>");
     }
 
@@ -105,94 +84,73 @@ public class TurboStreamBuilderTests
     [Fact]
     public void Refresh_WithoutRequestId_GeneratesCorrectHtml()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
         var result = builder.Refresh().Build();
 
-        // Assert
         result.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
     }
 
     [Fact]
     public void Refresh_WithRequestId_GeneratesCorrectHtml()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
         var result = builder.Refresh("abc-123").Build();
 
-        // Assert
         result.Should().Be("<turbo-stream action=\"refresh\" request-id=\"abc-123\"></turbo-stream>");
     }
 
     [Fact]
     public void Refresh_WithNull_GeneratesHtmlWithoutRequestId()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
         var result = builder.Refresh(null).Build();
 
-        // Assert
         result.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
     }
 
     [Fact]
     public void Refresh_WithEmpty_GeneratesHtmlWithoutRequestId()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
-        var result = builder.Refresh("").Build();
+        var result = builder.Refresh(string.Empty).Build();
 
-        // Assert
         result.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
     }
 
     [Fact]
     public void Refresh_WithSpecialCharacters_EscapesRequestId()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
         var result = builder.Refresh("id\"with<special>&chars").Build();
 
-        // Assert
         result.Should().Be("<turbo-stream action=\"refresh\" request-id=\"id&quot;with&lt;special&gt;&amp;chars\"></turbo-stream>");
     }
 
     [Fact]
     public void Refresh_SupportsMethodChaining()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
         var result = builder.Refresh("abc-123");
 
-        // Assert
         result.Should().BeSameAs(builder);
     }
 
     [Fact]
     public void Refresh_CombinedWithOtherActions_BuildsAll()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
         var result = builder
             .Append("list", "<li>Item</li>")
             .Refresh("abc-123")
             .Build();
 
-        // Assert
         result.Should().Contain("action=\"append\"");
         result.Should().Contain("action=\"refresh\"");
         result.Should().Contain("request-id=\"abc-123\"");
@@ -201,50 +159,48 @@ public class TurboStreamBuilderTests
     [Fact]
     public void GenerateRefreshAction_WithoutRequestId_ProducesValidHtml()
     {
-        // Act
-        var result = TurboStreamBuilder.GenerateRefreshAction(null);
+        var writer = new StringWriter();
 
-        // Assert
+        TurboStreamBuilder.GenerateRefreshAction(null, writer);
+
+        var result = writer.ToString();
+
         result.Should().Be("<turbo-stream action=\"refresh\"></turbo-stream>");
     }
 
     [Fact]
     public void GenerateRefreshAction_WithRequestId_ProducesValidHtml()
     {
-        // Act
-        var result = TurboStreamBuilder.GenerateRefreshAction("req-789");
+        var writer = new StringWriter();
 
-        // Assert
+        TurboStreamBuilder.GenerateRefreshAction("req-789", writer);
+
+        var result = writer.ToString();
+
         result.Should().Be("<turbo-stream action=\"refresh\" request-id=\"req-789\"></turbo-stream>");
     }
 
     [Fact]
     public void Build_WithNoActions_ReturnsEmptyString()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
         string result = builder.Build();
 
-        // Assert
         result.Should().BeEmpty();
     }
 
     [Fact]
     public void Build_WithMultipleActions_ConcatenatesAll()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
         string result = builder
             .Append("list", "<li>Item 1</li>")
             .Append("list", "<li>Item 2</li>")
             .Update("counter", "<span>2</span>")
             .Build();
 
-        // Assert
         result.Should().Contain("action=\"append\"");
         result.Should().Contain("action=\"update\"");
         result.Should().Contain("<li>Item 1</li>");
@@ -255,53 +211,42 @@ public class TurboStreamBuilderTests
     [Fact]
     public void Append_WithNullTarget_ThrowsArgumentNullException()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act & Assert
         Assert.Throws<ArgumentNullException>(() => builder.Append(null!, "<div>Content</div>"));
     }
 
     [Fact]
     public void Append_WithEmptyTarget_ThrowsArgumentException()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() => builder.Append("", "<div>Content</div>"));
+        Assert.Throws<ArgumentException>(() => builder.Append(string.Empty, "<div>Content</div>"));
     }
 
     [Fact]
     public void Append_WithWhitespaceTarget_ThrowsArgumentException()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act & Assert
         Assert.Throws<ArgumentException>(() => builder.Append("   ", "<div>Content</div>"));
     }
 
     [Fact]
     public void Append_WithNullHtml_ThrowsArgumentNullException()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act & Assert
         Assert.Throws<ArgumentNullException>(() => builder.Append("target", null!));
     }
 
     [Fact]
     public void Append_WithEmptyHtml_Succeeds()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
-        string result = builder.Append("target", "").Build();
+        var result = builder.Append("target", "").Build();
 
-        // Assert
         result.Should().Contain("target=\"target\"");
         result.Should().Contain("<template></template>");
     }
@@ -309,83 +254,75 @@ public class TurboStreamBuilderTests
     [Fact]
     public void Remove_WithNullTarget_ThrowsArgumentNullException()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act & Assert
         Assert.Throws<ArgumentNullException>(() => builder.Remove(null!));
     }
 
     [Fact]
     public void Remove_WithEmptyTarget_ThrowsArgumentException()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act & Assert
-        Assert.Throws<ArgumentException>(() => builder.Remove(""));
+        Assert.Throws<ArgumentException>(() => builder.Remove(string.Empty));
     }
 
     [Fact]
     public void EscapeAttribute_EscapesSpecialCharacters()
     {
-        // Act & Assert
         TurboStreamBuilder.EscapeAttribute("test\"value").Should().Be("test&quot;value");
         TurboStreamBuilder.EscapeAttribute("test<value>").Should().Be("test&lt;value&gt;");
         TurboStreamBuilder.EscapeAttribute("test&value").Should().Be("test&amp;value");
-        TurboStreamBuilder.EscapeAttribute("test'value").Should().Be("test&#39;value");
+        TurboStreamBuilder.EscapeAttribute("test'value").Should().Be("test&#x27;value");
     }
 
     [Fact]
     public void EscapeAttribute_WithNull_ReturnsNull()
     {
-        // Act
-        string? result = TurboStreamBuilder.EscapeAttribute(null!);
+        var result = TurboStreamBuilder.EscapeAttribute(null!);
 
-        // Assert
         result.Should().BeNull();
     }
 
     [Fact]
     public void EscapeAttribute_WithEmpty_ReturnsEmpty()
     {
-        // Act
-        string result = TurboStreamBuilder.EscapeAttribute("");
+        var result = TurboStreamBuilder.EscapeAttribute(string.Empty);
 
-        // Assert
         result.Should().BeEmpty();
     }
 
     [Fact]
     public void GenerateAction_ProducesValidHtml()
     {
-        // Act
-        string result = TurboStreamBuilder.GenerateAction("replace", "my-element", "<p>Content</p>");
+        var writer = new StringWriter();
 
-        // Assert
+        TurboStreamBuilder.GenerateAction("replace", "my-element", "<p>Content</p>", writer);
+
+        var result = writer.ToString();
+
         result.Should().Be("<turbo-stream action=\"replace\" target=\"my-element\"><template><p>Content</p></template></turbo-stream>");
     }
 
     [Fact]
     public void GenerateRemoveAction_ProducesValidHtml()
     {
-        // Act
-        string result = TurboStreamBuilder.GenerateRemoveAction("my-element");
+        var writer = new StringWriter();
 
-        // Assert
+        TurboStreamBuilder.GenerateRemoveAction("my-element", writer);
+
+        var result = writer.ToString();
+
         result.Should().Be("<turbo-stream action=\"remove\" target=\"my-element\"></turbo-stream>");
     }
 
     [Fact]
     public void Target_WithSpecialCharacters_IsEscaped()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
-        string result = builder.Append("target\"test", "<div>Content</div>").Build();
+        var result = builder.Append("target\"test", "<div>Content</div>").Build();
 
-        // Assert
         result.Should().Contain("target=\"target&quot;test\"");
     }
 
@@ -398,11 +335,9 @@ public class TurboStreamBuilderTests
     [InlineData("after")]
     public void AllActions_SupportMethodChaining(string action)
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
-        ITurboStreamBuilder result = action switch
+        var result = action switch
         {
             "append" => builder.Append("target", "<div>Content</div>"),
             "prepend" => builder.Prepend("target", "<div>Content</div>"),
@@ -413,20 +348,16 @@ public class TurboStreamBuilderTests
             _ => throw new ArgumentException($"Unknown action: {action}")
         };
 
-        // Assert
         result.Should().BeSameAs(builder);
     }
 
     [Fact]
     public void Remove_SupportsMethodChaining()
     {
-        // Arrange
         var builder = new TurboStreamBuilder();
 
-        // Act
-        ITurboStreamBuilder result = builder.Remove("target");
+        var result = builder.Remove("target");
 
-        // Assert
         result.Should().BeSameAs(builder);
     }
 }
