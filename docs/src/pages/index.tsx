@@ -113,7 +113,7 @@ function CodeShowcase() {
     <section className="code-showcase">
       <div className="container">
         <h2>Up and Running in Minutes</h2>
-        <p>Three lines to set up, a tag helper for frames, two lines for real-time.</p>
+        <p className="code-showcase__subtitle">Three lines to set up, a tag helper for frames, two lines for real-time.</p>
         <div className="code-showcase__grid">
           <div className="code-showcase__item">
             <h3>Setup</h3>
