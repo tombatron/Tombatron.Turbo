@@ -20,7 +20,7 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     /// <remarks>
     /// This property is set internally by TurboService when using async Stream overloads.
     /// </remarks>
-    internal IPartialRenderer? Renderer { get; set; } // ???
+    internal IPartialRenderer? Renderer { get; init; }
 
     /// <inheritdoc />
     public ITurboStreamBuilder Append(string target, string html)

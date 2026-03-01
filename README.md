@@ -620,10 +620,7 @@ string? connectionId = HttpContext.GetSignalRConnectionId();
 The source generator is bundled with `Tombatron.Turbo` — no extra package needed. It scans `_*.cshtml` partial views at compile time and generates a `Partials` class (in `Tombatron.Turbo.Generated`) with strongly-typed references:
 
 ```csharp
-// Instead of magic strings (requires IPartialRenderer):
-await builder.AppendAsync("messages", renderer, "_Message", message);
-
-// Use generated references (no renderer needed):
+// Use generated references:
 await builder.AppendAsync("messages", Partials.Message, message);
 ```
 
