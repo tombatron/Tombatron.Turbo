@@ -62,11 +62,11 @@ public class TurboFrameTagHelperTests
     }
 
     [Fact]
-    public void Process_WithLoading_AddsLoadingAttribute()
+    public void Process_WithLoadingLazy_AddsLoadingAttribute()
     {
         // Arrange
         var tagHelper = CreateTagHelper();
-        tagHelper.Loading = "lazy";
+        tagHelper.Loading = TurboFrameLoading.Lazy;
         var context = CreateTagHelperContext();
         var output = CreateTagHelperOutput("turbo-frame");
 
@@ -75,6 +75,84 @@ public class TurboFrameTagHelperTests
 
         // Assert
         output.Attributes.Should().Contain(a => a.Name == "loading" && a.Value.ToString() == "lazy");
+    }
+
+    [Fact]
+    public void Process_WithLoadingEager_AddsLoadingAttribute()
+    {
+        // Arrange
+        var tagHelper = CreateTagHelper();
+        tagHelper.Loading = TurboFrameLoading.Eager;
+        var context = CreateTagHelperContext();
+        var output = CreateTagHelperOutput("turbo-frame");
+
+        // Act
+        tagHelper.Process(context, output);
+
+        // Assert
+        output.Attributes.Should().Contain(a => a.Name == "loading" && a.Value.ToString() == "eager");
+    }
+
+    [Fact]
+    public void Process_WithoutLoading_DoesNotAddLoadingAttribute()
+    {
+        // Arrange
+        var tagHelper = CreateTagHelper();
+        var context = CreateTagHelperContext();
+        var output = CreateTagHelperOutput("turbo-frame");
+
+        // Act
+        tagHelper.Process(context, output);
+
+        // Assert
+        output.Attributes.Should().NotContain(a => a.Name == "loading");
+    }
+
+    [Fact]
+    public void Process_WithRefreshReplace_AddsRefreshAttribute()
+    {
+        // Arrange
+        var tagHelper = CreateTagHelper();
+        tagHelper.Refresh = TurboFrameRefresh.Replace;
+        var context = CreateTagHelperContext();
+        var output = CreateTagHelperOutput("turbo-frame");
+
+        // Act
+        tagHelper.Process(context, output);
+
+        // Assert
+        output.Attributes.Should().Contain(a => a.Name == "refresh" && a.Value.ToString() == "replace");
+    }
+
+    [Fact]
+    public void Process_WithRefreshMorph_AddsRefreshAttribute()
+    {
+        // Arrange
+        var tagHelper = CreateTagHelper();
+        tagHelper.Refresh = TurboFrameRefresh.Morph;
+        var context = CreateTagHelperContext();
+        var output = CreateTagHelperOutput("turbo-frame");
+
+        // Act
+        tagHelper.Process(context, output);
+
+        // Assert
+        output.Attributes.Should().Contain(a => a.Name == "refresh" && a.Value.ToString() == "morph");
+    }
+
+    [Fact]
+    public void Process_WithoutRefresh_DoesNotAddRefreshAttribute()
+    {
+        // Arrange
+        var tagHelper = CreateTagHelper();
+        var context = CreateTagHelperContext();
+        var output = CreateTagHelperOutput("turbo-frame");
+
+        // Act
+        tagHelper.Process(context, output);
+
+        // Assert
+        output.Attributes.Should().NotContain(a => a.Name == "refresh");
     }
 
     [Fact]
@@ -163,7 +241,8 @@ public class TurboFrameTagHelperTests
         // Arrange
         var tagHelper = CreateTagHelper();
         tagHelper.Src = "/products/list";
-        tagHelper.Loading = "lazy";
+        tagHelper.Loading = TurboFrameLoading.Lazy;
+        tagHelper.Refresh = TurboFrameRefresh.Morph;
         tagHelper.Disabled = true;
         tagHelper.Target = "_top";
         tagHelper.Autoscroll = true;
@@ -177,7 +256,8 @@ public class TurboFrameTagHelperTests
         // Assert
         output.Attributes.Should().Contain(a => a.Name == "id");
         output.Attributes.Should().Contain(a => a.Name == "src");
-        output.Attributes.Should().Contain(a => a.Name == "loading");
+        output.Attributes.Should().Contain(a => a.Name == "loading" && a.Value.ToString() == "lazy");
+        output.Attributes.Should().Contain(a => a.Name == "refresh" && a.Value.ToString() == "morph");
         output.Attributes.Should().Contain(a => a.Name == "disabled");
         output.Attributes.Should().Contain(a => a.Name == "target");
         output.Attributes.Should().Contain(a => a.Name == "autoscroll");

@@ -395,7 +395,7 @@ public class TurboTagHelperTests
     public void EscapeAttribute_EscapesAmpersand()
     {
         // Act
-        string result = TurboTagHelper.EscapeAttribute("a&b");
+        var result = TurboTagHelper.EscapeAttribute("a&b");
 
         // Assert
         result.Should().Be("a&amp;b");
@@ -405,7 +405,7 @@ public class TurboTagHelperTests
     public void EscapeAttribute_EscapesQuotes()
     {
         // Act
-        string result = TurboTagHelper.EscapeAttribute("a\"b");
+        var result = TurboTagHelper.EscapeAttribute("a\"b");
 
         // Assert
         result.Should().Be("a&quot;b");
@@ -415,7 +415,7 @@ public class TurboTagHelperTests
     public void EscapeAttribute_EscapesLessThan()
     {
         // Act
-        string result = TurboTagHelper.EscapeAttribute("a<b");
+        var result = TurboTagHelper.EscapeAttribute("a<b");
 
         // Assert
         result.Should().Be("a&lt;b");
@@ -425,7 +425,7 @@ public class TurboTagHelperTests
     public void EscapeAttribute_EscapesGreaterThan()
     {
         // Act
-        string result = TurboTagHelper.EscapeAttribute("a>b");
+        var result = TurboTagHelper.EscapeAttribute("a>b");
 
         // Assert
         result.Should().Be("a&gt;b");
@@ -435,27 +435,27 @@ public class TurboTagHelperTests
     public void EscapeAttribute_EscapesSingleQuote()
     {
         // Act
-        string result = TurboTagHelper.EscapeAttribute("a'b");
+        var result = TurboTagHelper.EscapeAttribute("a'b");
 
         // Assert
-        result.Should().Be("a&#39;b");
+        result.Should().Be("a&#x27;b");
     }
 
     [Fact]
     public void EscapeAttribute_EscapesAllSpecialCharacters()
     {
         // Act
-        string result = TurboTagHelper.EscapeAttribute("<a href=\"test\">text & 'stuff'</a>");
+        var result = TurboTagHelper.EscapeAttribute("<a href=\"test\">text & 'stuff'</a>");
 
         // Assert
-        result.Should().Be("&lt;a href=&quot;test&quot;&gt;text &amp; &#39;stuff&#39;&lt;/a&gt;");
+        result.Should().Be("&lt;a href=&quot;test&quot;&gt;text &amp; &#x27;stuff&#x27;&lt;/a&gt;");
     }
 
     [Fact]
     public void EscapeAttribute_WithNull_ReturnsNull()
     {
         // Act
-        string result = TurboTagHelper.EscapeAttribute(null!);
+        var result = TurboTagHelper.EscapeAttribute(null!);
 
         // Assert
         result.Should().BeNull();
@@ -465,7 +465,7 @@ public class TurboTagHelperTests
     public void EscapeAttribute_WithEmpty_ReturnsEmpty()
     {
         // Act
-        string result = TurboTagHelper.EscapeAttribute("");
+        var result = TurboTagHelper.EscapeAttribute("");
 
         // Assert
         result.Should().BeEmpty();

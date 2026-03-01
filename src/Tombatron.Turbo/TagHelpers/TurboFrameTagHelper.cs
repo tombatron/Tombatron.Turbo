@@ -45,12 +45,20 @@ public class TurboFrameTagHelper : TagHelper
     public string? Src { get; set; }
 
     /// <summary>
-    /// Whether to lazily load the frame content.
-    /// When set to "lazy", the frame content is loaded when the frame scrolls into view.
+    /// Controls when the frame content is loaded.
+    /// <see cref="TurboFrameLoading.Lazy"/> defers loading until the frame scrolls into view.
     /// Maps to the <c>loading</c> attribute.
     /// </summary>
     [HtmlAttributeName("loading")]
-    public string? Loading { get; set; }
+    public TurboFrameLoading? Loading { get; set; }
+
+    /// <summary>
+    /// Controls how the frame content is updated during a page refresh (Turbo 8+).
+    /// <see cref="TurboFrameRefresh.Morph"/> preserves DOM state where possible.
+    /// Maps to the <c>refresh</c> attribute.
+    /// </summary>
+    [HtmlAttributeName("refresh")]
+    public TurboFrameRefresh? Refresh { get; set; }
 
     /// <summary>
     /// Whether the frame is disabled.
@@ -99,9 +107,15 @@ public class TurboFrameTagHelper : TagHelper
         }
 
         // Add loading attribute if specified
-        if (!string.IsNullOrEmpty(Loading))
+        if (Loading.HasValue)
         {
-            output.Attributes.SetAttribute("loading", Loading);
+            output.Attributes.SetAttribute("loading", Loading.Value.ToString().ToLowerInvariant());
+        }
+
+        // Add refresh attribute if specified
+        if (Refresh.HasValue)
+        {
+            output.Attributes.SetAttribute("refresh", Refresh.Value.ToString().ToLowerInvariant());
         }
 
         // Add disabled attribute if true

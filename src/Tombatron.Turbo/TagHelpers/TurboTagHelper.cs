@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using System.Security.Claims;
+using System.Text.Encodings.Web;
 
 namespace Tombatron.Turbo.TagHelpers;
 
@@ -68,15 +69,8 @@ public class TurboTagHelper : TagHelper
     /// <inheritdoc />
     public override void Process(TagHelperContext context, TagHelperOutput output)
     {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
-
-        if (output == null)
-        {
-            throw new ArgumentNullException(nameof(output));
-        }
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(output);
 
         // Determine the stream name(s)
         string streamName = GetStreamName();
@@ -265,22 +259,10 @@ public class TurboTagHelper : TagHelper
     }
 
     /// <summary>
-    /// Escapes special characters for use in HTML attributes.
+    /// Escapes special characters for use in HTML attributes using <see cref="HtmlEncoder"/>.
     /// </summary>
-    /// <param name="value">The value to escape.</param>
-    /// <returns>The escaped value.</returns>
-    internal static string EscapeAttribute(string value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return value;
-        }
-
-        return value
-            .Replace("&", "&amp;")
-            .Replace("\"", "&quot;")
-            .Replace("<", "&lt;")
-            .Replace(">", "&gt;")
-            .Replace("'", "&#39;");
-    }
+    /// <param name="value">The value to escape, or <c>null</c>.</param>
+    /// <returns>The HTML-encoded value, or <c>null</c> if <paramref name="value"/> is <c>null</c>.</returns>
+    internal static string? EscapeAttribute(string? value) =>
+        value is null ? value : HtmlEncoder.Default.Encode(value);
 }
