@@ -27,12 +27,12 @@ builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
-app.UseStaticFiles();
 app.UseRouting();
 app.UseTurbo();
 
 app.MapRazorPages();
 app.MapTurboHub();
+app.MapStaticAssets();
 
 app.Run();
 ```
@@ -70,31 +70,63 @@ A `Traditional` mode is also available if you prefer classic `<script>` tags. Se
 
 ## 5. Create your first Turbo Frame
 
-Wrap a section of your page in a `<turbo-frame>`:
+First, create a partial view at `Pages/Shared/_Greeting.cshtml`:
 
 ```html
+@model IndexModel
+
 <turbo-frame id="greeting">
-    <p>Hello, world!</p>
-    <a href="/greeting?handler=Refresh" data-turbo-frame="greeting">
+    <p>@Model.Greeting</p>
+    <a href="/?handler=Refresh" data-turbo-frame="greeting">
         Refresh
     </a>
 </turbo-frame>
 ```
 
-In your page model, return a partial for Turbo Frame requests. Use the source-generated `Partials` class for compile-time safety instead of passing partial names as strings:
+Then render it from your page. In `Pages/Index.cshtml`:
+
+```html
+@page
+@model IndexModel
+
+<partial name="_Greeting" model="Model" />
+```
+
+In your page model (`Pages/Index.cshtml.cs`), return the partial for Turbo Frame requests. Use the source-generated `Partials` class for compile-time safety instead of passing partial names as strings:
 
 ```csharp
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Tombatron.Turbo;
 using Tombatron.Turbo.Generated;
 
-public IActionResult OnGetRefresh()
+public class IndexModel : PageModel
 {
-    if (HttpContext.IsTurboFrameRequest())
-    {
-        return Partial(Partials.Greeting.ViewPath, Model);
-    }
+    private static readonly string[] Greetings =
+    [
+        "Hello, world!",
+        "Howdy, partner!",
+        "Bonjour, le monde!",
+        "Hola, mundo!",
+        "Ciao, mondo!",
+        "Hej, världen!"
+    ];
 
-    return RedirectToPage();
+    public string Greeting { get; set; } = Greetings[0];
+
+    public void OnGet() { }
+
+    public IActionResult OnGetRefresh()
+    {
+        Greeting = Greetings[Random.Shared.Next(Greetings.Length)];
+
+        if (HttpContext.IsTurboFrameRequest())
+        {
+            return Partial(Partials.Greeting.ViewPath, this);
+        }
+
+        return RedirectToPage();
+    }
 }
 ```
 

@@ -37,7 +37,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 
 app.UseRouting();
 
@@ -53,5 +52,7 @@ app.MapRazorPages();
 
 // Map the Turbo SignalR hub for streaming
 app.MapTurboHub();
+
+app.MapStaticAssets();
 
 app.Run();

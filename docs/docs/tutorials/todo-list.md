@@ -32,12 +32,12 @@ builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
-app.UseStaticFiles();
 app.UseRouting();
 app.UseTurbo();
 
 app.MapRazorPages();
 app.MapTurboHub();
+app.MapStaticAssets();
 
 app.Run();
 ```
@@ -65,12 +65,134 @@ Replace `Pages/Shared/_Layout.cshtml`:
     <title>Todo List</title>
     <turbo-scripts mode="Importmap" />
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
-        .todo-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; }
-        .completed { text-decoration: line-through; opacity: 0.6; }
-        .error { color: red; font-size: 0.875rem; }
-        input[type="text"] { flex: 1; padding: 0.5rem; font-size: 1rem; }
-        button { padding: 0.5rem 1rem; cursor: pointer; }
+        @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: #faf9f7;
+            color: #1a1a1a;
+            max-width: 600px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .subtitle {
+            color: #6b6b6b;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e8e5e1;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            padding: 1.25rem;
+        }
+
+        .add-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 0.6rem 0.85rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            border: 1px solid #d4d1cc;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13,148,136,0.12);
+        }
+
+        .btn-add {
+            padding: 0.6rem 1.1rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #fff;
+            background: #0d9488;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-add:hover { background: #0a7a70; }
+
+        .error {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.3rem 0.75rem;
+            font-size: 0.85rem;
+            color: #9f1b1b;
+            background: #fde8e8;
+            border-radius: 999px;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.55rem 0.35rem;
+            border-bottom: 1px solid #f0eeeb;
+            transition: background 0.12s;
+        }
+
+        .todo-item:last-child { border-bottom: none; }
+        .todo-item:hover { background: #faf9f7; border-radius: 6px; }
+
+        .todo-list { margin-top: 0.75rem; }
+
+        .btn-toggle {
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            font-size: 0.75rem;
+            line-height: 22px;
+            text-align: center;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            flex-shrink: 0;
+        }
+
+        .btn-toggle:hover { border-color: #0d9488; }
+        .btn-toggle.done { background: #0d9488; border-color: #0d9488; color: #fff; }
+
+        .todo-title { flex: 1; font-size: 0.95rem; }
+        .completed .todo-title { text-decoration: line-through; opacity: 0.45; }
+
+        .btn-delete {
+            padding: 0.15rem 0.45rem;
+            font-size: 0.85rem;
+            color: #aaa;
+            background: none;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.12s, color 0.12s, border-color 0.12s;
+        }
+
+        .todo-item:hover .btn-delete { opacity: 1; }
+        .btn-delete:hover { color: #c53030; border-color: #fde8e8; }
     </style>
 </head>
 <body>
@@ -171,6 +293,7 @@ Replace `Pages/Index.cshtml`:
 @model TurboTodo.Pages.IndexModel
 
 <h1>Todo List</h1>
+<p class="subtitle">A simple task tracker built with Turbo Frames</p>
 
 <partial name="_TodoList" model="Model" />
 ```
@@ -185,34 +308,41 @@ Create `Pages/Shared/_TodoList.cshtml`:
 @model TurboTodo.Pages.IndexModel
 
 <turbo-frame id="todo-list">
-    <form method="post" asp-page-handler="Add"
-          data-controller="todo-form"
-          data-action="turbo:submit-end->todo-form#reset">
-        <div style="display: flex; gap: 0.5rem;">
-            <input type="text" name="title" placeholder="What needs to be done?"
-                   data-todo-form-target="input" />
-            <button type="submit">Add</button>
-        </div>
-        @if (Model.Error is not null)
-        {
-            <p class="error">@Model.Error</p>
-        }
-    </form>
+    <div class="card">
+        <form method="post" asp-page-handler="Add"
+              data-controller="todo-form"
+              data-action="turbo:submit-end->todo-form#reset">
+            <div class="add-row">
+                <input type="text" name="title" placeholder="What needs to be done?"
+                       data-todo-form-target="input" />
+                <button type="submit" class="btn-add">Add</button>
+            </div>
+            @if (Model.Error is not null)
+            {
+                <p class="error">@Model.Error</p>
+            }
+        </form>
 
-    @foreach (var todo in Model.Todos)
-    {
-        <div class="todo-item">
-            <form method="post" asp-page-handler="Toggle">
-                <input type="hidden" name="id" value="@todo.Id" />
-                <button type="submit">@(todo.IsComplete ? "✓" : "○")</button>
-            </form>
-            <span class="@(todo.IsComplete ? "completed" : "")">@todo.Title</span>
-            <form method="post" asp-page-handler="Delete">
-                <input type="hidden" name="id" value="@todo.Id" />
-                <button type="submit">×</button>
-            </form>
+        <div class="todo-list">
+            @foreach (var todo in Model.Todos)
+            {
+                <div class="todo-item @(todo.IsComplete ? "completed" : "")">
+                    <form method="post" asp-page-handler="Toggle">
+                        <input type="hidden" name="id" value="@todo.Id" />
+                        <button type="submit"
+                                class="btn-toggle @(todo.IsComplete ? "done" : "")">
+                            @(todo.IsComplete ? "✓" : "")
+                        </button>
+                    </form>
+                    <span class="todo-title">@todo.Title</span>
+                    <form method="post" asp-page-handler="Delete">
+                        <input type="hidden" name="id" value="@todo.Id" />
+                        <button type="submit" class="btn-delete">✕</button>
+                    </form>
+                </div>
+            }
         </div>
-    }
+    </div>
 </turbo-frame>
 ```
 
