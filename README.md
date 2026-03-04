@@ -6,7 +6,7 @@
 
 Hotwire Turbo for ASP.NET Core with SignalR-powered real-time streams.
 
-**[Read the full documentation](https://tombatron.github.io/Tombatron.Turbo/)**
+**[Read the full documentation](https://tombatron.github.io/Tombatron.Turbo/docs/getting-started)**
 
 ## Features
 

@@ -14,8 +14,9 @@ function HeroSection() {
       <div className="container">
         <h1>Hotwire Turbo for ASP.NET Core</h1>
         <p>
-          Build fast, modern web apps with server-rendered HTML.
-          No JavaScript framework needed.
+          Bring <a href="https://turbo.hotwired.dev/">Hotwired Turbo</a> and{' '}
+          <a href="https://stimulus.hotwired.dev/">Stimulus</a> to ASP.NET Core.
+          Build fast, modern web apps with server-rendered HTML — no JavaScript framework needed.
         </p>
         <div className="hero__buttons">
           <Link className="hero__button--primary" to="/docs/getting-started">
@@ -108,6 +109,54 @@ function FeaturesSection() {
   );
 }
 
+function BlazorComparisonSection() {
+  return (
+    <section className="blazor-comparison">
+      <div className="container">
+        <h2>How Does It Compare to Blazor?</h2>
+        <p className="blazor-comparison__intro">
+          Blazor and Tombatron.Turbo solve the same problem — rich interactivity from C# — but with
+          different philosophies. Neither is universally better; pick the one that fits your mental model.
+        </p>
+        <div className="blazor-comparison__grid">
+          <div className="blazor-comparison__card">
+            <h3>Blazor Server</h3>
+            <ul>
+              <li>Persistent SignalR circuit per user</li>
+              <li>Stateful components with C# everywhere</li>
+              <li>Small initial download, heavier server memory</li>
+              <li>Latency-sensitive — every click round-trips</li>
+            </ul>
+          </div>
+          <div className="blazor-comparison__card">
+            <h3>Blazor WASM</h3>
+            <ul>
+              <li>.NET runtime compiled to WebAssembly</li>
+              <li>Offline-capable after first load</li>
+              <li>Large initial download (~5-10 MB)</li>
+              <li>Full C# in the browser</li>
+            </ul>
+          </div>
+          <div className="blazor-comparison__card blazor-comparison__card--highlight">
+            <h3>Tombatron.Turbo</h3>
+            <ul>
+              <li>Stateless HTTP + targeted DOM updates</li>
+              <li>Thin JS layer (~30 KB), no .NET in the browser</li>
+              <li>Progressive enhancement — works without JS</li>
+              <li>Standard HTML/Razor, no component model to learn</li>
+            </ul>
+          </div>
+        </div>
+        <div className="blazor-comparison__cta">
+          <Link to="/docs/migration/from-blazor-server">
+            Learn more in the Blazor migration guide &rarr;
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CodeShowcase() {
   return (
     <section className="code-showcase">
@@ -165,6 +214,7 @@ export default function Home(): React.JSX.Element {
       <HeroSection />
       <main>
         <FeaturesSection />
+        <BlazorComparisonSection />
         <CodeShowcase />
         <CTASection />
       </main>

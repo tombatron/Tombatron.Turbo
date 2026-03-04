@@ -37,7 +37,7 @@ app.MapTurboHub();
 app.Run();
 ```
 
-`AddTurbo()` registers the Turbo services and tag helpers. `UseTurbo()` adds middleware that sets the `Vary` header on Turbo Frame responses. `MapTurboHub()` exposes the SignalR hub for Turbo Streams.
+`AddTurbo()` registers the Turbo services that are required to communicate with the Turbo front-end as well as the tag helpers we've defined on the back-end. `UseTurbo()` adds middleware that sets the `Vary` header on Turbo Frame responses. `MapTurboHub()` exposes the SignalR hub for Turbo Streams.
 
 ## 3. Register tag helpers
 
@@ -58,7 +58,15 @@ In your layout file (e.g. `Pages/Shared/_Layout.cshtml`), add the script tag hel
 </head>
 ```
 
-This renders Turbo.js, the SignalR bridge, and (optionally) Stimulus via an import map.
+This renders Turbo.js, the SignalR bridge, and (optionally) Stimulus via an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script/type/importmap).
+
+We recommend **Importmap** mode because it uses native browser module resolution — no bundler, no build step. The tag helper emits a `<script type="importmap">` block that maps bare module specifiers (like `"@hotwired/turbo"`) to URLs, then loads them with standard `<script type="module">` imports. The browser handles dependency resolution natively, which means:
+
+- **No build tooling required** — no Webpack, Vite, or esbuild to configure
+- **Fine-grained caching** — each module is a separate cacheable resource; updating one doesn't invalidate the rest
+- **Transparent dependency graph** — you can inspect the import map in view-source to see exactly what's loaded
+
+A `Traditional` mode is also available if you prefer classic `<script>` tags. Set `mode="Traditional"` to emit individual script elements instead.
 
 ## 5. Create your first Turbo Frame
 
@@ -73,21 +81,24 @@ Wrap a section of your page in a `<turbo-frame>`:
 </turbo-frame>
 ```
 
-In your page model, return a partial for Turbo Frame requests:
+In your page model, return a partial for Turbo Frame requests. Use the source-generated `Partials` class for compile-time safety instead of passing partial names as strings:
 
 ```csharp
 using Tombatron.Turbo;
+using Tombatron.Turbo.Generated;
 
 public IActionResult OnGetRefresh()
 {
     if (HttpContext.IsTurboFrameRequest())
     {
-        return Partial("_Greeting", Model);
+        return Partial(Partials.Greeting.ViewPath, Model);
     }
 
     return RedirectToPage();
 }
 ```
+
+The `Partials` class is [generated at compile time](reference/source-generator.md) from your `_*.cshtml` files — typos in partial names become build errors instead of runtime failures.
 
 That's it — clicking "Refresh" updates only the frame, not the whole page.
 

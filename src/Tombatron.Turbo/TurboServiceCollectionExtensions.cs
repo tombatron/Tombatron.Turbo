@@ -21,10 +21,7 @@ public static class TurboServiceCollectionExtensions
     /// builder.Services.AddTurbo();
     /// </code>
     /// </example>
-    public static IServiceCollection AddTurbo(this IServiceCollection services)
-    {
-        return services.AddTurbo(_ => { });
-    }
+    public static IServiceCollection AddTurbo(this IServiceCollection services) => services.AddTurbo(_ => { });
 
     /// <summary>
     /// Adds Turbo services to the specified <see cref="IServiceCollection"/> with custom configuration.
@@ -46,15 +43,8 @@ public static class TurboServiceCollectionExtensions
         this IServiceCollection services,
         Action<TurboOptions> configure)
     {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
-
-        if (configure == null)
-        {
-            throw new ArgumentNullException(nameof(configure));
-        }
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configure);
 
         TurboOptions options = new();
 
