@@ -65,23 +65,29 @@ public interface ITurbo
     /// Automatically includes the current request's X-Turbo-Request-Id for originator suppression.
     /// </summary>
     /// <param name="streamName">The name of the stream to send the refresh to.</param>
+    /// <param name="morph">When true, uses morphing for the refresh instead of full page replacement.</param>
+    /// <param name="preserveScroll">When true, preserves scroll position during the refresh.</param>
     /// <returns>A task that completes when the refresh has been sent.</returns>
-    Task StreamRefresh(string streamName);
+    Task StreamRefresh(string streamName, bool morph = false, bool preserveScroll = false);
 
     /// <summary>
     /// Sends a Turbo Stream refresh action to all clients subscribed to any of the specified streams.
     /// Automatically includes the current request's X-Turbo-Request-Id for originator suppression.
     /// </summary>
     /// <param name="streamNames">The names of the streams to send the refresh to.</param>
+    /// <param name="morph">When true, uses morphing for the refresh instead of full page replacement.</param>
+    /// <param name="preserveScroll">When true, preserves scroll position during the refresh.</param>
     /// <returns>A task that completes when all refreshes have been sent.</returns>
-    Task StreamRefresh(IEnumerable<string> streamNames);
+    Task StreamRefresh(IEnumerable<string> streamNames, bool morph = false, bool preserveScroll = false);
 
     /// <summary>
     /// Sends a Turbo Stream refresh action to all connected clients.
     /// Automatically includes the current request's X-Turbo-Request-Id for originator suppression.
     /// </summary>
+    /// <param name="morph">When true, uses morphing for the refresh instead of full page replacement.</param>
+    /// <param name="preserveScroll">When true, preserves scroll position during the refresh.</param>
     /// <returns>A task that completes when the refresh has been sent.</returns>
-    Task BroadcastRefresh();
+    Task BroadcastRefresh(bool morph = false, bool preserveScroll = false);
 
     /// <summary>
     /// Broadcasts Turbo Stream updates to all clients subscribed to the specified stream,
@@ -201,8 +207,10 @@ public interface ITurbo
     /// </summary>
     /// <param name="streamName">The name of the stream to send the refresh to.</param>
     /// <param name="excludedConnectionId">The SignalR connection ID to exclude, or null for no exclusion.</param>
+    /// <param name="morph">When true, uses morphing for the refresh instead of full page replacement.</param>
+    /// <param name="preserveScroll">When true, preserves scroll position during the refresh.</param>
     /// <returns>A task that completes when the refresh has been sent.</returns>
-    Task StreamRefresh(string streamName, string? excludedConnectionId);
+    Task StreamRefresh(string streamName, string? excludedConnectionId, bool morph = false, bool preserveScroll = false);
 
     /// <summary>
     /// Sends a Turbo Stream refresh action to all clients subscribed to any of the specified streams,
@@ -210,14 +218,18 @@ public interface ITurbo
     /// </summary>
     /// <param name="streamNames">The names of the streams to send the refresh to.</param>
     /// <param name="excludedConnectionId">The SignalR connection ID to exclude, or null for no exclusion.</param>
+    /// <param name="morph">When true, uses morphing for the refresh instead of full page replacement.</param>
+    /// <param name="preserveScroll">When true, preserves scroll position during the refresh.</param>
     /// <returns>A task that completes when all refreshes have been sent.</returns>
-    Task StreamRefresh(IEnumerable<string> streamNames, string? excludedConnectionId);
+    Task StreamRefresh(IEnumerable<string> streamNames, string? excludedConnectionId, bool morph = false, bool preserveScroll = false);
 
     /// <summary>
     /// Sends a Turbo Stream refresh action to all connected clients,
     /// optionally excluding a specific connection.
     /// </summary>
     /// <param name="excludedConnectionId">The SignalR connection ID to exclude, or null for no exclusion.</param>
+    /// <param name="morph">When true, uses morphing for the refresh instead of full page replacement.</param>
+    /// <param name="preserveScroll">When true, preserves scroll position during the refresh.</param>
     /// <returns>A task that completes when the refresh has been sent.</returns>
-    Task BroadcastRefresh(string? excludedConnectionId);
+    Task BroadcastRefresh(string? excludedConnectionId, bool morph = false, bool preserveScroll = false);
 }

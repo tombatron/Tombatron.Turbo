@@ -161,28 +161,77 @@ Async version of Broadcast with connection exclusion.
 - `buildAsync` - An async function that configures the stream updates to send
 - `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
 
-### StreamRefresh(string streamName, string? excludedConnectionId)
+### StreamRefresh(string streamName, bool morph = false, bool preserveScroll = false)
+
+Sends a Turbo Stream refresh action to a stream.
+
+**Parameters:**
+- `streamName` - The name of the stream to send the refresh to
+- `morph` - When `true`, uses morphing for the refresh instead of full page replacement
+- `preserveScroll` - When `true`, preserves scroll position during the refresh
+
+**Example:**
+
+```csharp
+// Simple refresh
+await _turbo.StreamRefresh("room:1");
+
+// Morph refresh with scroll preservation
+await _turbo.StreamRefresh("room:1", morph: true, preserveScroll: true);
+```
+
+### StreamRefresh(IEnumerable\<string\> streamNames, bool morph = false, bool preserveScroll = false)
+
+Sends a Turbo Stream refresh action to multiple streams.
+
+**Parameters:**
+- `streamNames` - The names of the streams to send the refresh to
+- `morph` - When `true`, uses morphing for the refresh instead of full page replacement
+- `preserveScroll` - When `true`, preserves scroll position during the refresh
+
+### BroadcastRefresh(bool morph = false, bool preserveScroll = false)
+
+Sends a Turbo Stream refresh action to all connected clients.
+
+**Parameters:**
+- `morph` - When `true`, uses morphing for the refresh instead of full page replacement
+- `preserveScroll` - When `true`, preserves scroll position during the refresh
+
+### StreamRefresh(string streamName, string? excludedConnectionId, bool morph = false, bool preserveScroll = false)
 
 Sends a Turbo Stream refresh action to a stream, excluding a specific connection.
 
 **Parameters:**
 - `streamName` - The name of the stream to send the refresh to
 - `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
+- `morph` - When `true`, uses morphing for the refresh instead of full page replacement
+- `preserveScroll` - When `true`, preserves scroll position during the refresh
 
-### StreamRefresh(IEnumerable\<string\> streamNames, string? excludedConnectionId)
+**Example:**
+
+```csharp
+var connectionId = HttpContext.GetSignalRConnectionId();
+await _turbo.StreamRefresh("room:1", connectionId, morph: true, preserveScroll: true);
+```
+
+### StreamRefresh(IEnumerable\<string\> streamNames, string? excludedConnectionId, bool morph = false, bool preserveScroll = false)
 
 Sends a Turbo Stream refresh action to multiple streams, excluding a specific connection.
 
 **Parameters:**
 - `streamNames` - The names of the streams to send the refresh to
 - `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
+- `morph` - When `true`, uses morphing for the refresh instead of full page replacement
+- `preserveScroll` - When `true`, preserves scroll position during the refresh
 
-### BroadcastRefresh(string? excludedConnectionId)
+### BroadcastRefresh(string? excludedConnectionId, bool morph = false, bool preserveScroll = false)
 
 Sends a Turbo Stream refresh action to all connected clients, excluding a specific connection.
 
 **Parameters:**
 - `excludedConnectionId` - The SignalR connection ID to exclude, or null for no exclusion
+- `morph` - When `true`, uses morphing for the refresh instead of full page replacement
+- `preserveScroll` - When `true`, preserves scroll position during the refresh
 
 ## Common Patterns
 

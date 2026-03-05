@@ -126,6 +126,71 @@ For multiple streams:
 </div>
 ```
 
+## turbo-meta
+
+Renders one or more Turbo-related `<meta>` tags for configuring page-level Turbo behavior. This is a self-closing tag helper.
+
+### Attributes
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `refresh-method` | `TurboRefreshMethod?` | The refresh method: `Morph` or `Replace` |
+| `refresh-scroll` | `TurboRefreshScroll?` | Scroll behavior during refresh: `Preserve` or `Reset` |
+| `cache-control` | `string` | Cache control directive (e.g., `"no-cache"`, `"no-preview"`) |
+| `visit-control` | `string` | Visit control directive (e.g., `"reload"`) |
+
+### Enum Values
+
+**`TurboRefreshMethod`**
+| Value | Description |
+|-------|-------------|
+| `Morph` | Uses DOM morphing (idiomorph) to update the page, preserving state |
+| `Replace` | Replaces the entire page content (default Turbo behavior) |
+
+**`TurboRefreshScroll`**
+| Value | Description |
+|-------|-------------|
+| `Preserve` | Preserves scroll position during the refresh |
+| `Reset` | Resets scroll position to the top after the refresh (default) |
+
+### Examples
+
+**Enable morph refresh with scroll preservation:**
+```html
+<turbo-meta refresh-method="Morph" refresh-scroll="Preserve" />
+```
+
+**Generated output:**
+```html
+<meta name="turbo-refresh-method" content="morph">
+<meta name="turbo-refresh-scroll" content="preserve">
+```
+
+**Disable caching for a page:**
+```html
+<turbo-meta cache-control="no-cache" />
+```
+
+**Generated output:**
+```html
+<meta name="turbo-cache-control" content="no-cache">
+```
+
+**All attributes combined:**
+```html
+<turbo-meta refresh-method="Morph" refresh-scroll="Preserve" cache-control="no-cache" visit-control="reload" />
+```
+
+**Generated output:**
+```html
+<meta name="turbo-refresh-method" content="morph">
+<meta name="turbo-refresh-scroll" content="preserve">
+<meta name="turbo-cache-control" content="no-cache">
+<meta name="turbo-visit-control" content="reload">
+```
+
+> **Tip:** Place `<turbo-meta>` in the `<head>` of your layout or page. Only attributes you set will produce `<meta>` tags — omitted attributes generate no output.
+
 ## Best Practices
 
 ### Frame IDs

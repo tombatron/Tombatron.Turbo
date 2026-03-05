@@ -361,4 +361,239 @@ public class TurboStreamBuilderTests
 
         result.Should().BeSameAs(builder);
     }
+
+    // Morph tests
+
+    [Fact]
+    public void Replace_WithMorph_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.Replace("message-1", "<div>Updated</div>", morph: true).Build();
+
+        result.Should().Be("<turbo-stream action=\"replace\" method=\"morph\" target=\"message-1\"><template><div>Updated</div></template></turbo-stream>");
+    }
+
+    [Fact]
+    public void Replace_WithoutMorph_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.Replace("message-1", "<div>Updated</div>", morph: false).Build();
+
+        result.Should().Be("<turbo-stream action=\"replace\" target=\"message-1\"><template><div>Updated</div></template></turbo-stream>");
+    }
+
+    [Fact]
+    public void Update_WithMorph_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.Update("content", "<p>New</p>", morph: true).Build();
+
+        result.Should().Be("<turbo-stream action=\"update\" method=\"morph\" target=\"content\"><template><p>New</p></template></turbo-stream>");
+    }
+
+    // Refresh with morph/scroll tests
+
+    [Fact]
+    public void Refresh_WithMorph_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.Refresh(morph: true).Build();
+
+        result.Should().Be("<turbo-stream action=\"refresh\" method=\"morph\"></turbo-stream>");
+    }
+
+    [Fact]
+    public void Refresh_WithPreserveScroll_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.Refresh(preserveScroll: true).Build();
+
+        result.Should().Be("<turbo-stream action=\"refresh\" scroll=\"preserve\"></turbo-stream>");
+    }
+
+    [Fact]
+    public void Refresh_WithMorphAndPreserveScroll_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.Refresh(morph: true, preserveScroll: true).Build();
+
+        result.Should().Be("<turbo-stream action=\"refresh\" method=\"morph\" scroll=\"preserve\"></turbo-stream>");
+    }
+
+    [Fact]
+    public void Refresh_WithMorphAndRequestId_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.Refresh("abc-123", morph: true, preserveScroll: true).Build();
+
+        result.Should().Be("<turbo-stream action=\"refresh\" method=\"morph\" scroll=\"preserve\" request-id=\"abc-123\"></turbo-stream>");
+    }
+
+    // *All (targets) tests
+
+    [Fact]
+    public void AppendAll_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.AppendAll(".messages", "<div>Hello</div>").Build();
+
+        result.Should().Be("<turbo-stream action=\"append\" targets=\".messages\"><template><div>Hello</div></template></turbo-stream>");
+    }
+
+    [Fact]
+    public void PrependAll_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.PrependAll(".messages", "<div>Hello</div>").Build();
+
+        result.Should().Be("<turbo-stream action=\"prepend\" targets=\".messages\"><template><div>Hello</div></template></turbo-stream>");
+    }
+
+    [Fact]
+    public void ReplaceAll_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.ReplaceAll(".items", "<div>New</div>").Build();
+
+        result.Should().Be("<turbo-stream action=\"replace\" targets=\".items\"><template><div>New</div></template></turbo-stream>");
+    }
+
+    [Fact]
+    public void ReplaceAll_WithMorph_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.ReplaceAll(".items", "<div>New</div>", morph: true).Build();
+
+        result.Should().Be("<turbo-stream action=\"replace\" method=\"morph\" targets=\".items\"><template><div>New</div></template></turbo-stream>");
+    }
+
+    [Fact]
+    public void UpdateAll_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.UpdateAll(".items", "<p>Updated</p>").Build();
+
+        result.Should().Be("<turbo-stream action=\"update\" targets=\".items\"><template><p>Updated</p></template></turbo-stream>");
+    }
+
+    [Fact]
+    public void UpdateAll_WithMorph_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.UpdateAll(".items", "<p>Updated</p>", morph: true).Build();
+
+        result.Should().Be("<turbo-stream action=\"update\" method=\"morph\" targets=\".items\"><template><p>Updated</p></template></turbo-stream>");
+    }
+
+    [Fact]
+    public void RemoveAll_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.RemoveAll(".old-items").Build();
+
+        result.Should().Be("<turbo-stream action=\"remove\" targets=\".old-items\"></turbo-stream>");
+    }
+
+    [Fact]
+    public void BeforeAll_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.BeforeAll(".items", "<div>Before</div>").Build();
+
+        result.Should().Be("<turbo-stream action=\"before\" targets=\".items\"><template><div>Before</div></template></turbo-stream>");
+    }
+
+    [Fact]
+    public void AfterAll_GeneratesCorrectHtml()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.AfterAll(".items", "<div>After</div>").Build();
+
+        result.Should().Be("<turbo-stream action=\"after\" targets=\".items\"><template><div>After</div></template></turbo-stream>");
+    }
+
+    [Fact]
+    public void AppendAll_WithSpecialCharactersInSelector_EscapesTargets()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.AppendAll(".item[data-id=\"1\"]", "<div>Content</div>").Build();
+
+        result.Should().Contain("targets=\".item[data-id=&quot;1&quot;]\"");
+    }
+
+    [Fact]
+    public void AppendAll_WithNullTargets_ThrowsArgumentNullException()
+    {
+        var builder = new TurboStreamBuilder();
+
+        Assert.Throws<ArgumentNullException>(() => builder.AppendAll(null!, "<div>Content</div>"));
+    }
+
+    [Fact]
+    public void AppendAll_WithEmptyTargets_ThrowsArgumentException()
+    {
+        var builder = new TurboStreamBuilder();
+
+        Assert.Throws<ArgumentException>(() => builder.AppendAll(string.Empty, "<div>Content</div>"));
+    }
+
+    [Fact]
+    public void RemoveAll_WithNullTargets_ThrowsArgumentNullException()
+    {
+        var builder = new TurboStreamBuilder();
+
+        Assert.Throws<ArgumentNullException>(() => builder.RemoveAll(null!));
+    }
+
+    [Theory]
+    [InlineData("append")]
+    [InlineData("prepend")]
+    [InlineData("replace")]
+    [InlineData("update")]
+    [InlineData("before")]
+    [InlineData("after")]
+    public void AllActions_All_SupportMethodChaining(string action)
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = action switch
+        {
+            "append" => builder.AppendAll(".target", "<div>Content</div>"),
+            "prepend" => builder.PrependAll(".target", "<div>Content</div>"),
+            "replace" => builder.ReplaceAll(".target", "<div>Content</div>"),
+            "update" => builder.UpdateAll(".target", "<div>Content</div>"),
+            "before" => builder.BeforeAll(".target", "<div>Content</div>"),
+            "after" => builder.AfterAll(".target", "<div>Content</div>"),
+            _ => throw new ArgumentException($"Unknown action: {action}")
+        };
+
+        result.Should().BeSameAs(builder);
+    }
+
+    [Fact]
+    public void RemoveAll_SupportsMethodChaining()
+    {
+        var builder = new TurboStreamBuilder();
+
+        var result = builder.RemoveAll(".target");
+
+        result.Should().BeSameAs(builder);
+    }
 }

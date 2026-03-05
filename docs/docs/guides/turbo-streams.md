@@ -154,6 +154,134 @@ builder.Before("submit-button", "<div class='warning'>Please review</div>");
 builder.After("header", "<div class='announcement'>New feature!</div>");
 ```
 
+## Morphing
+
+Turbo v8 introduces **morphing** as an alternative to full DOM replacement. When enabled, Turbo uses [idiomorph](https://github.com/bigskysoftware/idiomorph) to intelligently diff and patch the DOM, preserving state like form inputs, focus, and scroll positions.
+
+### Morph on Replace and Update
+
+The `Replace` and `Update` actions accept an optional `morph` parameter:
+
+```csharp
+// Standard replace — removes the old element and inserts the new one
+builder.Replace("user-card", newCardHtml);
+
+// Morph replace — patches the existing element in place
+builder.Replace("user-card", newCardHtml, morph: true);
+
+// Morph update — patches inner content while preserving element state
+builder.Update("product-list", newListHtml, morph: true);
+```
+
+This adds a `method="morph"` attribute to the generated `<turbo-stream>` tag:
+
+```html
+<turbo-stream action="replace" method="morph" target="user-card">
+  <template><div id='user-card'>Updated Card</div></template>
+</turbo-stream>
+```
+
+Morph is especially useful for elements with complex state (e.g., forms with unsaved input, elements with CSS transitions) where a full replacement would be disruptive.
+
+### Morph with CSS Selector Targeting
+
+The `ReplaceAll` and `UpdateAll` methods also support morph:
+
+```csharp
+builder.ReplaceAll(".status-card", updatedCardHtml, morph: true);
+builder.UpdateAll(".price-tag", newPriceHtml, morph: true);
+```
+
+## Targeting Multiple Elements
+
+The `*All` methods let you target multiple elements using a CSS selector instead of a single DOM ID. The selector is passed via the `targets` attribute (plural) on the `<turbo-stream>` tag.
+
+```csharp
+// Update all elements with class "price" at once
+builder.UpdateAll(".price", "$9.99");
+
+// Remove all dismissed notifications
+builder.RemoveAll(".notification.dismissed");
+
+// Append to every feed container on the page
+builder.AppendAll("[data-feed]", "<div class='entry'>New event</div>");
+```
+
+**Generated HTML:**
+```html
+<turbo-stream action="update" targets=".price">
+  <template>$9.99</template>
+</turbo-stream>
+```
+
+All seven `*All` methods mirror the single-target actions:
+
+| Method | Description |
+|--------|-------------|
+| `AppendAll(targets, html)` | Append to all matching elements |
+| `PrependAll(targets, html)` | Prepend to all matching elements |
+| `ReplaceAll(targets, html, morph)` | Replace all matching elements |
+| `UpdateAll(targets, html, morph)` | Update inner content of all matching elements |
+| `RemoveAll(targets)` | Remove all matching elements |
+| `BeforeAll(targets, html)` | Insert before all matching elements |
+| `AfterAll(targets, html)` | Insert after all matching elements |
+
+## Page Refresh
+
+The `Refresh` action tells connected clients to re-fetch and re-render the current page. This is useful after server-side changes that affect the whole page layout rather than individual elements.
+
+### Using the Builder
+
+```csharp
+await _turbo.Stream("room:1", builder =>
+{
+    builder.Refresh();
+});
+
+// With morph and scroll preservation
+await _turbo.Stream("room:1", builder =>
+{
+    builder.Refresh(morph: true, preserveScroll: true);
+});
+```
+
+### Convenience Methods
+
+`ITurbo` provides `StreamRefresh` and `BroadcastRefresh` for the common case where a refresh is the only action:
+
+```csharp
+// Refresh a single stream
+await _turbo.StreamRefresh("room:1");
+
+// Morph refresh with scroll preservation
+await _turbo.StreamRefresh("room:1", morph: true, preserveScroll: true);
+
+// Refresh all connected clients
+await _turbo.BroadcastRefresh(morph: true, preserveScroll: true);
+
+// With connection exclusion
+var connectionId = HttpContext.GetSignalRConnectionId();
+await _turbo.StreamRefresh("room:1", connectionId, morph: true, preserveScroll: true);
+```
+
+## Meta Tag Configuration
+
+Use the `<turbo-meta>` tag helper to set page-level defaults for Turbo refresh behavior. Place it in the `<head>` of your layout:
+
+```html
+<head>
+    <turbo-meta refresh-method="Morph" refresh-scroll="Preserve" />
+</head>
+```
+
+This generates:
+```html
+<meta name="turbo-refresh-method" content="morph">
+<meta name="turbo-refresh-scroll" content="preserve">
+```
+
+When these meta tags are present, all Turbo page refreshes on that page will use morphing and preserve scroll position by default. See the [Tag Helpers reference](../api/TagHelpers.md#turbo-meta) for the full list of attributes.
+
 ## Stream Naming Conventions
 
 Use descriptive, namespaced names:

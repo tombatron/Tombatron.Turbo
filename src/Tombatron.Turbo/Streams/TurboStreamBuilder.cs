@@ -45,23 +45,23 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     }
 
     /// <inheritdoc />
-    public ITurboStreamBuilder Replace(string target, string html)
+    public ITurboStreamBuilder Replace(string target, string html, bool morph = false)
     {
         ValidateTarget(target);
         ValidateHtml(html);
 
-        GenerateAction("replace", target, html, _outputBuilder);
+        GenerateAction("replace", target, html, _outputBuilder, morph);
 
         return this;
     }
 
     /// <inheritdoc />
-    public ITurboStreamBuilder Update(string target, string html)
+    public ITurboStreamBuilder Update(string target, string html, bool morph = false)
     {
         ValidateTarget(target);
         ValidateHtml(html);
 
-        GenerateAction("update", target, html,  _outputBuilder);
+        GenerateAction("update", target, html, _outputBuilder, morph);
 
         return this;
     }
@@ -77,9 +77,85 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     }
 
     /// <inheritdoc />
-    public ITurboStreamBuilder Refresh(string? requestId = null)
+    public ITurboStreamBuilder Refresh(string? requestId = null, bool morph = false, bool preserveScroll = false)
     {
-        GenerateRefreshAction(requestId, _outputBuilder);
+        GenerateRefreshAction(requestId, _outputBuilder, morph, preserveScroll);
+
+        return this;
+    }
+
+    /// <inheritdoc />
+    public ITurboStreamBuilder AppendAll(string targets, string html)
+    {
+        ValidateTargets(targets);
+        ValidateHtml(html);
+
+        GenerateActionAll("append", targets, html, _outputBuilder);
+
+        return this;
+    }
+
+    /// <inheritdoc />
+    public ITurboStreamBuilder PrependAll(string targets, string html)
+    {
+        ValidateTargets(targets);
+        ValidateHtml(html);
+
+        GenerateActionAll("prepend", targets, html, _outputBuilder);
+
+        return this;
+    }
+
+    /// <inheritdoc />
+    public ITurboStreamBuilder ReplaceAll(string targets, string html, bool morph = false)
+    {
+        ValidateTargets(targets);
+        ValidateHtml(html);
+
+        GenerateActionAll("replace", targets, html, _outputBuilder, morph);
+
+        return this;
+    }
+
+    /// <inheritdoc />
+    public ITurboStreamBuilder UpdateAll(string targets, string html, bool morph = false)
+    {
+        ValidateTargets(targets);
+        ValidateHtml(html);
+
+        GenerateActionAll("update", targets, html, _outputBuilder, morph);
+
+        return this;
+    }
+
+    /// <inheritdoc />
+    public ITurboStreamBuilder RemoveAll(string targets)
+    {
+        ValidateTargets(targets);
+
+        GenerateRemoveActionAll(targets, _outputBuilder);
+
+        return this;
+    }
+
+    /// <inheritdoc />
+    public ITurboStreamBuilder BeforeAll(string targets, string html)
+    {
+        ValidateTargets(targets);
+        ValidateHtml(html);
+
+        GenerateActionAll("before", targets, html, _outputBuilder);
+
+        return this;
+    }
+
+    /// <inheritdoc />
+    public ITurboStreamBuilder AfterAll(string targets, string html)
+    {
+        ValidateTargets(targets);
+        ValidateHtml(html);
+
+        GenerateActionAll("after", targets, html, _outputBuilder);
 
         return this;
     }
@@ -112,16 +188,46 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     /// <summary>
     /// Appends a Turbo Stream action element to the provided string writer.
     /// </summary>
-    /// <param name="action">The action type (append, prepend, replace, update, before after).</param>
+    /// <param name="action">The action type (append, prepend, replace, update, before, after).</param>
     /// <param name="target">The DOM ID of the target element.</param>
     /// <param name="html">The HTML content.</param>
     /// <param name="outputBuilder">The string builder used to produce the payload for the stream.</param>
-    internal static void GenerateAction(string action, string target, string html, StringBuilder outputBuilder)
+    /// <param name="morph">When true, emits method="morph" attribute.</param>
+    internal static void GenerateAction(string action, string target, string html, StringBuilder outputBuilder, bool morph = false)
     {
         outputBuilder.Append("<turbo-stream action=\"");
         outputBuilder.Append(action);
-        outputBuilder.Append("\" target=\"");
+        outputBuilder.Append('"');
+        if (morph)
+        {
+            outputBuilder.Append(" method=\"morph\"");
+        }
+        outputBuilder.Append(" target=\"");
         outputBuilder.Append(EscapeAttribute(target));
+        outputBuilder.Append("\"><template>");
+        outputBuilder.Append(html);
+        outputBuilder.Append("</template></turbo-stream>");
+    }
+
+    /// <summary>
+    /// Appends a Turbo Stream action element targeting multiple elements via CSS selector.
+    /// </summary>
+    /// <param name="action">The action type (append, prepend, replace, update, before, after).</param>
+    /// <param name="targets">The CSS selector matching target elements.</param>
+    /// <param name="html">The HTML content.</param>
+    /// <param name="outputBuilder">The string builder used to produce the payload for the stream.</param>
+    /// <param name="morph">When true, emits method="morph" attribute.</param>
+    internal static void GenerateActionAll(string action, string targets, string html, StringBuilder outputBuilder, bool morph = false)
+    {
+        outputBuilder.Append("<turbo-stream action=\"");
+        outputBuilder.Append(action);
+        outputBuilder.Append('"');
+        if (morph)
+        {
+            outputBuilder.Append(" method=\"morph\"");
+        }
+        outputBuilder.Append(" targets=\"");
+        outputBuilder.Append(EscapeAttribute(targets));
         outputBuilder.Append("\"><template>");
         outputBuilder.Append(html);
         outputBuilder.Append("</template></turbo-stream>");
@@ -130,8 +236,8 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     /// <summary>
     /// Appends a Turbo Stream remove action element to the provided string writer.
     /// </summary>
-    /// <param name="target"></param>
-    /// <param name="outputBuilder"></param>
+    /// <param name="target">The DOM ID of the target element.</param>
+    /// <param name="outputBuilder">The string builder used to produce the payload for the stream.</param>
     internal static void GenerateRemoveAction(string target, StringBuilder outputBuilder)
     {
         outputBuilder.Append("<turbo-stream action=\"remove\" target=\"");
@@ -140,22 +246,42 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     }
 
     /// <summary>
+    /// Appends a Turbo Stream remove action element targeting multiple elements via CSS selector.
+    /// </summary>
+    /// <param name="targets">The CSS selector matching target elements.</param>
+    /// <param name="outputBuilder">The string builder used to produce the payload for the stream.</param>
+    internal static void GenerateRemoveActionAll(string targets, StringBuilder outputBuilder)
+    {
+        outputBuilder.Append("<turbo-stream action=\"remove\" targets=\"");
+        outputBuilder.Append(EscapeAttribute(targets));
+        outputBuilder.Append("\"></turbo-stream>");
+    }
+
+    /// <summary>
     /// Appends a Turbo Stream refresh action element to the provided string writer.
     /// </summary>
-    /// <param name="requestId"></param>
-    /// <param name="outputBuilder"></param>
-    internal static void GenerateRefreshAction(string? requestId, StringBuilder outputBuilder)
+    /// <param name="requestId">The request ID for originator suppression, or null.</param>
+    /// <param name="outputBuilder">The string builder used to produce the payload for the stream.</param>
+    /// <param name="morph">When true, emits method="morph" attribute.</param>
+    /// <param name="preserveScroll">When true, emits scroll="preserve" attribute.</param>
+    internal static void GenerateRefreshAction(string? requestId, StringBuilder outputBuilder, bool morph = false, bool preserveScroll = false)
     {
-        if (string.IsNullOrEmpty(requestId))
+        outputBuilder.Append("<turbo-stream action=\"refresh\"");
+        if (morph)
         {
-            outputBuilder.Append("<turbo-stream action=\"refresh\"></turbo-stream>");
+            outputBuilder.Append(" method=\"morph\"");
         }
-        else
+        if (preserveScroll)
         {
-            outputBuilder.Append("<turbo-stream action=\"refresh\" request-id=\"");
+            outputBuilder.Append(" scroll=\"preserve\"");
+        }
+        if (!string.IsNullOrEmpty(requestId))
+        {
+            outputBuilder.Append(" request-id=\"");
             outputBuilder.Append(EscapeAttribute(requestId));
-            outputBuilder.Append("\"></turbo-stream>");
+            outputBuilder.Append('"');
         }
+        outputBuilder.Append("></turbo-stream>");
     }
 
     /// <summary>
@@ -168,6 +294,9 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
 
     private static void ValidateTarget(string target) =>
         ArgumentException.ThrowIfNullOrWhiteSpace(target);
+
+    private static void ValidateTargets(string targets) =>
+        ArgumentException.ThrowIfNullOrWhiteSpace(targets);
 
     private static void ValidateHtml(string html) =>
         ArgumentNullException.ThrowIfNull(html);

@@ -269,6 +269,11 @@ const connectionManager = {
             const target = stream.getAttribute('target');
             const templateContent = stream.querySelector('template');
 
+            if (action === 'refresh') {
+                window.location.reload();
+                return;
+            }
+
             if (!target) {
                 continue;
             }
