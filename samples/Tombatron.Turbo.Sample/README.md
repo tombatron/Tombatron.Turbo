@@ -142,7 +142,7 @@ app.MapTurboHub();
 ### Layout (Required Scripts)
 
 ```html
-<!-- Renders Turbo.js + SignalR adapter script tags -->
+<!-- Renders Turbo.js + SignalR adapter via import map (default mode) -->
 <turbo-scripts />
 ```
 

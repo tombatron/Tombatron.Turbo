@@ -37,7 +37,7 @@ This renders an `<script type="importmap">` block followed by `<link rel="module
 For traditional `<script>` tags instead:
 
 ```html
-<turbo-scripts />
+<turbo-scripts mode="Traditional" />
 ```
 
 ## Custom Modules

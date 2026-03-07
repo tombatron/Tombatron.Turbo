@@ -94,13 +94,13 @@ public class TurboScriptsTagHelperTests
     #region Default Property Values
 
     [Fact]
-    public void Mode_DefaultIsTraditional()
+    public void Mode_DefaultIsImportmap()
     {
         // Arrange
         var tagHelper = CreateTagHelper();
 
         // Assert
-        tagHelper.Mode.Should().Be(TurboScriptsMode.Traditional);
+        tagHelper.Mode.Should().Be(TurboScriptsMode.Importmap);
     }
 
     #endregion
@@ -130,6 +130,7 @@ public class TurboScriptsTagHelperTests
     {
         // Arrange
         var tagHelper = CreateTagHelper();
+        tagHelper.Mode = TurboScriptsMode.Traditional;
         var (context, output) = CreateTagHelperContextAndOutput();
 
         // Act
@@ -145,6 +146,7 @@ public class TurboScriptsTagHelperTests
     {
         // Arrange
         var tagHelper = CreateTagHelper();
+        tagHelper.Mode = TurboScriptsMode.Traditional;
         var (context, output) = CreateTagHelperContextAndOutput();
 
         // Act
@@ -161,6 +163,7 @@ public class TurboScriptsTagHelperTests
         // Arrange
         _mockEnvironment.Setup(e => e.EnvironmentName).Returns(Environments.Development);
         var tagHelper = CreateTagHelper();
+        tagHelper.Mode = TurboScriptsMode.Traditional;
         var (context, output) = CreateTagHelperContextAndOutput();
 
         // Act
@@ -178,6 +181,7 @@ public class TurboScriptsTagHelperTests
         // Arrange
         _mockEnvironment.Setup(e => e.EnvironmentName).Returns(Environments.Production);
         var tagHelper = CreateTagHelper();
+        tagHelper.Mode = TurboScriptsMode.Traditional;
         var (context, output) = CreateTagHelperContextAndOutput();
 
         // Act
@@ -194,6 +198,7 @@ public class TurboScriptsTagHelperTests
         // Arrange
         _options.ImportMap.Pin("controllers/hello", "/js/controllers/hello_controller.js");
         var tagHelper = CreateTagHelper();
+        tagHelper.Mode = TurboScriptsMode.Traditional;
         var (context, output) = CreateTagHelperContextAndOutput();
 
         // Act

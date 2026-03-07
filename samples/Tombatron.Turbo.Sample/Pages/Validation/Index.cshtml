@@ -1,5 +1,7 @@
 @page
+@using static Tombatron.Turbo.TagHelpers.TurboFrameLoading
 @model Tombatron.Turbo.Sample.Pages.Validation.IndexModel
+
 @{
     ViewData["Title"] = "Form Validation";
 }
@@ -21,7 +23,7 @@
         <h2>Feedback Form (Lazy Loaded)</h2>
         <p>This form loads on demand via a lazy turbo-frame. It also uses the 422 pattern for validation.</p>
 
-        <turbo-frame id="feedback-form" src="/Validation?handler=FeedbackForm" loading="TurboFrameLoading.Lazy">
+        <turbo-frame id="feedback-form" src="/Validation?handler=FeedbackForm" loading="Lazy">
             <div style="padding: 24px; text-align: center; color: var(--text-muted);">
                 Loading feedback form...
             </div>

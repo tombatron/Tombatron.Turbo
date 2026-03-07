@@ -1,4 +1,5 @@
 using Tombatron.Turbo;
+using Tombatron.Turbo.Sample;
 using Tombatron.Turbo.Stimulus;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -27,6 +28,8 @@ builder.Services.AddSession(options =>
 builder.Services.AddStimulus();
 
 builder.Services.AddRazorPages();
+
+builder.Services.AddHostedService<StreamBackgroundService>();
 
 var app = builder.Build();
 

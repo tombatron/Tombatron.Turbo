@@ -36,7 +36,7 @@ public class TurboScriptsTagHelper : TagHelper
     /// Gets or sets the rendering mode.
     /// </summary>
     [HtmlAttributeName("mode")]
-    public TurboScriptsMode Mode { get; set; } = TurboScriptsMode.Traditional;
+    public TurboScriptsMode Mode { get; set; } = TurboScriptsMode.Importmap;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TurboScriptsTagHelper"/> class.
