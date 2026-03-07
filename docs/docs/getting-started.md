@@ -54,7 +54,7 @@ In your layout file (e.g. `Pages/Shared/_Layout.cshtml`), add the script tag hel
 ```html
 <head>
     <!-- ... -->
-    <turbo-scripts mode="Importmap" />
+    <turbo-scripts />
 </head>
 ```
 
@@ -62,7 +62,7 @@ This renders Turbo.js, the SignalR bridge, and (optionally) Stimulus via an [imp
 
 > **Note:** Turbo.js must be loaded before the SignalR adapter. If Turbo.js is missing, stream messages will be dropped and a warning will appear in the browser console.
 
-We recommend **Importmap** mode because it uses native browser module resolution — no bundler, no build step. The tag helper emits a `<script type="importmap">` block that maps bare module specifiers (like `"@hotwired/turbo"`) to URLs, then loads them with standard `<script type="module">` imports. The browser handles dependency resolution natively, which means:
+**Importmap** mode is the default because it uses native browser module resolution — no bundler, no build step. The tag helper emits a `<script type="importmap">` block that maps bare module specifiers (like `"@hotwired/turbo"`) to URLs, then loads them with standard `<script type="module">` imports. The browser handles dependency resolution natively, which means:
 
 - **No build tooling required** — no Webpack, Vite, or esbuild to configure
 - **Fine-grained caching** — each module is a separate cacheable resource; updating one doesn't invalidate the rest
