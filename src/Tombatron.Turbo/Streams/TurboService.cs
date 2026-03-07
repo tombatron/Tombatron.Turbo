@@ -227,24 +227,24 @@ public sealed class TurboService : ITurbo
     }
 
     /// <inheritdoc />
-    public Task StreamRefresh(string streamName, bool morph = false, bool preserveScroll = false)
+    public Task StreamRefresh(string streamName)
     {
         var requestId = _httpContextAccessor.HttpContext?.GetTurboRequestId();
-        return Stream(streamName, builder => builder.Refresh(requestId, morph, preserveScroll));
+        return Stream(streamName, builder => builder.Refresh(requestId));
     }
 
     /// <inheritdoc />
-    public Task StreamRefresh(IEnumerable<string> streamNames, bool morph = false, bool preserveScroll = false)
+    public Task StreamRefresh(IEnumerable<string> streamNames)
     {
         var requestId = _httpContextAccessor.HttpContext?.GetTurboRequestId();
-        return Stream(streamNames, builder => builder.Refresh(requestId, morph, preserveScroll));
+        return Stream(streamNames, builder => builder.Refresh(requestId));
     }
 
     /// <inheritdoc />
-    public Task BroadcastRefresh(bool morph = false, bool preserveScroll = false)
+    public Task BroadcastRefresh()
     {
         var requestId = _httpContextAccessor.HttpContext?.GetTurboRequestId();
-        return Broadcast(builder => builder.Refresh(requestId, morph, preserveScroll));
+        return Broadcast(builder => builder.Refresh(requestId));
     }
 
     /// <inheritdoc />
@@ -476,24 +476,24 @@ public sealed class TurboService : ITurbo
     }
 
     /// <inheritdoc />
-    public Task StreamRefresh(string streamName, string? excludedConnectionId, bool morph = false, bool preserveScroll = false)
+    public Task StreamRefresh(string streamName, string? excludedConnectionId)
     {
         var requestId = _httpContextAccessor.HttpContext?.GetTurboRequestId();
-        return Stream(streamName, builder => builder.Refresh(requestId, morph, preserveScroll), excludedConnectionId);
+        return Stream(streamName, builder => builder.Refresh(requestId), excludedConnectionId);
     }
 
     /// <inheritdoc />
-    public Task StreamRefresh(IEnumerable<string> streamNames, string? excludedConnectionId, bool morph = false, bool preserveScroll = false)
+    public Task StreamRefresh(IEnumerable<string> streamNames, string? excludedConnectionId)
     {
         var requestId = _httpContextAccessor.HttpContext?.GetTurboRequestId();
-        return Stream(streamNames, builder => builder.Refresh(requestId, morph, preserveScroll), excludedConnectionId);
+        return Stream(streamNames, builder => builder.Refresh(requestId), excludedConnectionId);
     }
 
     /// <inheritdoc />
-    public Task BroadcastRefresh(string? excludedConnectionId, bool morph = false, bool preserveScroll = false)
+    public Task BroadcastRefresh(string? excludedConnectionId)
     {
         var requestId = _httpContextAccessor.HttpContext?.GetTurboRequestId();
-        return Broadcast(builder => builder.Refresh(requestId, morph, preserveScroll), excludedConnectionId);
+        return Broadcast(builder => builder.Refresh(requestId), excludedConnectionId);
     }
 
     /// <summary>

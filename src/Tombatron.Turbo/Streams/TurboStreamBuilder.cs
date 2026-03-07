@@ -77,9 +77,9 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     }
 
     /// <inheritdoc />
-    public ITurboStreamBuilder Refresh(string? requestId = null, bool morph = false, bool preserveScroll = false)
+    public ITurboStreamBuilder Refresh(string? requestId = null)
     {
-        GenerateRefreshAction(requestId, _outputBuilder, morph, preserveScroll);
+        GenerateRefreshAction(requestId, _outputBuilder);
 
         return this;
     }
@@ -262,19 +262,9 @@ public sealed class TurboStreamBuilder : ITurboStreamBuilder
     /// </summary>
     /// <param name="requestId">The request ID for originator suppression, or null.</param>
     /// <param name="outputBuilder">The string builder used to produce the payload for the stream.</param>
-    /// <param name="morph">When true, emits method="morph" attribute.</param>
-    /// <param name="preserveScroll">When true, emits scroll="preserve" attribute.</param>
-    internal static void GenerateRefreshAction(string? requestId, StringBuilder outputBuilder, bool morph = false, bool preserveScroll = false)
+    internal static void GenerateRefreshAction(string? requestId, StringBuilder outputBuilder)
     {
         outputBuilder.Append("<turbo-stream action=\"refresh\"");
-        if (morph)
-        {
-            outputBuilder.Append(" method=\"morph\"");
-        }
-        if (preserveScroll)
-        {
-            outputBuilder.Append(" scroll=\"preserve\"");
-        }
         if (!string.IsNullOrEmpty(requestId))
         {
             outputBuilder.Append(" request-id=\"");

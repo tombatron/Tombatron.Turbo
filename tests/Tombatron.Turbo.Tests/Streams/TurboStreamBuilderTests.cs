@@ -394,48 +394,6 @@ public class TurboStreamBuilderTests
         result.Should().Be("<turbo-stream action=\"update\" method=\"morph\" target=\"content\"><template><p>New</p></template></turbo-stream>");
     }
 
-    // Refresh with morph/scroll tests
-
-    [Fact]
-    public void Refresh_WithMorph_GeneratesCorrectHtml()
-    {
-        var builder = new TurboStreamBuilder();
-
-        var result = builder.Refresh(morph: true).Build();
-
-        result.Should().Be("<turbo-stream action=\"refresh\" method=\"morph\"></turbo-stream>");
-    }
-
-    [Fact]
-    public void Refresh_WithPreserveScroll_GeneratesCorrectHtml()
-    {
-        var builder = new TurboStreamBuilder();
-
-        var result = builder.Refresh(preserveScroll: true).Build();
-
-        result.Should().Be("<turbo-stream action=\"refresh\" scroll=\"preserve\"></turbo-stream>");
-    }
-
-    [Fact]
-    public void Refresh_WithMorphAndPreserveScroll_GeneratesCorrectHtml()
-    {
-        var builder = new TurboStreamBuilder();
-
-        var result = builder.Refresh(morph: true, preserveScroll: true).Build();
-
-        result.Should().Be("<turbo-stream action=\"refresh\" method=\"morph\" scroll=\"preserve\"></turbo-stream>");
-    }
-
-    [Fact]
-    public void Refresh_WithMorphAndRequestId_GeneratesCorrectHtml()
-    {
-        var builder = new TurboStreamBuilder();
-
-        var result = builder.Refresh("abc-123", morph: true, preserveScroll: true).Build();
-
-        result.Should().Be("<turbo-stream action=\"refresh\" method=\"morph\" scroll=\"preserve\" request-id=\"abc-123\"></turbo-stream>");
-    }
-
     // *All (targets) tests
 
     [Fact]

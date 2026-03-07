@@ -103,27 +103,25 @@ Inserts content immediately **after** the target element (as a sibling).
 builder.After("item-5", "<div class='item'>Item 6</div>");
 ```
 
-### Refresh(string? requestId = null, bool morph = false, bool preserveScroll = false)
+### Refresh(string? requestId = null)
 
 Tells clients to perform a page refresh. Optionally includes a request ID so the originating client can suppress the redundant refresh.
 
 **Parameters:**
 - `requestId` — The `X-Turbo-Request-Id` of the originating request, or `null` for no suppression
-- `morph` — When `true`, uses morphing for the refresh instead of full page replacement
-- `preserveScroll` — When `true`, preserves scroll position during the refresh
 
 ```csharp
 builder.Refresh();
-builder.Refresh(requestId: "abc-123", morph: true, preserveScroll: true);
+builder.Refresh(requestId: "abc-123");
 ```
 
 **Generated HTML:**
 ```html
 <turbo-stream action="refresh"></turbo-stream>
-<turbo-stream action="refresh" method="morph" scroll="preserve" request-id="abc-123"></turbo-stream>
+<turbo-stream action="refresh" request-id="abc-123"></turbo-stream>
 ```
 
-> **Note:** The `Refresh` action does not use a `<template>` or target — it triggers a full page re-fetch. Use `morph` and `preserveScroll` to make refreshes less disruptive. For convenience, see also `ITurbo.StreamRefresh()` and `ITurbo.BroadcastRefresh()`.
+> **Note:** The `Refresh` action does not use a `<template>` or target — it triggers a full page re-fetch. To configure morphing and scroll preservation for page refreshes, use the `<turbo-meta>` tag helper in your layout's `<head>`. For convenience, see also `ITurbo.StreamRefresh()` and `ITurbo.BroadcastRefresh()`.
 
 ## CSS Selector Targeting
 
@@ -233,7 +231,7 @@ await _turbo.Stream("user:123", builder =>
 | `Remove` | Removed | N/A | No |
 | `Before` | Preserved | Added before element | No |
 | `After` | Preserved | Added after element | No |
-| `Refresh` | N/A (full page) | N/A | Yes |
+| `Refresh` | N/A (full page) | N/A | No (use `<turbo-meta>`) |
 
 Each action above (except `Refresh`) has a corresponding `*All` variant that accepts a CSS selector via the `targets` parameter instead of a single DOM ID:
 

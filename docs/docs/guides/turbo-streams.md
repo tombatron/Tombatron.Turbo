@@ -237,12 +237,6 @@ await _turbo.Stream("room:1", builder =>
 {
     builder.Refresh();
 });
-
-// With morph and scroll preservation
-await _turbo.Stream("room:1", builder =>
-{
-    builder.Refresh(morph: true, preserveScroll: true);
-});
 ```
 
 ### Convenience Methods
@@ -253,15 +247,12 @@ await _turbo.Stream("room:1", builder =>
 // Refresh a single stream
 await _turbo.StreamRefresh("room:1");
 
-// Morph refresh with scroll preservation
-await _turbo.StreamRefresh("room:1", morph: true, preserveScroll: true);
-
 // Refresh all connected clients
-await _turbo.BroadcastRefresh(morph: true, preserveScroll: true);
+await _turbo.BroadcastRefresh();
 
 // With connection exclusion
 var connectionId = HttpContext.GetSignalRConnectionId();
-await _turbo.StreamRefresh("room:1", connectionId, morph: true, preserveScroll: true);
+await _turbo.StreamRefresh("room:1", connectionId);
 ```
 
 ## Meta Tag Configuration
@@ -280,7 +271,7 @@ This generates:
 <meta name="turbo-refresh-scroll" content="preserve">
 ```
 
-When these meta tags are present, all Turbo page refreshes on that page will use morphing and preserve scroll position by default. See the [Tag Helpers reference](../api/TagHelpers.md#turbo-meta) for the full list of attributes.
+When these meta tags are present, all Turbo page refreshes on that page will use morphing and preserve scroll position by default. This is the **only** way to configure morphing and scroll preservation for the `refresh` stream action — these behaviors are controlled via `<meta>` tags in the page `<head>`, not via attributes on the `<turbo-stream>` element. See the [Tag Helpers reference](../api/TagHelpers.md#turbo-meta) for the full list of attributes.
 
 ## Stream Naming Conventions
 

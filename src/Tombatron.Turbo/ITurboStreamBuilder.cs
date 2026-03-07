@@ -85,10 +85,13 @@ public interface ITurboStreamBuilder
     /// so the originating client can suppress the redundant refresh.
     /// </summary>
     /// <param name="requestId">The X-Turbo-Request-Id of the originating request, or null for no suppression.</param>
-    /// <param name="morph">When true, uses morphing for the refresh instead of full page replacement.</param>
-    /// <param name="preserveScroll">When true, preserves scroll position during the refresh.</param>
     /// <returns>The builder instance for method chaining.</returns>
-    ITurboStreamBuilder Refresh(string? requestId = null, bool morph = false, bool preserveScroll = false);
+    /// <remarks>
+    /// To configure morphing and scroll preservation for page refreshes, use the
+    /// <c>&lt;turbo-meta&gt;</c> tag helper in your layout's <c>&lt;head&gt;</c>.
+    /// These behaviors are controlled via <c>&lt;meta&gt;</c> tags, not stream element attributes.
+    /// </remarks>
+    ITurboStreamBuilder Refresh(string? requestId = null);
 
     /// <summary>
     /// Appends content to the end of all elements matching the CSS selector.
