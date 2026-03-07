@@ -331,96 +331,23 @@ describe('connectionManager', () => {
             delete window.Turbo;
         });
 
-        it('should use manual rendering when Turbo is not available', () => {
+        it('should warn and drop the message when Turbo is not available', () => {
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
             document.body.innerHTML = '<div id="list"></div>';
 
             connectionManager.handleTurboStream(
                 '<turbo-stream action="append" target="list"><template><p>New item</p></template></turbo-stream>'
             );
 
-            expect(document.getElementById('list').innerHTML).toContain('New item');
+            expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Turbo.js is not loaded'));
+            expect(document.getElementById('list').innerHTML).not.toContain('New item');
+
+            warnSpy.mockRestore();
         });
 
         it('should handle empty html gracefully', () => {
             expect(() => connectionManager.handleTurboStream('')).not.toThrow();
             expect(() => connectionManager.handleTurboStream(null)).not.toThrow();
-        });
-    });
-
-    describe('manualRenderStream', () => {
-        beforeEach(() => {
-            document.body.innerHTML = '<div id="target"><p>Original</p></div>';
-        });
-
-        it('should handle append action', () => {
-            connectionManager.manualRenderStream(
-                '<turbo-stream action="append" target="target"><template><p>Appended</p></template></turbo-stream>'
-            );
-
-            expect(document.getElementById('target').innerHTML).toContain('Original');
-            expect(document.getElementById('target').innerHTML).toContain('Appended');
-        });
-
-        it('should handle prepend action', () => {
-            connectionManager.manualRenderStream(
-                '<turbo-stream action="prepend" target="target"><template><p>Prepended</p></template></turbo-stream>'
-            );
-
-            const html = document.getElementById('target').innerHTML;
-            expect(html.indexOf('Prepended')).toBeLessThan(html.indexOf('Original'));
-        });
-
-        it('should handle update action', () => {
-            connectionManager.manualRenderStream(
-                '<turbo-stream action="update" target="target"><template><p>Updated</p></template></turbo-stream>'
-            );
-
-            expect(document.getElementById('target').innerHTML).not.toContain('Original');
-            expect(document.getElementById('target').innerHTML).toContain('Updated');
-        });
-
-        it('should handle replace action', () => {
-            connectionManager.manualRenderStream(
-                '<turbo-stream action="replace" target="target"><template><div id="target"><p>Replaced</p></div></template></turbo-stream>'
-            );
-
-            expect(document.getElementById('target').innerHTML).toContain('Replaced');
-        });
-
-        it('should handle remove action', () => {
-            connectionManager.manualRenderStream(
-                '<turbo-stream action="remove" target="target"></turbo-stream>'
-            );
-
-            expect(document.getElementById('target')).toBeNull();
-        });
-
-        it('should handle before action', () => {
-            connectionManager.manualRenderStream(
-                '<turbo-stream action="before" target="target"><template><p id="before">Before</p></template></turbo-stream>'
-            );
-
-            const before = document.getElementById('before');
-            const target = document.getElementById('target');
-            expect(before.nextSibling).toBe(target);
-        });
-
-        it('should handle after action', () => {
-            connectionManager.manualRenderStream(
-                '<turbo-stream action="after" target="target"><template><p id="after">After</p></template></turbo-stream>'
-            );
-
-            const after = document.getElementById('after');
-            const target = document.getElementById('target');
-            expect(target.nextSibling).toBe(after);
-        });
-
-        it('should handle missing target gracefully', () => {
-            expect(() => {
-                connectionManager.manualRenderStream(
-                    '<turbo-stream action="append" target="nonexistent"><template><p>Content</p></template></turbo-stream>'
-                );
-            }).not.toThrow();
         });
     });
 

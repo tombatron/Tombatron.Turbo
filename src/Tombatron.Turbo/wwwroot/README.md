@@ -43,9 +43,9 @@ If using the [Tombatron.Turbo](https://www.nuget.org/packages/Tombatron.Turbo/) 
 <div id="notifications"></div>
 ```
 
-### With Turbo.js (Recommended)
+### Script Setup
 
-When Turbo.js is loaded, stream messages are automatically rendered:
+Turbo.js **must** be loaded before the SignalR adapter. If Turbo.js is not present, incoming stream messages will be dropped and a warning will appear in the console.
 
 ```html
 <script type="module" src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.min.js"></script>
@@ -54,10 +54,6 @@ When Turbo.js is loaded, stream messages are automatically rendered:
 
 <turbo-stream-source-signalr stream="my-stream" hub-url="/turbo-hub"></turbo-stream-source-signalr>
 ```
-
-### Without Turbo.js
-
-The adapter includes a fallback renderer that handles basic Turbo Stream actions when Turbo.js is not present.
 
 ## Attributes
 
@@ -115,8 +111,7 @@ await turbo.Stream("notifications", builder =>
 - **Singleton Connection**: Multiple elements share one SignalR connection
 - **Reference Counting**: Automatically manages subscriptions
 - **Auto-Reconnect**: Exponential backoff reconnection with resubscription
-- **Turbo.js Integration**: Seamless rendering when Turbo is present
-- **Fallback Renderer**: Works without Turbo.js for basic operations
+- **Turbo.js Integration**: Renders stream messages via Turbo.js (required)
 
 ## Browser Support
 

@@ -273,78 +273,11 @@
             if (typeof window !== 'undefined' && window.Turbo && typeof window.Turbo.renderStreamMessage === 'function') {
                 window.Turbo.renderStreamMessage(html);
             } else {
-                // Fallback: manually insert the stream actions
-                this.manualRenderStream(html);
-            }
-        },
-
-        /**
-         * Manually renders Turbo Stream HTML when Turbo.js is not available.
-         * @param {string} html - The Turbo Stream HTML
-         */
-        manualRenderStream(html) {
-            const template = document.createElement('template');
-            template.innerHTML = html;
-
-            const streams = template.content.querySelectorAll('turbo-stream');
-
-            for (const stream of streams) {
-                const action = stream.getAttribute('action');
-                const target = stream.getAttribute('target');
-                const templateContent = stream.querySelector('template');
-
-                if (!target) {
-                    continue;
-                }
-
-                const targetElement = document.getElementById(target);
-
-                if (!targetElement && action !== 'remove') {
-                    continue;
-                }
-
-                const content = templateContent ? templateContent.content.cloneNode(true) : null;
-
-                switch (action) {
-                    case 'append':
-                        if (content) {
-                            targetElement.appendChild(content);
-                        }
-                        break;
-                    case 'prepend':
-                        if (content) {
-                            targetElement.prepend(content);
-                        }
-                        break;
-                    case 'replace':
-                        if (content && targetElement.parentNode) {
-                            targetElement.parentNode.replaceChild(content, targetElement);
-                        }
-                        break;
-                    case 'update':
-                        if (targetElement) {
-                            targetElement.innerHTML = '';
-                            if (content) {
-                                targetElement.appendChild(content);
-                            }
-                        }
-                        break;
-                    case 'remove':
-                        if (targetElement) {
-                            targetElement.remove();
-                        }
-                        break;
-                    case 'before':
-                        if (content && targetElement.parentNode) {
-                            targetElement.parentNode.insertBefore(content, targetElement);
-                        }
-                        break;
-                    case 'after':
-                        if (content && targetElement.parentNode) {
-                            targetElement.parentNode.insertBefore(content, targetElement.nextSibling);
-                        }
-                        break;
-                }
+                // eslint-disable-next-line no-console
+                console.warn(
+                    'Turbo.js is not loaded. Turbo Stream message was received but cannot be rendered. ' +
+                    'Please load Turbo.js before the SignalR adapter. The stream message has been dropped.'
+                );
             }
         },
 
