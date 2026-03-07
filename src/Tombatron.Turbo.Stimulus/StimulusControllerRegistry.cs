@@ -75,7 +75,8 @@ public sealed partial class StimulusControllerRegistry
             {
                 ScanDirectory(fileProvider, controllersPath, itemRelativePath, entries, logger);
             }
-            else if (item.Name.EndsWith("_controller.js", StringComparison.OrdinalIgnoreCase))
+            else if (item.Name.EndsWith("_controller.js", StringComparison.OrdinalIgnoreCase) ||
+                     item.Name.EndsWith("-controller.js", StringComparison.OrdinalIgnoreCase))
             {
                 var identifier = DeriveIdentifier(itemRelativePath);
 
@@ -84,7 +85,8 @@ public sealed partial class StimulusControllerRegistry
                     var importPath = $"/{controllersPath}/{itemRelativePath}";
                     entries.Add(new ControllerEntry(identifier, importPath));
 
-                    if (itemRelativePath.Contains('/') || itemRelativePath.Contains('_'))
+                    if (itemRelativePath.Contains('/') || itemRelativePath.Contains('_') ||
+                        HasHyphensInPrefix(itemRelativePath))
                     {
                         logger.LogInformation(
                             "Stimulus: {FilePath} → \"{Identifier}\"",
@@ -112,21 +114,27 @@ public sealed partial class StimulusControllerRegistry
     /// <summary>
     /// Derives a Stimulus identifier from a controller file path.
     /// </summary>
-    /// <param name="relativePath">Path relative to the controllers directory (e.g. "admin/user_profile_controller.js").</param>
+    /// <param name="relativePath">Path relative to the controllers directory (e.g. "admin/user_profile_controller.js" or "admin/user-profile-controller.js").</param>
     /// <returns>The Stimulus identifier, or null if the path is invalid.</returns>
     internal static string? DeriveIdentifier(string relativePath)
     {
         // Normalize to forward slashes
         var normalized = relativePath.Replace('\\', '/');
 
-        // Must end with _controller.js
-        if (!normalized.EndsWith("_controller.js", StringComparison.OrdinalIgnoreCase))
+        // Must end with _controller.js or -controller.js
+        string withoutSuffix;
+        if (normalized.EndsWith("_controller.js", StringComparison.OrdinalIgnoreCase))
+        {
+            withoutSuffix = normalized[..^"_controller.js".Length];
+        }
+        else if (normalized.EndsWith("-controller.js", StringComparison.OrdinalIgnoreCase))
+        {
+            withoutSuffix = normalized[..^"-controller.js".Length];
+        }
+        else
         {
             return null;
         }
-
-        // Strip the _controller.js suffix
-        var withoutSuffix = normalized[..^"_controller.js".Length];
 
         if (string.IsNullOrEmpty(withoutSuffix))
         {
@@ -141,6 +149,23 @@ public sealed partial class StimulusControllerRegistry
         var identifier = string.Join("--", transformed);
 
         return string.IsNullOrEmpty(identifier) ? null : identifier;
+    }
+
+    private static bool HasHyphensInPrefix(string path)
+    {
+        // Check if the filename (before the -controller.js suffix) contains hyphens.
+        var fileName = path;
+        var lastSlash = path.LastIndexOf('/');
+        if (lastSlash >= 0)
+            fileName = path[(lastSlash + 1)..];
+
+        if (fileName.EndsWith("-controller.js", StringComparison.OrdinalIgnoreCase))
+        {
+            var prefix = fileName[..^"-controller.js".Length];
+            return prefix.Contains('-');
+        }
+
+        return false;
     }
 
     private static string BuildIndexModule(IReadOnlyList<ControllerEntry> entries)

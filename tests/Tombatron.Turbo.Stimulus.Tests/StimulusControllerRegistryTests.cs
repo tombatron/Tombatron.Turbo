@@ -20,6 +20,10 @@ public class StimulusControllerRegistryTests
     [InlineData("admin/users_controller.js", "admin--users")]
     [InlineData("admin/user_profile_controller.js", "admin--user-profile")]
     [InlineData("deeply/nested/thing_controller.js", "deeply--nested--thing")]
+    [InlineData("hello-controller.js", "hello")]
+    [InlineData("user-profile-controller.js", "user-profile")]
+    [InlineData("admin/users-controller.js", "admin--users")]
+    [InlineData("admin/user-profile-controller.js", "admin--user-profile")]
     public void DeriveIdentifier_ProducesCorrectIdentifiers(string input, string expected)
     {
         var result = StimulusControllerRegistry.DeriveIdentifier(input);
@@ -39,10 +43,12 @@ public class StimulusControllerRegistryTests
         result.Should().BeNull();
     }
 
-    [Fact]
-    public void DeriveIdentifier_ReturnsNull_ForEmptyPrefix()
+    [Theory]
+    [InlineData("_controller.js")]
+    [InlineData("-controller.js")]
+    public void DeriveIdentifier_ReturnsNull_ForEmptyPrefix(string input)
     {
-        var result = StimulusControllerRegistry.DeriveIdentifier("_controller.js");
+        var result = StimulusControllerRegistry.DeriveIdentifier(input);
 
         result.Should().BeNull();
     }
@@ -169,6 +175,23 @@ public class StimulusControllerRegistryTests
         var module = registry.GeneratedIndexModule;
         module.Should().Contain("import AdminUsersController from \"/controllers/admin/users_controller.js\"");
         module.Should().Contain("application.register(\"admin--users\", AdminUsersController)");
+    }
+
+    [Fact]
+    public void Rebuild_DiscoversBothUnderscoreAndHyphenConventions()
+    {
+        var registry = new StimulusControllerRegistry();
+        var fileProvider = CreateMockFileProvider(new[]
+        {
+            "hello_controller.js",
+            "goodbye-controller.js"
+        });
+
+        registry.Rebuild(fileProvider, "controllers", _logger);
+
+        registry.Controllers.Should().HaveCount(2);
+        registry.Controllers.Should().Contain(c => c.StimulusIdentifier == "hello");
+        registry.Controllers.Should().Contain(c => c.StimulusIdentifier == "goodbye");
     }
 
     [Fact]

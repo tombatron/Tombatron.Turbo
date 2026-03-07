@@ -20,11 +20,13 @@ builder.Services.AddStimulus();
 | File | Identifier |
 |---|---|
 | `hello_controller.js` | `hello` |
+| `hello-controller.js` | `hello` |
 | `todo_form_controller.js` | `todo-form` |
+| `todo-form-controller.js` | `todo-form` |
 | `admin/users_controller.js` | `admin--users` |
 | `admin/user_settings_controller.js` | `admin--user-settings` |
 
-Underscores become hyphens, the `_controller.js` suffix is stripped, and directory separators become `--`.
+Both `_controller.js` and `-controller.js` suffixes are supported. Underscores become hyphens, the controller suffix is stripped, and directory separators become `--`.
 
 ## Options
 
