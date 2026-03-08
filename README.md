@@ -61,6 +61,10 @@ cd samples/Tombatron.Turbo.Sample
 dotnet run
 ```
 
+## Claude Code
+
+This repository includes a [`CLAUDE.md`](CLAUDE.md) file with project-specific context for building apps with Tombatron.Turbo using [Claude Code](https://claude.ai/code). Copy it into your project root to give Claude Code knowledge of setup, Turbo Frames, Turbo Streams, Stimulus conventions, and the full API surface.
+
 ## Requirements
 
 - .NET 10.0 or later

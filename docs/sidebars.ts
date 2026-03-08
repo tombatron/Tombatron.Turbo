@@ -21,6 +21,7 @@ const sidebars: SidebarsConfig = {
         'guides/authorization',
         'guides/testing',
         'guides/troubleshooting',
+        'guides/claude-code',
       ],
     },
     {
